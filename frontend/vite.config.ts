@@ -5,6 +5,7 @@ import Vue from '@vitejs/plugin-vue'
 import VueDevTools from 'vite-plugin-vue-devtools'
 import VueRouter from 'unplugin-vue-router/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { codecovVitePlugin } from "@codecov/vite-plugin"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -35,6 +36,11 @@ export default defineConfig({
         background_color: 'transparent',
         prefer_related_applications: true
       }
+    }),
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: "<bundle project name>",
+      uploadToken: process.env.CODECOV_TOKEN,
     }),
   ]
 })
