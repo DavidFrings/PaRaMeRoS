@@ -15,7 +15,7 @@
     "@unhead/vue": "^2.0.14",
     "axios": "^1.11.0",
     "vanilla-cookieconsent": "^3.1.0",
-    "vue": "^3.5.18",
+    "vue": "^3.5.19",
     "vue-cookies": "^1.8.6",
     "vue-router": "^4.5.1"
   },
