@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: pnpm
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: cargo
+    directory: "/api"
+    schedule:
+      interval: "weekly"
