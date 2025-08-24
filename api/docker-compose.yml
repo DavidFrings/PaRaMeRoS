@@ -1,0 +1,39 @@
+services:
+  parameros-db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - parameros-db:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  parameros-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - HOST=${HOST}
+      - PORT=8080
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@parameros-db:${POSTGRES_PORT}/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE}
+    ports:
+      - "${PORT}:8080"
+    volumes:
+      - parameros-api:/usr/local/bin/uploads
+    depends_on:
+      parameros-db:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  parameros-db:
+  parameros-api:

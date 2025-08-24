@@ -1,0 +1,162 @@
+/* +-----------------------------------------------------------+ */
+/* | Color                                                     | */
+/* +-----------------------------------------------------------+ */
+
+:root {
+  --bg-dark-val: 0, 0%, 90%;
+  --bg: hsl(300 0% 95%);
+  --bg-light: hsl(300 50% 100%);
+  --text: hsl(300 0% 4%);
+  --text-muted: hsl(0 0% 28%);
+  --highlight: hsl(300 50% 100%);
+  --border: hsl(0 0% 50%);
+  --border-muted: hsl(340 0% 62%);
+  --primary-val: 29, 100%, 22%;
+  --secondary: hsl(196 100% 18%);
+  --danger: hsl(9 21% 41%);
+  --warning: hsl(52 23% 34%);
+  --success: hsl(147 19% 36%);
+  --info: hsl(217 22% 41%);
+  --primary: hsl(var(--primary-val));
+  --bg-dark: hsl(var(--bg-dark-val));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-dark-val: 336, 0%, 1%;
+    --bg: hsl(300 0% 4%);
+    --bg-light: hsl(0 0% 9%);
+    --text: hsl(300 0% 95%);
+    --text-muted: hsl(300 0% 69%);
+    --highlight: hsl(330 0% 39%);
+    --border: hsl(0 0% 28%);
+    --border-muted: hsl(300 0% 18%);
+    --primary-val: 24, 66%, 67%;
+    --secondary: hsl(202 72% 67%);
+    --danger: hsl(9 26% 64%);
+    --warning: hsl(52 19% 57%);
+    --success: hsl(146 17% 59%);
+    --info: hsl(217 28% 65%);
+  }
+}
+/* +-----------------------------------------------------------+ */
+/* | Spacing                                                   | */
+/* +-----------------------------------------------------------+ */
+
+:root {
+  --margin-xxs: 0.25rem;
+  --margin-xs: 0.5rem;
+  --margin-s: 0.75rem;
+  --margin-m: 1rem;
+  --margin-l: 1.25rem;
+  --margin-xl: 1.75rem;
+  --margin-xxl: 2.5rem;
+  --margin: 80%;
+}
+
+.padding-xxs {
+  padding: var(--margin-xxs) 0;
+}
+
+.padding-xs {
+  padding: var(--margin-xs) 0;
+}
+
+.padding-s {
+  padding: var(--margin-s) 0;
+}
+
+.padding-m {
+  padding: var(--margin-m) 0;
+}
+
+.padding-l {
+  padding: var(--margin-l) 0;
+}
+
+.padding-xl {
+  padding: var(--margin-xl) 0;
+}
+
+.padding-xxl {
+  padding: var(--margin-xxl) 0;
+}
+
+.margin-xxs {
+  margin: var(--margin-xxs) auto;
+}
+
+.margin-xs {
+  margin: var(--margin-xs) auto;
+}
+
+.margin-m {
+  margin: var(--margin-m) auto;
+}
+
+.margin-l {
+  margin: var(--margin-l) auto;
+}
+
+.margin-xl {
+  margin: var(--margin-xl) auto;
+}
+
+.margin-xxl {
+  margin: var(--margin-xxl) auto;
+}
+
+/* +-----------------------------------------------------------+ */
+/* | Fonts                                                     | */
+/* +-----------------------------------------------------------+ */
+
+:root {
+  --font:
+    Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --h1: bold 4rem/1em var(--font);
+  --h2: bold 3rem/1.2em var(--font);
+  --h3: bold 2.25rem/1.2em var(--font);
+  --h4: bold 1.5rem/1.6em var(--font);
+  --p-big: 1.25rem/1.6em var(--font);
+  --p: 1rem/1.6em var(--font);
+  --p-small: 0.75rem/2em var(--font);
+}
+
+h1 {
+  font: var(--h1);
+}
+
+h2 {
+  font: var(--h2);
+}
+
+h3 {
+  font: var(--h3);
+}
+
+h4 {
+  font: var(--h4);
+}
+
+p.big {
+  font: var(--p-big);
+}
+
+p {
+  font: var(--p);
+}
+
+p.small {
+  font: var(--p-small);
+}
+
+/* +-----------------------------------------------------------+ */
+/* | Base Styles                                               | */
+/* +-----------------------------------------------------------+ */
+
+body {
+  font-family: var(--font);
+  background-color: var(--bg-dark);
+  color: var(--text);
+}

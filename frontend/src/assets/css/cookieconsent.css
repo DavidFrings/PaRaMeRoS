@@ -1,0 +1,40 @@
+@import './base.css';
+
+:root {
+  --cc-bg: var(--bg);
+  --cc-primary-color: var(--text);
+  --cc-secondary-color: var(--text-muted);
+
+  --cc-btn-primary-bg: var(--primary);
+  --cc-btn-primary-color: var(--text);
+  --cc-btn-primary-hover-bg: hsla(var(--primary-val), 0.8);
+  --cc-btn-primary-hover-color: var(--text-muted);
+
+  --cc-btn-secondary-bg: var(--bg-light);
+  --cc-btn-secondary-color: var(--cc-primary-color);
+  --cc-btn-secondary-hover-bg: var(--cc-btn-secondary-bg);
+  --cc-btn-secondary-hover-color: var(--cc-btn-secondary-color);
+
+  --cc-cookie-category-block-bg: var(--bg-light);
+  --cc-cookie-category-block-border: var(--border);
+  --cc-cookie-category-block-hover-bg: var(--bg-light);
+  --cc-cookie-category-block-hover-border: var(--border-muted);
+  --cc-cookie-category-expanded-block-hover-bg: var(--cc-cookie-category-block-hover-border);
+  --cc-cookie-category-expanded-block-bg: var(--cc-cookie-category-block-hover-bg);
+  --cc-toggle-readonly-bg: var(--secondary);
+  --cc-overlay-bg: hsla(var(--bg-dark-val), 0.8) !important;
+
+  --cc-toggle-on-knob-bg: var(--cc-bg);
+  --cc-toggle-readonly-knob-bg: var(--cc-cookie-category-block-bg);
+
+  --cc-separator-border-color: var(--border);
+
+  --cc-footer-border-color: var(--border);
+  --cc-footer-bg: var(--bg-light);
+}
+
+#cc-main {
+  scroll-behavior: smooth;
+  scrollbar-color: var(--text-muted) var(--cc-bg);
+  scrollbar-width: thin;
+}

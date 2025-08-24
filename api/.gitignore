@@ -1,0 +1,5 @@
+.env
+.env.docker
+/.idea
+/target
+Cargo.lock
