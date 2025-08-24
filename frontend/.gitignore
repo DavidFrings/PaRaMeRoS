@@ -31,4 +31,3 @@ coverage
 
 .env
 .npmrc
-pnpm-lock.yaml
