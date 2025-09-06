@@ -1,4 +1,5 @@
-use diesel::{Insertable, Queryable, Selectable};
+use diesel::prelude::*;
+use diesel::SelectableHelper;
 use serde::{Deserialize, Serialize};
 use crate::db::schema::{users, events};
 
@@ -7,20 +8,20 @@ use crate::db::schema::{users, events};
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
     pub id: i32,
-    pub name: String,
+    pub username: String,
     pub password: String
 }
 
 #[derive(Insertable, Deserialize)]
 #[diesel(table_name = users)]
 pub struct NewUser {
-    pub name: String,
+    pub username: String,
     pub password: String
 }
 
 #[derive(Deserialize)]
 pub struct LoginRequest {
-    pub name: String,
+    pub username: String,
     pub password: String
 }
 

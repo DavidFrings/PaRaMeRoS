@@ -1,11 +1,11 @@
-use diesel::{pg::PgConnection, r2d2::{self, ConnectionManager}};
-use r2d2::Pool;
+use diesel_async::{AsyncPgConnection, pooled_connection::{bb8::Pool, AsyncDieselConnectionManager}};
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub type DbPool = Pool<AsyncPgConnection>;
 
-pub fn establish(db_url: String) -> DbPool {
-    let manager = ConnectionManager::<PgConnection>::new(db_url);
+pub async fn establish(db_url: String) -> DbPool {
+    let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
     Pool::builder()
         .build(manager)
+        .await
         .expect("Failed to create a pool!")
 }

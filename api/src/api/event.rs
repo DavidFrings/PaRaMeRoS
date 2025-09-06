@@ -1,6 +1,7 @@
-use actix_web::{post, HttpResponse, HttpRequest, web::{Data, block}};
+use actix_web::{post, HttpResponse, HttpRequest, web::Data};
 use actix_multipart::{Field, Multipart};
-use diesel::{RunQueryDsl, SelectableHelper};
+use diesel_async::RunQueryDsl;
+use diesel::SelectableHelper;
 use futures::{StreamExt, TryStreamExt};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use std::path::Path;
@@ -21,12 +22,10 @@ async fn process_field(mut field: Field) -> Result<String, HttpError> {
         );
     }
 
-    let res = String::from_utf8(content)
+    String::from_utf8(content)
         .map_err(|_|
             internal_error("Invalid UTF-8 text!")
-        )?;
-
-    Ok(res)
+        )
 }
 
 #[post("/event")]
@@ -105,7 +104,7 @@ pub async fn new_event(req: HttpRequest, mut payload: Multipart, env: Data<Env>)
                     )?;
 
                 img_filename = Some(filename);
-            },
+        },
             _ => {
                 internal_error("To many fields!");
             }
@@ -126,19 +125,17 @@ pub async fn new_event(req: HttpRequest, mut payload: Multipart, env: Data<Env>)
     };
 
     let mut conn = env.pool.get()
+        .await
         .map_err(|err|
             internal_error(format!("Database connection error: {}", err))
         )?;
 
-    let res = block(move || {
-        diesel::insert_into(events)
-            .values(&new_event)
-            .returning(Event::as_returning())
-            .get_result(&mut conn)
-    }).await
+    let res = diesel::insert_into(events)
+        .values(&new_event)
+        .returning(Event::as_returning())
+        .get_result(&mut conn)
+        .await
         .map_err(|err|
-            internal_error(format!("Error creating event: {}", err))
-        )?.map_err(|err|
             internal_error(format!("Error creating event: {}", err))
         )?;
 

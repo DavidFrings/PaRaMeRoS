@@ -1,30 +1,28 @@
-use actix_web::{post, web::{Data, Json, block}, HttpResponse};
+use actix_web::{post, web::{Data, Json}, HttpResponse};
 use bcrypt::verify;
 use chrono::{Duration, Utc};
-use diesel::{RunQueryDsl, QueryDsl, ExpressionMethods};
+use diesel_async::RunQueryDsl;
+use diesel::{QueryDsl, ExpressionMethods};
 use jsonwebtoken::{encode, EncodingKey, Header};
-use crate::db::{models::{AuthResponse, Claims, LoginRequest, User}, schema::users::{dsl::users, name}};
+use crate::db::{models::{AuthResponse, Claims, LoginRequest, User}, schema::users::{dsl::users, username}};
 use crate::Env;
 use crate::utils::{internal_error, unauthorized, HttpError};
 
 #[post("/auth")]
 pub async fn auth(login_data: Json<LoginRequest>, env: Data<Env>) -> Result<HttpResponse, HttpError> {
-   let data = login_data.into_inner();
-    
+    let data = login_data.into_inner();
+
     let mut conn = env.pool.get()
+        .await
         .map_err(|err|
             internal_error(format!("Database connection error: {}", err))
         )?;
     
     // Verify username
-    let usr = block(move || {
-        users
-            .filter(name.eq(&data.name))
-            .first::<User>(&mut conn)
-    }).await
-        .map_err(|_| 
-            unauthorized("Invalid username or password")
-        )?
+    let usr = users
+        .filter(username.eq(&data.username))
+        .first::<User>(&mut conn)
+        .await
         .map_err(|_|
             unauthorized("Invalid username or password")
         )?;
@@ -36,13 +34,13 @@ pub async fn auth(login_data: Json<LoginRequest>, env: Data<Env>) -> Result<Http
         )?;
     
     if !password_matches {
-        unauthorized("Invalid username or password");
+        return Err(unauthorized("Invalid username or password"));
     }
     
     // JWT token
     let expiration = Utc::now()
         .checked_add_signed(Duration::minutes(env.jwt_expire))
-        .expect("valid timestamp")
+        .expect("invalid timestamp!")
         .timestamp() as usize;
 
     let claims = Claims {

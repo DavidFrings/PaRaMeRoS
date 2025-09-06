@@ -1,14 +1,34 @@
-# Build stage
-FROM rust:1.87 AS builder
-WORKDIR /usr/src/api
-RUN apt-get update && apt-get install -y libpq-dev build-essential
-COPY . .
-RUN cargo install --path .
+### Lockfile stage
+FROM cgr.dev/chainguard/rust AS lockfile
+WORKDIR /work
+COPY ./Cargo.toml ./
+COPY ./.build/src ./src
+RUN cargo generate-lockfile
 
-# Production stage
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y libssl3 ca-certificates libpq-dev && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/cargo/bin/parameros-api /usr/local/bin/parameros-api
-COPY --from=builder /usr/src/api/migrations /usr/local/bin/migrations
-WORKDIR /usr/local/bin
-CMD ["parameros-api"]
+
+### Build stage
+FROM cgr.dev/chainguard/rust AS builder
+WORKDIR /work
+COPY ./Cargo.toml ./
+COPY --from=lockfile /work/Cargo.lock ./
+# Cache dependencies (Save time on rebuilds)
+COPY ./.build/src ./src
+RUN cargo build
+# Docker starts here on rebuilds
+COPY ./src ./src
+# Add --release for prod to builds and in prod stage to copy /target/release/
+RUN cargo build
+
+### Migrations stage (only if first time setup)
+FROM cgr.dev/chainguard/rust AS migrations
+#install diesel cli
+COPY ./migrations ./
+#Check for tables
+#RUN diesel migration run
+
+### Production stage
+FROM cgr.dev/chainguard/wolfi-base
+RUN apk add --no-cache libpq
+COPY --from=builder /work/target/debug/parameros-api /usr/local/bin/api
+RUN mkdir -p /api/uploads
+CMD ["api"]

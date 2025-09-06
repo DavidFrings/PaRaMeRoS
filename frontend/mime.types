@@ -1,0 +1,23 @@
+types {
+    # Web content types
+    text/html                    html htm
+    text/css                     css
+    application/javascript       js
+    application/json             json
+
+    # Images
+    image/x-icon                 ico
+    image/webp                   webp
+
+    # Source maps
+    application/json             map
+
+    # Service Worker (specific MIME type)
+    application/javascript       sw
+
+    # Web App Manifest
+    application/manifest+json    webmanifest
+
+    # Default fallback
+    application/octet-stream     *
+}
