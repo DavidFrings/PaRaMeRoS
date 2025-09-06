@@ -1,14 +1,14 @@
 [package]
 name = "parameros-api"
-authors = ["David Frings"]
+authors = ["David Frings <dev@davidfrings.dev> (https://DavidFrings.dev)"]
 version = "2.0.0"
 description = "This is the API / backend from the Official PaRaMeRoS Website"
 categories = ["web-programming", "api-bindings"]
 homepage = "https://PaRaMeRoS.net"
-license = "GPL"
-repository = "https://github.com/DavidFrings/PaRaMeRoS-Backend"
+license = "MPL-2.0"
+repository = "https://github.com/DavidFrings/PaRaMeRoS"
 rust-version = "1.87"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 actix-web = "^4"

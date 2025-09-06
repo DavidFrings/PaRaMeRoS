@@ -1,6 +1,12 @@
 {
   "name": "parameros-frontend",
+  "author": "David Frings <dev@davidfrings.dev> (https://DavidFrings.dev)",
   "version": "2.0.0",
+  "description": "",
+  "categories": ["Education"],
+  "homepage": "https://PaRaMeRoS.net",
+  "license": "MPL-2.0",
+  "repository": "github:DavidFrings/PaRaMeRoS",
   "type": "module",
   "scripts": {
     "dev": "vite",
