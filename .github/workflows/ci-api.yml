@@ -11,24 +11,26 @@ defaults:
     working-directory: api
 
 jobs:
-  type-check:
-    name: "Type Check"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Dummy Step
-        run: echo "This is a dummy job that always succeeds"
-  lint:
-    name: "Lint"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Dummy Step
-        run: echo "This is a dummy job that always succeeds"
   format:
     name: "Format"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Dummy Step
-        run: echo "This is a dummy job that always succeeds"
+      - name: Format
+        run: cargo fmt --all
+  lint:
+    name: "Lint"
+    needs: format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clippy
+        run: cargo clippy --fix
+  type-check:
+    name: "Type Check"
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check
+        run: cargo check
