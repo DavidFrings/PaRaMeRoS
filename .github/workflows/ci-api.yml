@@ -8,7 +8,7 @@ on:
 
 defaults:
   run:
-    working-directory: ./api
+    working-directory: api
 
 jobs:
   type-check:
