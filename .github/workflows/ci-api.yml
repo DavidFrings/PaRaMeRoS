@@ -1,10 +1,14 @@
 name: CI - API
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main, master]
+
+defaults:
+  run:
+    working-directory: ./api
 
 jobs:
   type-check:

@@ -1,10 +1,14 @@
 name: CI - Frontend
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main, master]
+
+defaults:
+  run:
+    working-directory: ./frontend
 
 jobs:
   type-check:
