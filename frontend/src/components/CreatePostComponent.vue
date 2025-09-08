@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import VueCookies from 'vue-cookies'
 const Cookies = VueCookies.VueCookies
 import axios from 'axios'
-import Upload from '@/components/icons/Upload.vue'
+import UploadIcon from '@/components/icons/UploadIcon.vue'
 
 const props = defineProps<{
   name: string
@@ -68,7 +68,7 @@ function createObjectURL(file: File): string {
   <div id="create-post">
     <form @submit="handleSubmit">
       <label for="file" class="file-label">
-        <Upload />
+        <UploadIcon />
       </label>
       <input id="file" class="file-input" type="file" accept="image/*" @change="handleFileChange" />
       <input

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Navbar from '@/components/Navbar.vue'
-import Footer from '@/components/Footer.vue'
+import Navbar from '@/components/NavbarComponent.vue'
+import Footer from '@/components/FooterComponent.vue'
 import { onMounted } from 'vue'
 
 onMounted(() => {

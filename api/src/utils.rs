@@ -27,7 +27,7 @@ impl ResponseError for HttpError {
     }
 }
 
-pub fn bad_gateway(msg: impl Into<String>) -> HttpError {
+pub fn _bad_gateway(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::BAD_GATEWAY)
 }
 

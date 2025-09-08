@@ -20,17 +20,17 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...404]': RouteRecordInfo<'/[...404]', '/:404(.*)', { 404: ParamValue<true> }, { 404: ParamValue<false> }>,
-    '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
-    '/imprint': RouteRecordInfo<'/imprint', '/imprint', Record<never, never>, Record<never, never>>,
-    '/login': RouteRecordInfo<'/login', '/login', Record<never, never>, Record<never, never>>,
+    '/About': RouteRecordInfo<'/About', '/About', Record<never, never>, Record<never, never>>,
+    '/Imprint': RouteRecordInfo<'/Imprint', '/Imprint', Record<never, never>, Record<never, never>>,
+    '/Login': RouteRecordInfo<'/Login', '/Login', Record<never, never>, Record<never, never>>,
     '/post/[id]': RouteRecordInfo<'/post/[id]', '/post/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
-    '/privacy-policy': RouteRecordInfo<'/privacy-policy', '/privacy-policy', Record<never, never>, Record<never, never>>,
+    '/Privacy-Policy': RouteRecordInfo<'/Privacy-Policy', '/Privacy-Policy', Record<never, never>, Record<never, never>>,
     '/prmrs/forest-project/': RouteRecordInfo<'/prmrs/forest-project/', '/prmrs/forest-project', Record<never, never>, Record<never, never>>,
-    '/prmrs/forest-project/create': RouteRecordInfo<'/prmrs/forest-project/create', '/prmrs/forest-project/create', Record<never, never>, Record<never, never>>,
+    '/prmrs/forest-project/Create': RouteRecordInfo<'/prmrs/forest-project/Create', '/prmrs/forest-project/Create', Record<never, never>, Record<never, never>>,
     '/progress-logs/': RouteRecordInfo<'/progress-logs/', '/progress-logs', Record<never, never>, Record<never, never>>,
-    '/progress-logs/create': RouteRecordInfo<'/progress-logs/create', '/progress-logs/create', Record<never, never>, Record<never, never>>,
+    '/progress-logs/Create': RouteRecordInfo<'/progress-logs/Create', '/progress-logs/Create', Record<never, never>, Record<never, never>>,
     '/team/': RouteRecordInfo<'/team/', '/team', Record<never, never>, Record<never, never>>,
-    '/team/create': RouteRecordInfo<'/team/create', '/team/create', Record<never, never>, Record<never, never>>,
+    '/team/Create': RouteRecordInfo<'/team/Create', '/team/Create', Record<never, never>, Record<never, never>>,
   }
 
   /**
@@ -52,48 +52,48 @@ declare module 'vue-router/auto-routes' {
       routes: '/[...404]'
       views: never
     }
-    'src/pages/about.vue': {
-      routes: '/about'
+    'src/pages/About.vue': {
+      routes: '/About'
       views: never
     }
-    'src/pages/imprint.vue': {
-      routes: '/imprint'
+    'src/pages/Imprint.vue': {
+      routes: '/Imprint'
       views: never
     }
-    'src/pages/login.vue': {
-      routes: '/login'
+    'src/pages/Login.vue': {
+      routes: '/Login'
       views: never
     }
     'src/pages/post/[id].vue': {
       routes: '/post/[id]'
       views: never
     }
-    'src/pages/privacy-policy.vue': {
-      routes: '/privacy-policy'
+    'src/pages/Privacy-Policy.vue': {
+      routes: '/Privacy-Policy'
       views: never
     }
     'src/pages/prmrs/forest-project/index.vue': {
       routes: '/prmrs/forest-project/'
       views: never
     }
-    'src/pages/prmrs/forest-project/create.vue': {
-      routes: '/prmrs/forest-project/create'
+    'src/pages/prmrs/forest-project/Create.vue': {
+      routes: '/prmrs/forest-project/Create'
       views: never
     }
     'src/pages/progress-logs/index.vue': {
       routes: '/progress-logs/'
       views: never
     }
-    'src/pages/progress-logs/create.vue': {
-      routes: '/progress-logs/create'
+    'src/pages/progress-logs/Create.vue': {
+      routes: '/progress-logs/Create'
       views: never
     }
     'src/pages/team/index.vue': {
       routes: '/team/'
       views: never
     }
-    'src/pages/team/create.vue': {
-      routes: '/team/create'
+    'src/pages/team/Create.vue': {
+      routes: '/team/Create'
       views: never
     }
   }
