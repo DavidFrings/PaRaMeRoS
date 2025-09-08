@@ -15,6 +15,23 @@ env:
   PNPM_VERSION: "9"
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Use pnpm ${{ env.PNPM_VERSION }}
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: './frontend/pnpm-lock.yaml'
+      - name: ll
+        run: ls -l
   format:
     name: "Format"
     runs-on: ubuntu-latest
