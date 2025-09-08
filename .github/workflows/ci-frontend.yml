@@ -31,7 +31,7 @@ jobs:
       - name: ll
         run: ls -l
       - name: pnpm
-        run: pnpm install || pnpm help install
+        run: pnpm help
   format:
     name: "Format"
     runs-on: ubuntu-latest
