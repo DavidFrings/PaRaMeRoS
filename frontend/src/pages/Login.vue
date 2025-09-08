@@ -107,7 +107,7 @@ function togglePass(e: Event) {
         <label for="privacy" id="label-privacy">
           <input id="privacy" type="checkbox" name="privacy" />
           <span class="box"></span>
-          Ich akzeptiere die&nbsp;<a href="/src/pages/PrivacyPolicyPage">Datenschutzrichtlinien</a
+          Ich akzeptiere die&nbsp;<a href="/privacy-policy">Datenschutzrichtlinien</a
           >&nbsp;dieser Website
         </label>
       </div>
