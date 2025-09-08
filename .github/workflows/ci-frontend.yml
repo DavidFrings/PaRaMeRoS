@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          cache-dependency-path: './frontend/pnpm-lock.yaml'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Format
@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          cache-dependency-path: './frontend/pnpm-lock.yaml'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: ESLint
@@ -72,7 +72,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
+          cache-dependency-path: './frontend/pnpm-lock.yaml'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Check
