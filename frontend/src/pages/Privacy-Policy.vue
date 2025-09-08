@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<!-- eslint-disable vue/multi-word-component-names -->
+<script setup lang="ts">
+</script>
 
 <template>
   <main id="privacy-policy">
@@ -52,7 +54,7 @@
     <p>Vertreten durch: Markus v. Essen</p>
     <p>E-Mail-Adresse: parameros@mein.gmx</p>
     <p>Telefon: 089/74426-182</p>
-    <p>Impressum: <a href="/imprint">Impressum</a></p>
+    <p>Impressum: <a href="/src/pages/ImprintPage">Impressum</a></p>
     <br />
 
     <h3 id="3">Übersicht der Verarbeitungen</h3>

@@ -1,9 +1,10 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import axios from 'axios'
 import Logo from '@/assets/imgs/logo.webp'
-import Eye from '@/components/icons/Eye.vue'
-import EyeSlash from '@/components/icons/EyeSlash.vue'
+import EyeIcon from '@/components/icons/EyeIcon.vue'
+import EyeSlashIcon from '@/components/icons/EyeSlashIcon.vue'
 import VueCookies from 'vue-cookies'
 const Cookies = VueCookies.VueCookies
 
@@ -98,16 +99,16 @@ function togglePass(e: Event) {
           <span style="transition-delay: 350ms">D</span>
         </label>
         <div id="eye" class="toggle" @click="togglePass">
-          <Eye v-if="!showPass" />
-          <EyeSlash v-else />
+          <EyeIcon v-if="!showPass" />
+          <EyeSlashIcon v-else />
         </div>
       </div>
       <div class="input">
         <label for="privacy" id="label-privacy">
           <input id="privacy" type="checkbox" name="privacy" />
           <span class="box"></span>
-          Ich akzeptiere die&nbsp;<a href="/privacy-policy">Datenschutzrichtlinien</a>&nbsp;dieser
-          Website
+          Ich akzeptiere die&nbsp;<a href="/src/pages/PrivacyPolicyPage">Datenschutzrichtlinien</a
+          >&nbsp;dieser Website
         </label>
       </div>
       <div class="input">
