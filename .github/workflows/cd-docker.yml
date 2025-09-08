@@ -1,14 +1,12 @@
-name: CI - Functionality
+name: CD - Docker
 
 on:
-  workflow_dispatch:
-  pull_request:
   push:
     branches: [main, master]
 
 jobs:
   docker:
-    name: "Docker deployment"
+    name: "Image"
     environment: Docker
     runs-on: ubuntu-latest
     steps:
