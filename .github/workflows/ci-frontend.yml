@@ -30,6 +30,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: ll
         run: ls -l
+      - name: pnpm install
+        run: pnpm install
       - name: pnpm help
         run: pnpm help install
   format:
