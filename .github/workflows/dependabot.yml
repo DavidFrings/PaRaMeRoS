@@ -11,5 +11,5 @@ jobs:
       - name: Trigger Dependabot update
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DEPENDABOT_TOKEN }}
           event-type: "dependabot"
