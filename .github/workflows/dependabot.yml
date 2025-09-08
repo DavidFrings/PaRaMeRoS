@@ -8,8 +8,8 @@ jobs:
     name: "GitHub Action"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run Dependabot
-        uses: dependabot/fetch-metadata@v1
+      - name: Trigger Dependabot update
+        uses: peter-evans/repository-dispatch@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: "dependabot"
