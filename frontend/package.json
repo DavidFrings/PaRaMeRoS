@@ -43,7 +43,7 @@
     "vite": "^7.1.2",
     "vite-plugin-pwa": "^1.0.3",
     "vite-plugin-vue-devtools": "^8.0.0",
-    "vue-tsc": "^3.0.5"
+    "vue-tsc": "^3.0.6"
   },
   "packageManager": "pnpm@10.15.0"
 }
