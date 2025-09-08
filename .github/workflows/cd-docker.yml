@@ -10,6 +10,6 @@ jobs:
     environment: Docker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Dummy Step
         run: echo "This is a dummy job that always succeeds"

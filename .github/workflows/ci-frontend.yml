@@ -19,7 +19,7 @@ jobs:
     name: "Format"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         name: Use pnpm ${{ env.PNPM_VERSION }}
         with:
@@ -38,7 +38,7 @@ jobs:
     needs: format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         name: Use pnpm ${{ env.PNPM_VERSION }}
         with:
@@ -57,7 +57,7 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         name: Use pnpm ${{ env.PNPM_VERSION }}
         with:
