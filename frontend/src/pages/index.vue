@@ -1,6 +1,7 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import ArrowDown from '@/components/icons/ArrowDown.vue'
-import Section from '@/components/Section.vue'
+import ArrowDown from '@/components/icons/ArrowDownIcon.vue'
+import Section from '@/components/SectionComponent.vue'
 import AboutImg from '@/assets/imgs/intro.webp'
 </script>
 

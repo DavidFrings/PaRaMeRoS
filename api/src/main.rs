@@ -1,4 +1,4 @@
-use actix_web::{get, HttpServer, App, web::Data, middleware::Logger, HttpResponse};
+use actix_web::{HttpServer, App, web::Data, middleware::Logger};
 use actix_cors::Cors;
 
 mod utils;
@@ -79,7 +79,7 @@ async fn main() -> std::io::Result<()> {
             .service(register)
             .service(auth)
             .service(new_event)
-            .service(health)
+            //.service(health)
     })
         .bind(format!("{}:{}", host, port))?
         .run()

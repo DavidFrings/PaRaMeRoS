@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::SelectableHelper;
 use serde::{Deserialize, Serialize};
 use crate::db::schema::{users, events};
 

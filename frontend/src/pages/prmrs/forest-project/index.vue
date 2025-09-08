@@ -1,5 +1,6 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import Cards from '@/components/Cards.vue'
+import Cards from '@/components/CardsComponent.vue'
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 import '@/assets/css/main.css'
 
 import { createApp } from 'vue'
-import App from './App.vue'
+import AppMain from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import { createHead } from '@unhead/vue/client'
@@ -9,14 +9,21 @@ import { DataLoaderPlugin } from 'unplugin-vue-router/data-loaders'
 import * as CookieConsent from 'vanilla-cookieconsent'
 import 'vanilla-cookieconsent/dist/cookieconsent.css'
 import '@/assets/css/cookieconsent.css'
+import type { App } from 'vue'
+import type {
+  CookieConsentConfig,
+  ConsentModalLayout,
+  ConsentModalPosition,
+  PreferencesModalLayout
+} from 'vanilla-cookieconsent'
 
 const name: string = import.meta.env.VITE_NAME
 const desc: string = import.meta.env.VITE_DESC
 const keywords: string = import.meta.env.VITE_KEYWORDS
 
-const app = createApp(App)
+const app = createApp(AppMain)
 const CookieConsentVue = {
-  install: (app: any, pluginConfig: any) => {
+  install: (app: App, pluginConfig: CookieConsentConfig) => {
     app.config.globalProperties.$CookieConsent = CookieConsent
     app.config.globalProperties.$CookieConsent.run(pluginConfig)
   },
@@ -32,13 +39,13 @@ const consentOptions = {
   },
   guiOptions: {
     consentModal: {
-      layout: 'box',
-      position: 'middle center',
+      layout: 'box' as ConsentModalLayout,
+      position: 'middle center' as ConsentModalPosition,
       equalWeightButtons: true,
       flipButtons: false,
     },
     preferencesModal: {
-      layout: 'box',
+      layout: 'box' as PreferencesModalLayout,
       equalWeightButtons: true,
       flipButtons: false,
     },
