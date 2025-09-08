@@ -10,7 +10,12 @@ import * as CookieConsent from 'vanilla-cookieconsent'
 import 'vanilla-cookieconsent/dist/cookieconsent.css'
 import '@/assets/css/cookieconsent.css'
 import type { App } from 'vue'
-import type { CookieConsentConfig } from 'vanilla-cookieconsent'
+import type {
+  CookieConsentConfig,
+  ConsentModalLayout,
+  ConsentModalPosition,
+  PreferencesModalLayout
+} from 'vanilla-cookieconsent'
 
 const name: string = import.meta.env.VITE_NAME
 const desc: string = import.meta.env.VITE_DESC
@@ -34,13 +39,13 @@ const consentOptions = {
   },
   guiOptions: {
     consentModal: {
-      layout: 'box',
-      position: 'middle center',
+      layout: 'box' as ConsentModalLayout,
+      position: 'middle center' as ConsentModalPosition,
       equalWeightButtons: true,
       flipButtons: false,
     },
     preferencesModal: {
-      layout: 'box',
+      layout: 'box' as PreferencesModalLayout,
       equalWeightButtons: true,
       flipButtons: false,
     },
