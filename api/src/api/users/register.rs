@@ -1,35 +1,45 @@
-use actix_web::{post, web::{Data, Json}, HttpResponse};
-use bcrypt::{hash, DEFAULT_COST};
-use diesel_async::RunQueryDsl;
+use crate::db::{
+    models::{NewUser, RegisterRequest, User},
+    schema::users::dsl::users,
+};
+use crate::utils::{HttpError, db, forbidden, internal_error};
+use crate::{Env, query};
+use actix_web::{
+    HttpResponse, post,
+    web::{Data, Json},
+};
+use bcrypt::{DEFAULT_COST, hash};
 use diesel::SelectableHelper;
-use crate::db::{models::{NewUser, User}, schema::users::dsl::users};
-use crate::Env;
-use crate::utils::{internal_error, HttpError};
+use diesel_async::RunQueryDsl;
 
 #[post("/register")]
-pub async fn register(new_usr: Json<NewUser>, env: Data<Env>) -> Result<HttpResponse, HttpError> {
-    let mut usr = new_usr.into_inner();
-    
-    let hashed = hash(&usr.password, DEFAULT_COST)
-        .map_err(|err| 
-            internal_error(format!("Password hashing failed: {}", err))
-        )?;
-    usr.password = hashed;
+pub async fn register(
+    request: Json<RegisterRequest>,
+    env: Data<Env>,
+) -> Result<HttpResponse, HttpError> {
+    let req = request.into_inner();
 
-    let mut conn = env.pool.get()
-        .await
-        .map_err(|err| 
-            internal_error(format!("Database connection error: {}", err))
-        )?;
+    if req.admin_pass != env.admin_pass {
+        return Err(forbidden("You are not allowed to create a new user!"));
+    }
 
-    let res = diesel::insert_into(users)
-        .values(&usr)
-        .returning(User::as_returning())
-        .get_result(&mut conn)
-        .await
-        .map_err(|err|
-            internal_error(format!("Error creating user: {}", err))
-        )?;
-    
-    Ok(HttpResponse::Created().json(res))
+    let hashed = hash(&req.password, DEFAULT_COST)
+        .map_err(|err| return internal_error(format!("Password hashing failed: {}", err)))?;
+
+    let new_user = NewUser {
+        username: req.username,
+        password: hashed,
+        admin: req.admin,
+    };
+
+    let mut conn = db(&env).await?;
+
+    query!(
+        diesel::insert_into(users)
+            .values(&new_user)
+            .returning(User::as_returning())
+            .get_result(&mut conn)
+    );
+
+    Ok(HttpResponse::Created().finish())
 }

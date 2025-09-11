@@ -1,4 +1,7 @@
-use diesel_async::{AsyncPgConnection, pooled_connection::{bb8::Pool, AsyncDieselConnectionManager}};
+use diesel_async::{
+    AsyncPgConnection,
+    pooled_connection::{AsyncDieselConnectionManager, bb8::Pool},
+};
 
 pub type DbPool = Pool<AsyncPgConnection>;
 
