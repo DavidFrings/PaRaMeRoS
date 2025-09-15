@@ -5,7 +5,7 @@ import AppMain from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import { createHead } from '@unhead/vue/client'
-import { DataLoaderPlugin } from 'unplugin-vue-router/data-loaders'
+import { DataLoaderPlugin } from 'unplugin-vue-router/data-loaders' // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as CookieConsent from 'vanilla-cookieconsent'
 import 'vanilla-cookieconsent/dist/cookieconsent.css'
 import '@/assets/css/cookieconsent.css'
@@ -14,7 +14,7 @@ import type {
   CookieConsentConfig,
   ConsentModalLayout,
   ConsentModalPosition,
-  PreferencesModalLayout
+  PreferencesModalLayout,
 } from 'vanilla-cookieconsent'
 
 const name: string = import.meta.env.VITE_NAME
@@ -133,6 +133,6 @@ const head = createHead({
 
 app.use(head)
 app.use(CookieConsentVue, consentOptions)
-app.use(DataLoaderPlugin, { router })
+//app.use(DataLoaderPlugin, { router })
 app.use(router)
 app.mount('#app')
