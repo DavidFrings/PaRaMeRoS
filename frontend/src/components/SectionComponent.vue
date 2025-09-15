@@ -5,7 +5,8 @@ defineProps<{
   content: string
   btnText?: string
   btnLink?: string
-  img?: string
+  media_type?: 'img' | 'vid'
+  media?: string
 }>()
 </script>
 
@@ -16,7 +17,17 @@ defineProps<{
       <p v-html="content"></p>
       <a class="btn" v-if="btnText" :href="btnLink">{{ btnText }}</a>
     </div>
-    <img v-if="img" :src="img" />
+    <img v-if="media_type == 'img'" :src="media" alt="" class="media" />
+    <video
+      v-if="media_type == 'vid'"
+      controls
+      loop
+      controlslist="nodownload"
+      autoplay
+      class="media"
+    >
+      <source :src="media" type="video/mp4" />
+    </video>
   </section>
 </template>
 
@@ -34,5 +45,9 @@ p {
 
 a {
   margin-top: var(--margin-m);
+}
+
+.media {
+  aspect-ratio: 16/9;
 }
 </style>

@@ -1,9 +1,11 @@
 <!-- eslint-disable vue/multi-word-component-names -->
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import Section from '@/components/SectionComponent.vue'
+</script>
 
 <template>
   <main id="about">
-    <div class="about">Hi</div>
+    <Section heading="Entwicklungsverlauf" content="123"/>
   </main>
 </template>
 

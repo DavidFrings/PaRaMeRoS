@@ -19,7 +19,8 @@ import AboutImg from '@/assets/imgs/intro.webp'
       heading="About Us"
       btn-text="Mehr erfahren"
       btn-link="/about"
-      :img="AboutImg"
+      media_type="img"
+      :media="AboutImg"
       content="Wir sind <b>PaRaMeRoS</b>, das First Lego League Team der <b>Pater Rupert Mayer Realschule</b>. Als engagierte Schüler begeistern wir uns für Robotik und Technologie – mit Kreativität, Teamgeist und Leidenschaft."
     />
     <Section
@@ -27,7 +28,8 @@ import AboutImg from '@/assets/imgs/intro.webp'
       heading="Entwicklungsverlauf"
       btn-text="Mehr erfahren"
       btn-link="/progress-logs"
-      :img="AboutImg"
+      media_type="img"
+      :media="AboutImg"
       content="Erleben Sie den <b>Fortschritt unseres Teams</b> von den ersten Robotik-Ideen bis zu unseren größten Erfolgen. Hier zeigen wir <b>wichtige Meilensteine, aktuelle Projekte und unsere stetige Weiterentwicklung.</b>"
     />
   </main>
