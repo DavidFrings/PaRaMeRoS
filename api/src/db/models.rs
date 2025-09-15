@@ -41,7 +41,8 @@ pub struct Post {
     pub name: String,
     pub heading: String,
     pub content: String,
-    pub img: Option<String>,
+    pub media_type: Option<String>,
+    pub media_name: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -53,7 +54,8 @@ pub struct NewPost {
     pub name: String,
     pub heading: String,
     pub content: String,
-    pub img: Option<String>,
+    pub media_type: Option<String>,
+    pub media_name: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -95,10 +97,12 @@ pub struct NewPostResponse {
 
 #[derive(Serialize, Debug)]
 pub struct PostResponse {
+    pub uuid: Uuid,
     pub name: String,
     pub heading: String,
     pub content: String,
-    pub img: Option<String>,
+    pub media_type: Option<String>,
+    pub media_name: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -106,10 +110,12 @@ pub struct PostResponse {
 impl From<Post> for PostResponse {
     fn from(post: Post) -> Self {
         PostResponse {
+            uuid: post.uuid,
             name: post.name,
             heading: post.heading,
             content: post.content,
-            img: post.img,
+            media_type: post.media_type,
+            media_name: post.media_name,
             created_at: post.created_at,
             updated_at: post.updated_at,
         }

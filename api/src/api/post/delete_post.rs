@@ -35,8 +35,8 @@ pub async fn delete_post(
             .get_result::<Post>(&mut conn)
     );
 
-    if let Some(img) = post.img {
-        let file_path = format!("{}/{}", UPLOAD_DIR, img);
+    if let Some(media_name) = post.media_name {
+        let file_path = format!("{}/{}", UPLOAD_DIR, media_name);
 
         fs::remove_file(&file_path)
             .map_err(|err| return internal_error(format!("Failed to delete image: {}", err)))?;
@@ -47,5 +47,5 @@ pub async fn delete_post(
 
     info!("Deleted post {} on {}", post.heading, post.name);
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Accepted().finish())
 }

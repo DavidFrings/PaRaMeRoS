@@ -1,1 +1,12 @@
-# PaRaMeRoS
+# API Routes
+
+| Handler module | Description                   | Method | Path          | Auth required | Request                                                                        | Response (what is returned)                                                                   |
+|----------------|-------------------------------|--------|---------------|---------------|--------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| register       | Register a new user           | POST   | /register     | Admin         | { "username", "password", admin(bool), "admin_pass" }                          | 201: Created                                                                                  |
+| auth           | Authenticate user, return JWT | POST   | /auth         | user & pass   | { "username", "password" }                                                     | 200: Header: Authorization - Bearer                                                           |
+| verify auth    | Verify JWT / session          | GET    | /auth/verify  | Token         | -                                                                              | 200: { admin(bool) }                                                                          |
+| posts          | List posts                    | GET    | /posts/{name} | No            | -                                                                              | 200: Array of ⬇                                                                               |
+| post           | Get a single post by id       | GET    | /post/{uuid}  | No            | -                                                                              | 200: { "name", "heading", "content", "media_type", "media_name", "created_at", "updated_at" } |
+| new post       | Create a new post             | POST   | /post         | Token         | Multipart: { "name", "heading", "content", Option(media_type), Option(media) } | 200: { "uuid" }                                                                               |
+| update post    | Update a post by id           | PUT    | /post/{uuid}  | Token         | { "name", "heading", "content" }                                               | 202: Accepted                                                                                 |
+| delete post    | Delete a post by id           | DELETE | /post/{uuid}  | Token         | -                                                                              | 202: Accepted                                                                                 |

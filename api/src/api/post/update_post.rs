@@ -2,10 +2,12 @@ use actix_web::{
     HttpRequest, HttpResponse, put,
     web::{Data, Json, Path},
 };
+use chrono::Utc;
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
+use crate::db::schema::posts::updated_at;
 use crate::db::{
     models::UpdatePostRequest,
     schema::posts::{
@@ -41,15 +43,23 @@ pub async fn update_post(
         .map_err(|err| return bad_request(format!("Invalid UUID format: {}", err)))?;
 
     let mut conn = db(&env).await?;
+    let mut was_updated = false;
 
     if let Some(new_name) = data.name {
         update!(name, new_name, &req_uuid, &mut conn);
+        was_updated = true;
     }
     if let Some(new_heading) = data.heading {
         update!(heading, new_heading, &req_uuid, &mut conn);
+        was_updated = true;
     }
     if let Some(new_content) = data.content {
         update!(content, new_content, &req_uuid, &mut conn);
+        was_updated = true;
+    }
+
+    if was_updated {
+        update!(updated_at, Utc::now().naive_utc(), &req_uuid, &mut conn);
     }
 
     Ok(HttpResponse::Accepted().finish())

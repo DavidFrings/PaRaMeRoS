@@ -27,12 +27,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE}
       - ADMIN_PASS=${ADMIN_PASS}
-      - RUST_LOG=debug # Dev
-      - RUST_BACKTRACE=1 # Dev
+      #- RUST_LOG=debug # Dev
+      #- RUST_BACKTRACE=1 # Dev
     ports:
       - "${API_PORT}:8080"
     volumes:
-      - api:/api/uploads
+      - uploads:/api/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -42,17 +42,21 @@ services:
     #  interval: 10s
     #  timeout: 5s
     #  retries: 5
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      - NAME=${NAME}
-      - DESC=${DESC}
-      - KEYWORDS=${KEYWORDS}
+      args:
+        VITE_NAME: "${NAME}"
+        VITE_DESC: "${DESC}"
+        VITE_KEYWORDS: "${KEYWORDS}"
+        VITE_API: "http://localhost:${API_PORT}"
     ports:
       - "${FRONTEND_PORT}:80"
+    volumes:
+      - uploads:/usr/share/nginx/html/api/uploads
     depends_on:
       - api
       #api:
@@ -61,4 +65,4 @@ services:
 
 volumes:
   db:
-  api:
+  uploads:

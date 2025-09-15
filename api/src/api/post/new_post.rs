@@ -40,7 +40,7 @@ async fn to_webp(data: &[u8]) -> Result<Vec<u8>, HttpError> {
     Ok(webp.to_vec())
 }
 
-async fn save_webp(name: &String, data: Vec<u8>) -> Result<(), HttpError> {
+async fn save_media(name: &String, data: Vec<u8>) -> Result<(), HttpError> {
     if name.contains("..") || name.contains('/') || name.contains('\\') {
         return Err(bad_request("Invalid filename!"));
     }
@@ -48,9 +48,9 @@ async fn save_webp(name: &String, data: Vec<u8>) -> Result<(), HttpError> {
     let file_path = format!("{}/{}", UPLOAD_DIR, name);
 
     fs::write(&file_path, data)
-        .map_err(|err| return internal_error(format!("Failed to save image: {}", err)))?;
+        .map_err(|err| return internal_error(format!("Failed to save media: {}", err)))?;
 
-    info!("Saved image: {}", file_path);
+    info!("Saved media: {}", file_path);
     Ok(())
 }
 
@@ -65,6 +65,7 @@ pub async fn new_post(
     let mut name = None;
     let mut heading = None;
     let mut content = None;
+    let mut media_type = None;
     let mut media_name = None;
     let mut media_data = None;
 
@@ -100,6 +101,7 @@ pub async fn new_post(
                 "name" => name = Some(text),
                 "heading" => heading = Some(text),
                 "content" => content = Some(text),
+                "media_type" => media_type = Some(text),
                 _ => return Err(bad_request(format!("Unexpected field: {}", field_name))),
             }
         }
@@ -108,21 +110,42 @@ pub async fn new_post(
     let name = name.ok_or_else(|| bad_request("Name missing!"))?;
     let heading = heading.ok_or_else(|| bad_request("Heading missing!"))?;
     let content = content.ok_or_else(|| bad_request("Content missing!"))?;
-    let mut img_name = None;
+    let mut db_media_type = None;
+    let mut db_media_name = None;
 
-    if let (Some(media_name), Some(media_data)) = (media_name, media_data) {
-        let webp_data = to_webp(&media_data).await?;
+    if let (Some(media_type), Some(media_name), Some(media_data)) = (media_type, media_name, media_data) {
+        match media_type.to_lowercase().as_str() {
+            "img" => {
+                let webp_data = to_webp(&media_data).await?;
 
-        let webp_name = if media_name.contains('.') {
-            let parts: Vec<&str> = media_name.rsplitn(2, '.').collect();
-            format!("{}.webp", parts[1])
-        } else {
-            format!("{}.webp", media_name)
-        };
+                let webp_name = if media_name.contains('.') {
+                    let parts: Vec<&str> = media_name.rsplitn(2, '.').collect();
+                    format!("{}.webp", parts[1])
+                } else {
+                    format!("{}.webp", media_name)
+                };
 
-        save_webp(&webp_name, webp_data).await?;
+                save_media(&webp_name, webp_data).await?;
 
-        img_name = Some(webp_name);
+                db_media_type = Some("img".to_string());
+                db_media_name = Some(webp_name);
+            },
+            "vid" => {
+
+                let mp4_name = if media_name.contains('.') {
+                    let parts: Vec<&str> = media_name.rsplitn(2, '.').collect();
+                    format!("{}.mp4", parts[1])
+                } else {
+                    format!("{}.mp4", media_name)
+                };
+
+                save_media(&mp4_name, media_data).await?;
+
+                db_media_type = Some("vid".to_string());
+                db_media_name = Some(mp4_name);
+            },
+            _ => return Err(bad_request(format!("Invalid media type: {}", media_type))),
+        }
     }
 
     let new_post = NewPost {
@@ -130,7 +153,8 @@ pub async fn new_post(
         name,
         heading,
         content,
-        img: img_name,
+        media_type: db_media_type,
+        media_name: db_media_name,
         created_at: Utc::now().naive_utc(),
         updated_at: None,
     };
