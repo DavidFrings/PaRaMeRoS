@@ -14,7 +14,7 @@
       <span></span>
       <a href="/imprint">Impressum</a>
       <a href="/privacy-policy">Datenschutz</a>
-      <a data-cc="show-preferencesModal">Cookies</a>
+      <a data-cc="show-preferencesModal" role="button" tabindex="0">Cookies</a>
       <a href="/sitemap.xml">Sitemap</a>
     </div>
   </footer>
