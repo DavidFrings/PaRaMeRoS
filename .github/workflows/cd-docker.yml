@@ -74,7 +74,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{steps.img.outputs.img}}
+          images: ${{ steps.img.outputs.img }}
           tags: |
             type=raw,value=latest
             type=raw,value=frontend
