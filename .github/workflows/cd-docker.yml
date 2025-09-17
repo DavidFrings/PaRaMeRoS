@@ -22,7 +22,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: name="${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_API }}"
+          images: |
+            name="${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_API }}"
           tags: |
             type=raw,value=latest
             type=raw,value=api
@@ -66,7 +67,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: name="${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_FRONTEND }}"
+          images: |
+            name="${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_FRONTEND }}"
           tags: |
             type=raw,value=latest
             type=raw,value=frontend
