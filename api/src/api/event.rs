@@ -98,7 +98,7 @@ pub async fn new_event(req: HttpRequest, mut payload: Multipart, env: Data<Env>)
                 let filename = format!("{}.webp", id);
                 let filepath = Path::new("uploads").join(&filename);
 
-                let mut file = std::fs::File::create(filepath)
+                let _file = std::fs::File::create(filepath)
                     .map_err(|err|
                         internal_error(format!("Failed to create the image: {}", err))
                     )?;

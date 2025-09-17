@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import axios from 'axios'
-import Card from '@/components/Card.vue'
+import Card from '@/components/CardComponent.vue'
 
 defineProps<{
   name: string
