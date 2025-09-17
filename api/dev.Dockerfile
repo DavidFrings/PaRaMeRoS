@@ -17,6 +17,7 @@ RUN cargo build
 ARG CACHE_BUST=1
 # Docker starts here on rebuilds
 COPY ./src ./src
+RUN cargo clean --package parameros-api
 RUN cargo build
 
 ### Production stage

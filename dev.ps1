@@ -22,7 +22,8 @@ $POSTGRES_DB = [Environment]::GetEnvironmentVariable("POSTGRES_DB")
 Set-Location ./api
 docker compose -f "../docker-compose.dev.yml" down
 docker compose -f "../docker-compose.dev.yml" up -d --build 'db'
-diesel migration run --database-url postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+Start-Sleep -Seconds 3
+diesel migration run --database-url postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@127.0.0.1:${POSTGRES_PORT}/${POSTGRES_DB}
 docker compose -f "../docker-compose.dev.yml" down
 docker compose -f "../docker-compose.dev.yml" up -d --build
 Set-Location ..
