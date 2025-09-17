@@ -26,7 +26,6 @@ COPY --from=lockfile /app/pnpm-lock.yaml ./
 # Cache dependencies (Save time on rebuilds)
 COPY --chown=65532:65532 ./tsconfig.json ./tsconfig.node.json ./tsconfig.app.json ./.npmrc ./typed-router.d.ts ./env.d.ts ./eslint.config.ts ./vite.config.ts ./
 RUN npx pnpm install --frozen-lockfile
-COPY ./scripts ./scripts
 # Docker starts here on rebuilds
 COPY ./index.html ./
 COPY ./public ./public
