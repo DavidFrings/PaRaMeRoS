@@ -15,19 +15,22 @@ jobs:
         run: sudo apt install -y jq
 
       - name: Get version from cargo
-        id: get_version
+        id: version
         run: echo "version=$(cd api && cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')" >> $GITHUB_OUTPUT
 
+      - name: Format image name
+        id: img
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_API }}" >> $GITHUB_OUTPUT
+      
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            name="${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_API }}"
+          images: ${{ steps.img.outputs.img }}
           tags: |
             type=raw,value=latest
             type=raw,value=api
-            type=raw,value=${{steps.get_version.outputs.version}}
+            type=raw,value=${{steps.version.outputs.version}}
 
       - name: Login to container registry
         uses: docker/login-action@v3
@@ -60,19 +63,22 @@ jobs:
           run_install: false
 
       - name: Get version from pnpm
-        id: get_version
+        id: version
         run: echo "version=$(cd frontend && pnpm pkg get version --json | jq -r .)" >> $GITHUB_OUTPUT
+
+      - name: Format image name
+        id: img
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_FRONTEND }}" >> $GITHUB_OUTPUT
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            name="${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_FRONTEND }}"
+          images: ${{ steps.img.outputs.img }}
           tags: |
             type=raw,value=latest
             type=raw,value=frontend
-            type=raw,value=${{steps.get_version.outputs.version}}
+            type=raw,value=${{steps.version.outputs.version}}
 
       - name: Login to container registry
         uses: docker/login-action@v3
