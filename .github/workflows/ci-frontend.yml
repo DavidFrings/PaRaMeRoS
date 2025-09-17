@@ -10,10 +10,6 @@ defaults:
   run:
     working-directory: frontend
 
-env:
-  NODE_VERSION: "20.x"
-  PNPM_VERSION: "10"
-
 jobs:
   format:
     name: "Format"
