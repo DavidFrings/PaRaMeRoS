@@ -17,15 +17,8 @@ RUN cargo build
 ARG CACHE_BUST=1
 # Docker starts here on rebuilds
 COPY ./src ./src
-# Add --release for prod to builds and in prod stage to copy /target/release/
+RUN cargo clean --package parameros-api
 RUN cargo build
-
-### Migrations stage (only if first time setup)
-FROM cgr.dev/chainguard/rust AS migrations
-#install diesel cli
-COPY ./migrations ./
-#Check for tables
-#RUN diesel migration run
 
 ### Production stage
 FROM cgr.dev/chainguard/wolfi-base
