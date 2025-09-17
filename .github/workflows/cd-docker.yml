@@ -22,7 +22,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}
+          images: ${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_API }}
           tags: |
             type=raw,value=latest,
             type=raw,value=api,
@@ -31,8 +31,8 @@ jobs:
       - name: Login to container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
+          registry: ${{ vars.REGISTRY }}
+          username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -53,10 +53,10 @@ jobs:
       - name: Install jq
         run: sudo apt install -y jq
 
-      - name: Use pnpm ${{ env.PNPM_VERSION }}
+      - name: Use pnpm ${{ vars.PNPM_VERSION }}
         uses: pnpm/action-setup@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: ${{ vars.PNPM_VERSION }}
           run_install: false
 
       - name: Get version from pnpm
@@ -67,7 +67,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}
+          images: ${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_FRONTEND }}
           tags: |
             type=raw,value=latest,
             type=raw,value=frontend,
@@ -76,8 +76,8 @@ jobs:
       - name: Login to container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ env.REGISTRY_USERNAME }}
+          registry: ${{ vars.REGISTRY }}
+          username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
