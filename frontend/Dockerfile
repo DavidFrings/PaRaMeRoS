@@ -22,7 +22,7 @@ COPY ./package.json ./
 COPY ./pnpm-workspace.yaml ./
 COPY --from=lockfile /app/pnpm-lock.yaml ./
 # Cache dependencies (Save time on rebuilds)
-COPY --chown=65532:65532 ./tsconfig.json ./tsconfig.node.json ./tsconfig.app.json ./.npmrc ./typed-router.d.ts ./env.d.ts ./eslint.config.ts ./vite.config.ts ./
+COPY --chown=65532:65532 ./tsconfig.json ./tsconfig.node.json ./tsconfig.app.json ./typed-router.d.ts ./env.d.ts ./eslint.config.ts ./vite.config.ts ./
 RUN npx pnpm install --frozen-lockfile
 # Docker starts here on rebuilds
 COPY ./index.html ./
@@ -32,6 +32,9 @@ RUN npx pnpm run build
 
 ### Production stage
 FROM cgr.dev/chainguard/nginx
+LABEL org.opencontainers.image.source=https://github.com/DavidFrings/PaRaMeRoS
+LABEL org.opencontainers.image.description="This is the frontend service for PaRaMeRoS"
+LABEL org.opencontainers.image.licenses=MPL-2.0
 WORKDIR /usr/share/nginx/html
 COPY --from=builder /app/dist ./
 COPY ./nginx.conf ./mime.types /etc/nginx/

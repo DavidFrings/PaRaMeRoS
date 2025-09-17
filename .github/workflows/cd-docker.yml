@@ -5,11 +5,92 @@ on:
     branches: [main, master]
 
 jobs:
-  docker:
-    name: "Image"
-    environment: Docker
+  api:
+    environment: Build
+    name: "Create and Push Docker Image - API"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Dummy Step
-        run: echo "This is a dummy job that always succeeds"
+      - name: Install jq
+        run: sudo apt install -y jq
+
+      - name: Get version from cargo
+        id: version
+        run: echo "version=$(cd api && cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')" >> $GITHUB_OUTPUT
+
+      - name: Format image name
+        id: img
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_API }}" >> $GITHUB_OUTPUT
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.img.outputs.img }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=api
+            type=raw,value=${{steps.version.outputs.version}}
+
+      - name: Login to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.REGISTRY }}
+          username: ${{ vars.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  frontend:
+    environment: Build
+    name: "Create and Push Docker Image - Frontend"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install jq
+        run: sudo apt install -y jq
+
+      - name: Use pnpm ${{ vars.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ vars.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get version from pnpm
+        id: version
+        run: echo "version=$(cd frontend && pnpm pkg get version --json | jq -r .)" >> $GITHUB_OUTPUT
+
+      - name: Format image name
+        id: img
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_FRONTEND }}" >> $GITHUB_OUTPUT
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.img.outputs.img }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=frontend
+            type=raw,value=${{steps.version.outputs.version}}
+
+      - name: Login to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.REGISTRY }}
+          username: ${{ vars.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

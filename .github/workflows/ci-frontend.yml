@@ -10,63 +10,62 @@ defaults:
   run:
     working-directory: frontend
 
-env:
-  NODE_VERSION: "20.x"
-  PNPM_VERSION: "10"
-
 jobs:
   format:
+    environment: Build
     name: "Format"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-        name: Use pnpm ${{ env.PNPM_VERSION }}
+        name: Use pnpm ${{ vars.PNPM_VERSION }}
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: ${{ vars.PNPM_VERSION }}
           run_install: false
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: Use Node.js ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Format
         run: pnpm run format
   lint:
+    environment: Build
     name: "Lint"
     needs: format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-        name: Use pnpm ${{ env.PNPM_VERSION }}
+        name: Use pnpm ${{ vars.PNPM_VERSION }}
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: ${{ vars.PNPM_VERSION }}
           run_install: false
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: Use Node.js ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: ESLint
         run: pnpm run lint
   type-check:
+    environment: Build
     name: "Type Check"
     needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-        name: Use pnpm ${{ env.PNPM_VERSION }}
+        name: Use pnpm ${{ vars.PNPM_VERSION }}
         with:
-          version: ${{ env.PNPM_VERSION }}
+          version: ${{ vars.PNPM_VERSION }}
           run_install: false
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: Use Node.js ${{ vars.NODE_VERSION }}
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Check
