@@ -38,3 +38,7 @@
   scrollbar-color: var(--text-muted) var(--cc-bg);
   scrollbar-width: thin;
 }
+
+.pm__section-arrow svg {
+  stroke: var(--cc-cookie-category-block-bg);
+}

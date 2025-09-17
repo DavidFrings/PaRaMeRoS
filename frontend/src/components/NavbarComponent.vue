@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useNavigation } from '@/composables/Navigation.ts'
 import Logo from '@/assets/imgs/logo.webp'
-import VueCookies from 'vue-cookies'
-const Cookies = VueCookies.VueCookies
 import axios from 'axios'
+import { useCookies } from 'vue3-cookies'
+const { initializeNavigation, cleanup } = useNavigation()
+const { cookies } = useCookies()
+const router = useRouter()
+const route = useRoute()
 
 interface User {
   user?: boolean
@@ -14,48 +17,66 @@ interface User {
 
 const user = ref<User>({})
 const api = import.meta.env.VITE_API
+async function onLoad() {
+  const checkbox = document.getElementById('check') as HTMLInputElement
+  checkbox.checked = false
 
-const { initializeNavigation, cleanup } = useNavigation()
-onMounted(async () => {
-  const router = useRouter()
-  const result = await initializeNavigation(router)
-
-  if (result) {
-    const { unwatch } = result
-
-    onUnmounted(() => {
-      cleanup()
-      unwatch()
-    })
-  }
-
-  if (Cookies.isKey('auth_token')) {
+  if (cookies.isKey('auth_token')) {
     try {
-      const res = await axios.post(`${api}auth/verify`, {
-        token: Cookies.get('auth_token'),
+      const { data: res } = await axios.get(`${api}/auth/verify`, {
+        headers: {
+          Authorization: cookies.get('auth_token'),
+        },
       })
-      user.value = res.data
-    } catch (err) {
+
+      user.value = {
+        user: true,
+        admin: res.admin,
+      }
+    } catch (err: unknown) {
       console.error(err)
-      Cookies.remove('auth_token')
+      cookies.remove('auth_token')
+
+      user.value = {
+        user: false,
+        admin: false,
+      }
+    }
+  } else {
+    user.value = {
+      user: false,
+      admin: false,
     }
   }
 
-  user.value = {
-    user: true,
-    admin: true,
-  }
+  await initializeNavigation(router)
+}
+
+onMounted(async () => {
+  await onLoad()
+
+  onUnmounted(() => {
+    cleanup()
+  })
 })
 
+watch(
+  () => route.path,
+  async () => {
+    await onLoad()
+  },
+)
+
 function logout() {
-  Cookies.remove('auth_token')
+  cookies.remove('auth_token')
   user.value = {}
 }
 </script>
 
 <template>
   <nav id="Navbar">
-    <div id="bar">
+    <div class="bar" id="bg"></div>
+    <div class="bar" id="bar">
       <div id="logo">
         <img :src="Logo" alt="logo" />
         <span>PaRaMeRoS</span>
@@ -70,7 +91,7 @@ function logout() {
     <div id="nav">
       <div id="nav-main">
         <span></span>
-        <router-link to="/" @click="cleanup" data-value="HOME">HOME</router-link>
+        <router-link to="/?skipAnimation=true" @click="cleanup" data-value="HOME">HOME</router-link>
         <router-link to="/about" data-value="ÜBER UNS">ÜBER UNS</router-link>
         <router-link to="/progress-logs" data-value="ENTWICKLUNG">ENTWICKLUNG</router-link>
         <span id="short"></span>
@@ -195,7 +216,7 @@ a {
   border-radius: var(--margin-s);
 }
 
-#bar {
+.bar {
   position: fixed;
   display: flex;
   flex-wrap: nowrap;
@@ -203,9 +224,19 @@ a {
   justify-self: center;
   justify-content: space-between;
   top: 0;
-  z-index: 2;
   width: var(--margin);
+}
+
+#bar {
+  z-index: 3;
+}
+
+#bg {
+  position: fixed;
   background: hsla(var(--bg-dark-val), 0.45);
+  z-index: 0;
+  height: 5.5rem;
+  width: 100%;
 }
 
 #logo {

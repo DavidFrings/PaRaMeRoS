@@ -2,10 +2,11 @@ import '@/assets/css/main.css'
 
 import { createApp } from 'vue'
 import AppMain from './App.vue'
+import AppMain from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import { createHead } from '@unhead/vue/client'
-import { DataLoaderPlugin } from 'unplugin-vue-router/data-loaders'
+import { DataLoaderPlugin } from 'unplugin-vue-router/data-loaders' // eslint-disable-line @typescript-eslint/no-unused-vars
 import * as CookieConsent from 'vanilla-cookieconsent'
 import 'vanilla-cookieconsent/dist/cookieconsent.css'
 import '@/assets/css/cookieconsent.css'
@@ -14,7 +15,7 @@ import type {
   CookieConsentConfig,
   ConsentModalLayout,
   ConsentModalPosition,
-  PreferencesModalLayout
+  PreferencesModalLayout,
 } from 'vanilla-cookieconsent'
 
 const name: string = import.meta.env.VITE_NAME
@@ -22,7 +23,9 @@ const desc: string = import.meta.env.VITE_DESC
 const keywords: string = import.meta.env.VITE_KEYWORDS
 
 const app = createApp(AppMain)
+const app = createApp(AppMain)
 const CookieConsentVue = {
+  install: (app: App, pluginConfig: CookieConsentConfig) => {
   install: (app: App, pluginConfig: CookieConsentConfig) => {
     app.config.globalProperties.$CookieConsent = CookieConsent
     app.config.globalProperties.$CookieConsent.run(pluginConfig)
@@ -41,10 +44,13 @@ const consentOptions = {
     consentModal: {
       layout: 'box' as ConsentModalLayout,
       position: 'middle center' as ConsentModalPosition,
+      layout: 'box' as ConsentModalLayout,
+      position: 'middle center' as ConsentModalPosition,
       equalWeightButtons: true,
       flipButtons: false,
     },
     preferencesModal: {
+      layout: 'box' as PreferencesModalLayout,
       layout: 'box' as PreferencesModalLayout,
       equalWeightButtons: true,
       flipButtons: false,
@@ -133,6 +139,6 @@ const head = createHead({
 
 app.use(head)
 app.use(CookieConsentVue, consentOptions)
-app.use(DataLoaderPlugin, { router })
+//app.use(DataLoaderPlugin, { router })
 app.use(router)
 app.mount('#app')

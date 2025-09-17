@@ -11,23 +11,23 @@ rust-version = "1.87"
 edition = "2024"
 
 [dependencies]
-actix-web = "^4"
+actix-web = "^4.11"
 actix-multipart = "^0.7"
-uuid = { version = "^1.17", features = ["v4"] }
+uuid = { version = "^1.18", features = ["serde", "v4"] }
 serde = { version = "^1", features = ["derive"] }
 env_logger = "^0.11"
 log = "^0.4"
-derive_more = "^2"
-chrono = "^0.4"
+derive_more = "^2.0"
+chrono = { version = "^0.4", features = ["serde"] }
 futures = "^0.3"
 dotenv = "^0.15"
 #diesel = { version = "^2.2", features = ["postgres", "r2d2"] }
-diesel = "^2.2"
+diesel = { version = "^2.2", features = ["chrono", "uuid"] }
 diesel-async = { version = "^0.6", features = ["postgres", "tokio", "bb8"] }
 bb8 = "^0.9"
-tokio-postgres = "^0.7"
+#tokio-postgres = "^0.7"
 bcrypt = "^0.17"
-jsonwebtoken = "^9"
+jsonwebtoken = "^9.3"
 image = "^0.25"
 webp = "^0.3"
 actix-cors = "^0.7"

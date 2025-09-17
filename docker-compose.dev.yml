@@ -17,7 +17,9 @@ services:
       retries: 5
 
   api:
-    image: ghcr.io/davidfrings/parameros-api:latest
+    build:
+      context: ./api
+      dockerfile: dev.Dockerfile
     environment:
       - HOST=${HOST}
       - PORT=8080
@@ -25,6 +27,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE}
       - ADMIN_PASS=${ADMIN_PASS}
+      #- RUST_LOG=debug # Dev
+      #- RUST_BACKTRACE=1 # Dev
     ports:
       - "${API_PORT}:8080"
     volumes:
@@ -41,7 +45,14 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ghcr.io/davidfrings/parameros-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: dev.Dockerfile
+      args:
+        VITE_NAME: "${NAME}"
+        VITE_DESC: "${DESC}"
+        VITE_KEYWORDS: "${KEYWORDS}"
+        VITE_API: "http://localhost:${API_PORT}"
     ports:
       - "${FRONTEND_PORT}:80"
     volumes:

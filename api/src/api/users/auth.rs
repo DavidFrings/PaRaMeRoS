@@ -1,64 +1,70 @@
-use actix_web::{post, web::{Data, Json}, HttpResponse};
+use crate::Env;
+use crate::db::{
+    models::{Claims, LoginRequest, User},
+    schema::users::{dsl::users, username},
+};
+use crate::utils::{HttpError, db, internal_error, unauthorized};
+use actix_web::{
+    HttpResponse,
+    http::header::{ACCESS_CONTROL_EXPOSE_HEADERS, AUTHORIZATION},
+    post,
+    web::{Data, Json},
+};
 use bcrypt::verify;
 use chrono::{Duration, Utc};
+use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use diesel::{QueryDsl, ExpressionMethods};
-use jsonwebtoken::{encode, EncodingKey, Header};
-use crate::db::{models::{AuthResponse, Claims, LoginRequest, User}, schema::users::{dsl::users, username}};
-use crate::Env;
-use crate::utils::{internal_error, unauthorized, HttpError};
+use jsonwebtoken::{EncodingKey, Header, encode};
+use log::info;
 
 #[post("/auth")]
-pub async fn auth(login_data: Json<LoginRequest>, env: Data<Env>) -> Result<HttpResponse, HttpError> {
+pub async fn auth(
+    login_data: Json<LoginRequest>,
+    env: Data<Env>,
+) -> Result<HttpResponse, HttpError> {
     let data = login_data.into_inner();
 
-    let mut conn = env.pool.get()
-        .await
-        .map_err(|err|
-            internal_error(format!("Database connection error: {}", err))
-        )?;
-    
+    let mut conn = db(&env).await?;
+
     // Verify username
     let usr = users
         .filter(username.eq(&data.username))
-        .first::<User>(&mut conn)
+        .limit(1)
+        .get_result::<User>(&mut conn)
         .await
-        .map_err(|_|
-            unauthorized("Invalid username or password")
-        )?;
-    
+        .map_err(|_| return unauthorized("Invalid username or password"))?;
+
     // Verify password
-    let password_matches = verify(&data.password, &usr.password)
-        .map_err(|err| 
-            internal_error(format!("Password verification error: {}", err))
-        )?;
-    
+    let password_matches = verify(&data.password, &usr.password).map_err(|err| {
+        return internal_error(format!("Password verification error: {}", err));
+    })?;
+
     if !password_matches {
         return Err(unauthorized("Invalid username or password"));
     }
-    
+
+    info!("User logged in: {}", usr.username);
+
     // JWT token
     let expiration = Utc::now()
         .checked_add_signed(Duration::minutes(env.jwt_expire))
-        .expect("invalid timestamp!")
+        .expect("Invalid timestamp!")
         .timestamp() as usize;
 
     let claims = Claims {
         sub: usr.id.to_string(),
-        exp: expiration
+        exp: expiration,
     };
 
     let token = encode(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(env.jwt_secret.as_bytes()),
-    ).map_err(|err| 
-        internal_error(format!("Could not create a token: {}", err))
-    )?;
-    
-    let json = AuthResponse {
-        token: format!("Bearer {}", token)
-    };
-    
-    Ok(HttpResponse::Ok().json(json))
+    )
+    .map_err(|err| return internal_error(format!("Could not create a token: {}", err)))?;
+
+    Ok(HttpResponse::Ok()
+        .insert_header((AUTHORIZATION, format!("Bearer {}", token)))
+        .insert_header((ACCESS_CONTROL_EXPOSE_HEADERS, "authorization"))
+        .finish())
 }

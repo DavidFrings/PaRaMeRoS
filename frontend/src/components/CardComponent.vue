@@ -1,31 +1,27 @@
 <script setup lang="ts">
+import Section from '@/components/SectionComponent.vue'
+
 defineProps<{
   selector?: string
   heading: string
   content: string
   id: string
-  img?: string
-  video?: string
+  media_type?: 'img' | 'vid'
+  media?: string
 }>()
+
+const media_prefix = window.location.origin + '/uploads/'
 </script>
 
 <template>
-  <section :class="`flex margin-xl ${selector}`">
-    <div>
-      <h2>{{ heading }}</h2>
-      <p v-html="content"></p>
-      <a class="btn" :href="`/posts/${id}`">Mehr Erfahren</a>
-    </div>
-    <img v-if="img && !video" :src="img" />
-    <video
-      v-if="video && !img"
-      controls
-      loop
-      controlslist="play nodownload"
-      :src="video"
-      autoplay
-    ></video>
-  </section>
+  <Section
+    :heading="heading"
+    :content="content"
+    :btn-link="`/post/${id}`"
+    btn-text="Mehr Erfahren"
+    :media_type="media_type"
+    :media="media_prefix + media"
+  />
 </template>
 
 <style scoped></style>

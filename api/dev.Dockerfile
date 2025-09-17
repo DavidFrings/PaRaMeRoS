@@ -17,7 +17,6 @@ RUN cargo build
 ARG CACHE_BUST=1
 # Docker starts here on rebuilds
 COPY ./src ./src
-RUN cargo clean --package parameros-api
 # Add --release for prod to builds and in prod stage to copy /target/release/
 RUN cargo build
 
@@ -30,9 +29,6 @@ COPY ./migrations ./
 
 ### Production stage
 FROM cgr.dev/chainguard/wolfi-base
-LABEL org.opencontainers.image.source=https://github.com/DavidFrings/PaRaMeRoS
-LABEL org.opencontainers.image.description="This is the API service for PaRaMeRoS"
-LABEL org.opencontainers.image.licenses=MPL-2.0
 RUN apk add --no-cache libpq
 COPY --from=builder /work/target/debug/parameros-api /usr/local/bin/api
 RUN mkdir -p /api/uploads

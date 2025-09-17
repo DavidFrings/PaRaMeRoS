@@ -3,17 +3,16 @@ import { onMounted, ref } from 'vue'
 import axios from 'axios'
 import Card from '@/components/CardComponent.vue'
 
-defineProps<{
+const props = defineProps<{
   name: string
 }>()
 
 interface Post {
-  id: string
+  uuid: string
   heading: string
   content: string
-  media?: 'img' | 'video' | false
-  img?: string
-  video?: string
+  media_type?: 'img' | 'vid'
+  media_name?: string
 }
 
 const posts = ref<Post[]>([])
@@ -21,9 +20,9 @@ const api = import.meta.env.VITE_API
 
 onMounted(async () => {
   try {
-    const res = await axios.get(`${api}${name}`)
+    const res = await axios.get(`${api}/posts/${props.name}`)
     posts.value = res.data
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err)
   }
 })
@@ -33,11 +32,12 @@ onMounted(async () => {
   <div id="cards">
     <Card
       v-for="p in posts"
-      :key="p.id"
-      :id="p.id"
+      :key="p.uuid"
+      :id="p.uuid"
       :heading="p.heading"
       :content="p.content"
-      v-bind="p.media === 'img' ? { img: p.img } : p.media === 'video' ? { video: p.video } : {}"
+      :media_type="p.media_type"
+      :media="p.media_name"
     />
   </div>
 </template>

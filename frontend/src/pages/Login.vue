@@ -5,8 +5,10 @@ import axios from 'axios'
 import Logo from '@/assets/imgs/logo.webp'
 import EyeIcon from '@/components/icons/EyeIcon.vue'
 import EyeSlashIcon from '@/components/icons/EyeSlashIcon.vue'
-import VueCookies from 'vue-cookies'
-const Cookies = VueCookies.VueCookies
+import { useCookies } from 'vue3-cookies'
+import { useRouter } from 'vue-router'
+const { cookies } = useCookies()
+const router = useRouter()
 
 const data = ref({
   name: '',
@@ -41,15 +43,16 @@ async function handleSubmit(e: Event) {
   }
 
   try {
-    const { data: res } = await axios.post(`${api}auth`, {
+    const res = await axios.post(`${api}/auth`, {
       username: data.value.name,
       password: data.value.password,
     })
-    Cookies.set('auth_token', res.data, '3h')
-    window.location.replace('/')
+
+    cookies.set('auth_token', res.headers['authorization'], '3h')
+    await router.push('/')
   } catch (err: unknown) {
-    const errorObj = err as { response?: { data?: { message?: string } } }
-    error.value = errorObj.response?.data?.message || 'Ein Fehler ist aufgetreten'
+    const errorObj = err as { response?: { data?: string } }
+    error.value = errorObj.response?.data || 'Ein Fehler ist aufgetreten!'
     submit.disabled = false
   }
 }
@@ -67,7 +70,14 @@ function togglePass(e: Event) {
       <h2>Log In</h2>
       <div v-if="error" v-html="error" class="error"></div>
       <div class="input">
-        <input type="text" name="username" @change="handleChange" :value="data.name" required />
+        <input
+          type="text"
+          name="username"
+          @change="handleChange"
+          :value="data.name"
+          autocomplete="username"
+          required
+        />
         <label class="text">
           <span style="transition-delay: 0ms">U</span>
           <span style="transition-delay: 50ms">S</span>
@@ -86,6 +96,7 @@ function togglePass(e: Event) {
           @change="handleChange"
           :value="data.password"
           id="password"
+          autocomplete="current-password"
           required
         />
         <label class="text">

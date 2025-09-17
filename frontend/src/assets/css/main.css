@@ -21,7 +21,8 @@ html {
 }
 
 main {
-  margin-top: 5rem;
+  min-height: calc(100vh - 5.5rem);
+  margin-top: 5.5rem;
 }
 
 body {
@@ -32,13 +33,25 @@ body {
   overflow-x: hidden;
 }
 
+body.no-scroll {
+  overflow: hidden;
+  transition: 0.5s;
+}
+
 img {
   width: 100%;
   border-radius: var(--margin-m);
   user-select: none;
 }
 
-a {
+video {
+  width: 100%;
+  border-radius: var(--margin-m);
+  user-select: none;
+}
+
+a,
+.a {
   color: var(--text-muted);
   text-decoration: none;
   cursor: pointer;

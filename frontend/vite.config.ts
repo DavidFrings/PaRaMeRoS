@@ -35,6 +35,6 @@ export default defineConfig({
         background_color: 'transparent',
         prefer_related_applications: true
       }
-    }),
+    })
   ]
 })
