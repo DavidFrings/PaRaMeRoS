@@ -3,5 +3,5 @@
 /.idea
 /target
 Cargo.lock
-**/schema.rs
+#**/schema.rs
 /tmp
