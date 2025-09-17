@@ -53,6 +53,7 @@ services:
         VITE_DESC: "${DESC}"
         VITE_KEYWORDS: "${KEYWORDS}"
         VITE_API: "http://localhost:${API_PORT}"
+        VITE_HOSTNAME: "http://localhost"
     ports:
       - "${FRONTEND_PORT}:80"
     volumes:
