@@ -27,8 +27,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE}
       - ADMIN_PASS=${ADMIN_PASS}
-      #- RUST_LOG=debug # Dev
-      #- RUST_BACKTRACE=1 # Dev
+      - RUST_LOG=debug
+      - RUST_BACKTRACE=1
     ports:
       - "${API_PORT}:8080"
     volumes:
