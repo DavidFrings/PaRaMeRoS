@@ -10,12 +10,9 @@ defaults:
   run:
     working-directory: frontend
 
-env:
-  NODE_VERSION: "20.x"
-  PNPM_VERSION: "10"
-
 jobs:
   format:
+    environment: Build
     name: "Format"
     runs-on: ubuntu-latest
     steps:
@@ -34,6 +31,7 @@ jobs:
       - name: Format
         run: pnpm run format
   lint:
+    environment: Build
     name: "Lint"
     needs: format
     runs-on: ubuntu-latest
@@ -53,6 +51,7 @@ jobs:
       - name: ESLint
         run: pnpm run lint
   type-check:
+    environment: Build
     name: "Type Check"
     needs: lint
     runs-on: ubuntu-latest
