@@ -24,9 +24,9 @@ jobs:
         with:
           images: ${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_API }}
           tags: |
-            type=raw,value=latest,
-            type=raw,value=api,
-            type=raw,value=${{steps.get_version.outputs.version}},
+            type=raw,value=latest
+            type=raw,value=api
+            type=raw,value=${{steps.get_version.outputs.version}}
 
       - name: Login to container registry
         uses: docker/login-action@v3
@@ -34,6 +34,7 @@ jobs:
           registry: ${{ vars.REGISTRY }}
           username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -67,17 +68,17 @@ jobs:
         with:
           images: ${{ vars.REGISTRY }}/${{ vars.IMAGE_NAME_FRONTEND }}
           tags: |
-            type=raw,value=latest,
-            type=raw,value=frontend,
-            type=raw,value=${{steps.get_version.outputs.version}},
+            type=raw,value=latest
+            type=raw,value=frontend
+            type=raw,value=${{steps.get_version.outputs.version}}
 
       - name: Login to container registry
         uses: docker/login-action@v3
         with:
-
           registry: ${{ vars.REGISTRY }}
           username: ${{ vars.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_TOKEN }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
