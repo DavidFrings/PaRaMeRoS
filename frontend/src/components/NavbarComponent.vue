@@ -75,7 +75,8 @@ function logout() {
 
 <template>
   <nav id="Navbar">
-    <div id="bar">
+    <div class="bar" id="bg"></div>
+    <div class="bar" id="bar">
       <div id="logo">
         <img :src="Logo" alt="logo" />
         <span>PaRaMeRoS</span>
@@ -90,7 +91,7 @@ function logout() {
     <div id="nav">
       <div id="nav-main">
         <span></span>
-        <router-link to="/" @click="cleanup" data-value="HOME">HOME</router-link>
+        <router-link to="/?skipAnimation=true" @click="cleanup" data-value="HOME">HOME</router-link>
         <router-link to="/about" data-value="ÜBER UNS">ÜBER UNS</router-link>
         <router-link to="/progress-logs" data-value="ENTWICKLUNG">ENTWICKLUNG</router-link>
         <span id="short"></span>
@@ -215,7 +216,7 @@ a {
   border-radius: var(--margin-s);
 }
 
-#bar {
+.bar {
   position: fixed;
   display: flex;
   flex-wrap: nowrap;
@@ -223,9 +224,19 @@ a {
   justify-self: center;
   justify-content: space-between;
   top: 0;
-  z-index: 2;
   width: var(--margin);
+}
+
+#bar {
+  z-index: 3;
+}
+
+#bg {
+  position: fixed;
   background: hsla(var(--bg-dark-val), 0.45);
+  z-index: 0;
+  height: 5.5rem;
+  width: 100%;
 }
 
 #logo {

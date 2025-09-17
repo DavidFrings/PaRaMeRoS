@@ -5,7 +5,7 @@ import Section from '@/components/SectionComponent.vue'
 
 <template>
   <main id="about">
-    <Section heading="Entwicklungsverlauf" content="123"/>
+    <Section heading="Entwicklungsverlauf" content="123" />
   </main>
 </template>
 

@@ -23,6 +23,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --primary-val: 24, 67%, 59%;
+    --secondary: hsl(103, 49%, 40%);
+
     --bg-dark-val: 336, 0%, 1%;
     --bg: hsl(300 0% 4%);
     --bg-light: hsl(0 0% 9%);
@@ -31,8 +34,6 @@
     --highlight: hsl(330 0% 39%);
     --border: hsl(0 0% 28%);
     --border-muted: hsl(300 0% 18%);
-    --primary-val: 24, 66%, 67%;
-    --secondary: hsl(202 72% 67%);
     --danger: hsl(9 26% 64%);
     --warning: hsl(52 19% 57%);
     --success: hsl(146 17% 59%);

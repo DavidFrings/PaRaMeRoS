@@ -7,15 +7,15 @@
       <p>Alle Rechte vorbehalten</p>
     </div>
     <div class="url">
-      <a href="/">Home</a>
+      <a href="/?skipAnimation=true">Home</a>
       <a href="/about">Über Uns</a>
       <a href="/progress-logs">Entwicklung</a>
       <a href="/prmrs/forest-project">Wald Projekt</a>
       <span></span>
       <a href="/imprint">Impressum</a>
       <a href="/privacy-policy">Datenschutz</a>
-      <a href="/cookies">Cookies</a>
-      <a href="/sitemap">Sitemap</a>
+      <a data-cc="show-preferencesModal">Cookies</a>
+      <a href="/sitemap.xml">Sitemap</a>
     </div>
   </footer>
 </template>
