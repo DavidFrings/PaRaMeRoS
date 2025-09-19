@@ -26,6 +26,7 @@ LABEL org.opencontainers.image.licenses=MPL-2.0
 WORKDIR /usr/share/nginx/html
 COPY --from=builder /app/dist ./
 COPY ./nginx.conf ./mime.types /etc/nginx/
-COPY --chown=nginx:nginx  ./docker-env.sh ./docker-env.sh
+COPY --chown=nginx:nginx  ./entrypoint.sh ./entrypoint.sh
 COPY --chown=nginx:nginx  ./blank ./config.js
-RUN ./docker-env.sh
+RUN chmod u+x ./entrypoint.sh
+ENTRYPOINT [ "./entrypoint.sh" ]

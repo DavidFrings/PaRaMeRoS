@@ -5,7 +5,7 @@ import { useNavigation } from '@/composables/Navigation.ts'
 import Logo from '@/assets/imgs/logo.webp'
 import axios from 'axios'
 import { useCookies } from 'vue3-cookies'
-const { initializeNavigation, cleanup } = useNavigation()
+const { initializeNavigation, cleanup, closeNavigation } = useNavigation()
 const { cookies } = useCookies()
 const router = useRouter()
 const route = useRoute()
@@ -19,7 +19,13 @@ const user = ref<User>({})
 const api = window.__ENV__.API;
 async function onLoad() {
   const checkbox = document.getElementById('check') as HTMLInputElement
+  const nav = document.getElementById('nav') as HTMLElement
+  const bar = document.getElementById('bar') as HTMLElement
+
   checkbox.checked = false
+  setTimeout(() => {
+    closeNavigation(nav, bar)
+  }, 150);
 
   if (cookies.isKey('auth_token')) {
     try {
