@@ -4,4 +4,5 @@ echo "window.__ENV__ = {
   DESC: \"${VITE_DESC}\",
   KEYWORDS: \"${VITE_KEYWORDS}\",
   API: \"${VITE_API}\"
-};" > /usr/share/nginx/html/config.js
+}; 
+console.log(api);" > /usr/share/nginx/html/config.js
