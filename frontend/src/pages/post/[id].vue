@@ -1,11 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
-<!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { onMounted, ref } from 'vue'
 import axios from 'axios'
 
-const api = import.meta.env.VITE_API
+const api = window.__ENV__.API;
 
 const heading = ref('')
 const content = ref('')

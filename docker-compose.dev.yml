@@ -48,11 +48,11 @@ services:
     build:
       context: ./frontend
       dockerfile: dev.Dockerfile
-      args:
-        VITE_NAME: "${NAME}"
-        VITE_DESC: "${DESC}"
-        VITE_KEYWORDS: "${KEYWORDS}"
-        VITE_API: "http://localhost:${API_PORT}"
+    environment:
+      - VITE_NAME="${NAME}"
+      - VITE_DESC="${DESC}"
+      - VITE_KEYWORDS="${KEYWORDS}"
+      - VITE_API="http://localhost:${API_PORT}"
     ports:
       - "${FRONTEND_PORT}:80"
     volumes:

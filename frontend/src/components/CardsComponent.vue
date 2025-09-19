@@ -16,7 +16,7 @@ interface Post {
 }
 
 const posts = ref<Post[]>([])
-const api = import.meta.env.VITE_API
+const api = window.__ENV__.API;
 
 onMounted(async () => {
   try {

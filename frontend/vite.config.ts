@@ -28,8 +28,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: process.env.VITE_NAME,
-        short_name: process.env.VITE_NAME,
+        name: "PaRaMeRoS",
+        short_name: "PaRaMeRoS",
         start_url: "/",
         theme_color: 'transparent',
         background_color: 'transparent',

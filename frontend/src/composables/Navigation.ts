@@ -251,5 +251,6 @@ export function useNavigation() {
   return {
     initializeNavigation,
     cleanup,
+    closeNavigation
   }
 }
