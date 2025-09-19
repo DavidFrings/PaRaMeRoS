@@ -16,7 +16,7 @@ const data = ref({
 })
 const error = ref('')
 const showPass = ref(false)
-const api = import.meta.env.VITE_API
+const api = window.__ENV__.API;
 
 function handleChange(e: Event) {
   e.preventDefault()

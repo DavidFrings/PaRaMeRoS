@@ -8,16 +8,6 @@ RUN npx pnpm install --lockfile-only
 ### Build stage
 FROM cgr.dev/chainguard/node AS builder
 WORKDIR /app
-
-ARG VITE_NAME
-ARG VITE_DESC
-ARG VITE_KEYWORDS
-ARG VITE_API
-ENV VITE_NAME=${VITE_NAME}
-ENV VITE_DESC=${VITE_DESC}
-ENV VITE_KEYWORDS=${VITE_KEYWORDS}
-ENV VITE_API=${VITE_API}
-
 COPY ./package.json ./
 COPY ./pnpm-workspace.yaml ./
 COPY --from=lockfile /app/pnpm-lock.yaml ./
@@ -31,7 +21,11 @@ COPY ./src ./src
 RUN npx pnpm run build
 
 ### Production stage
-FROM cgr.dev/chainguard/nginx
+FROM cgr.dev/chainguard/nginx:latest-dev
+USER nginx
 WORKDIR /usr/share/nginx/html
 COPY --from=builder /app/dist ./
 COPY ./nginx.conf ./mime.types /etc/nginx/
+COPY --chown=nginx:nginx  ./docker-env.sh ./docker-env.sh
+COPY --chown=nginx:nginx  ./blank ./config.js
+RUN ./docker-env.sh

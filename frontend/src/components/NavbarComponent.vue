@@ -16,7 +16,7 @@ interface User {
 }
 
 const user = ref<User>({})
-const api = import.meta.env.VITE_API
+const api = window.__ENV__.API;
 async function onLoad() {
   const checkbox = document.getElementById('check') as HTMLInputElement
   checkbox.checked = false

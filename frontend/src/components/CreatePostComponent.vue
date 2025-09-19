@@ -14,7 +14,7 @@ const content = ref('')
 const media = ref<File | null>(null)
 const mediaType = ref<'img' | 'vid' | null>(null)
 
-const api = import.meta.env.VITE_API
+const api = window.__ENV__.API;
 
 async function handleSubmit(e: Event) {
   e.preventDefault()
