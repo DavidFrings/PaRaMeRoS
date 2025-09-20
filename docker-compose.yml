@@ -21,7 +21,7 @@ services:
     environment:
       - HOST=${HOST}
       - PORT=8080
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE}
       - ADMIN_PASS=${ADMIN_PASS}
@@ -47,7 +47,7 @@ services:
       - VITE_NAME="${NAME}"
       - VITE_DESC="${DESC}"
       - VITE_KEYWORDS="${KEYWORDS}"
-      - VITE_API="http://localhost:${API_PORT}"
+      - VITE_API="${API_SITE_NAME}"
     ports:
       - "${FRONTEND_PORT}:80"
     volumes:
