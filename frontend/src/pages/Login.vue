@@ -16,7 +16,7 @@ const data = ref({
 })
 const error = ref('')
 const showPass = ref(false)
-const api = window.__ENV__.API;
+const api = window.__ENV__.API
 
 function handleChange(e: Event) {
   e.preventDefault()
@@ -147,9 +147,10 @@ form {
   padding: 0 var(--margin-xxl);
   text-align: center;
   border-radius: var(--margin-m);
-  border: 1px solid var(--primary);
+  border: 2px solid var(--primary);
   max-width: 40rem;
   min-height: 60vh;
+  box-shadow: 3px 10px 30px -5px var(--primary);
 }
 
 img {
@@ -167,7 +168,7 @@ h2 {
 .error {
   position: relative;
   margin-bottom: var(--margin-xxl);
-  background: hsl(0, 100%, 39%);
+  background: var(--danger);
   padding: var(--margin-s) var(--margin-l);
   border-radius: var(--margin-l);
   font: var(--p-big);
@@ -244,11 +245,16 @@ input {
 
 input[type='submit'] {
   position: relative;
-  background-image: linear-gradient(160deg, var(--primary), var(--secondary));
+  background: linear-gradient(
+    150deg,
+    var(--primary) 15%,
+    hsl(79deg 69.87% 56.03%) 70%,
+    var(--secondary) 95%
+  );
   border: none;
   font: var(--h4);
   padding: var(--margin-xxs) var(--margin-xl);
-  color: var(--text);
+  color: #f2f2f2ff;
   text-transform: uppercase;
   cursor: pointer;
   transition: 0.5s ease-in-out;
@@ -275,7 +281,7 @@ input[type='submit']:hover {
   border: 2px solid var(--primary);
   cursor: pointer;
   background: var(--text-muted);
-  background-clip: content-box, padding-box;
+  background-clip: content-box;
 }
 
 #label-privacy {

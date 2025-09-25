@@ -4,11 +4,12 @@ import ArrowDown from '@/components/icons/ArrowDownIcon.vue'
 import Section from '@/components/SectionComponent.vue'
 import AboutImg from '@/assets/imgs/room.webp'
 import ErfolgeImg from '@/assets/imgs/erfolge.webp'
+import ForestProjectImg from '@/assets/imgs/forest-project.webp'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import * as CookieConsent from 'vanilla-cookieconsent'
 
 const skipAnimations = ref(false)
-
 onMounted(() => {
   const route = useRoute()
   skipAnimations.value = route.query.skipAnimation === 'true'
@@ -25,6 +26,10 @@ onMounted(() => {
       clearTimeout(timer)
       document.body.classList.remove('no-scroll')
     })
+  }
+
+  while (!CookieConsent.validConsent()) {
+    console.log('Waiting for cookie consent... CookieConsent:', CookieConsent)
   }
 })
 </script>
@@ -51,7 +56,7 @@ onMounted(() => {
         btn-link="/about"
         media_type="img"
         :media="AboutImg"
-        creator="Privat"
+        media_creator="Privat"
         content="Wir sind <b>PaRaMeRoS</b>, das First Lego League Team der <b>Pater Rupert Mayer Realschule</b>. Als engagierte Schüler begeistern wir uns für Robotik und Technologie – mit Kreativität, Teamgeist und Leidenschaft."
       />
       <Section
@@ -61,18 +66,18 @@ onMounted(() => {
         btn-link="/progress-logs"
         media_type="img"
         :media="ErfolgeImg"
-        creator="Privat"
+        media_creator="Privat"
         content="Erleben Sie den <b>Fortschritt unseres Teams</b> von den ersten Robotik-Ideen bis zu unseren größten Erfolgen. Hier zeigen wir <b>wichtige Meilensteine, aktuelle Projekte und unsere stetige Weiterentwicklung.</b>"
       />
       <Section
         heading="PRMRS - Projekt der 9. Klassen"
         btn-text="Mehr erfahren"
         btn-link="/prmrs/forest-project"
-        content="text"
+        media_type="img"
+        :media="ForestProjectImg"
+        media_creator="Privat"
+        content="Coming soon..."
       />
-      <!-- media_type="img"
-        :media=""
-        creator="Privat" -->
     </div>
   </main>
 </template>

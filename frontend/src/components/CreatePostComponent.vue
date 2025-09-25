@@ -13,8 +13,9 @@ const heading = ref('')
 const content = ref('')
 const media = ref<File | null>(null)
 const mediaType = ref<'img' | 'vid' | null>(null)
+const mediaCreator = ref('')
 
-const api = window.__ENV__.API;
+const api = window.__ENV__.API
 
 async function handleSubmit(e: Event) {
   e.preventDefault()
@@ -24,9 +25,10 @@ async function handleSubmit(e: Event) {
   formData.append('heading', heading.value)
   formData.append('content', content.value)
 
-  if (media.value && mediaType.value) {
+  if (media.value && mediaType.value && mediaCreator.value) {
     formData.append('media', media.value)
     formData.append('media_type', mediaType.value)
+    formData.append('media_creator', mediaCreator.value)
   }
 
   try {
@@ -55,6 +57,7 @@ function handleFileChange(e: Event) {
     } else {
       mediaType.value = null
       media.value = null
+      mediaCreator.value = ''
     }
   }
 }
@@ -67,6 +70,11 @@ function handleHeadingChange(e: Event) {
 function handleContentChange(e: Event) {
   const target = e.target as HTMLTextAreaElement
   content.value = target.value
+}
+
+function handleCreatorChange(e: Event) {
+  const target = e.target as HTMLTextAreaElement
+  mediaCreator.value = target.value
 }
 
 function createObjectURL(file: File): string {
@@ -86,6 +94,13 @@ function createObjectURL(file: File): string {
         type="file"
         accept="image/*, video/*"
         @change="handleFileChange"
+      />
+      <input
+        v-if="media"
+        class="media-creator"
+        type="text"
+        placeholder="Uhrheber des Bilds / Videos"
+        @change="handleCreatorChange"
       />
       <input
         class="heading"

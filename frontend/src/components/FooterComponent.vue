@@ -1,17 +1,18 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const currentYear = new Date().getFullYear()
+</script>
 
 <template>
   <footer id="footer">
     <div class="copyright">
-      <p>Copyright &#169; 2024-2025 PaRaMeRoS - David Frings</p>
-      <p>Alle Rechte vorbehalten</p>
+      <p>Copyright &#169; 2023-{{ currentYear }} PaRaMeRoS - David Frings</p>
+      <p><b>Alle Rechte vorbehalten</b></p>
     </div>
     <div class="url">
       <a href="/?skipAnimation=true">Home</a>
       <a href="/about">Über Uns</a>
       <a href="/progress-logs">Entwicklung</a>
       <a href="/prmrs/forest-project">Wald Projekt</a>
-      <span></span>
       <a href="/imprint">Impressum</a>
       <a href="/privacy-policy">Datenschutz</a>
       <a data-cc="show-preferencesModal">Cookies</a>
@@ -43,7 +44,7 @@ footer {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.8rem;
   text-align: center;
 }
 </style>

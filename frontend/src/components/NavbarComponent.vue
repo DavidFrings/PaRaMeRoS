@@ -16,7 +16,7 @@ interface User {
 }
 
 const user = ref<User>({})
-const api = window.__ENV__.API;
+const api = window.__ENV__.API
 async function onLoad() {
   const checkbox = document.getElementById('check') as HTMLInputElement
   const nav = document.getElementById('nav') as HTMLElement
@@ -25,7 +25,7 @@ async function onLoad() {
   checkbox.checked = false
   setTimeout(() => {
     closeNavigation(nav, bar)
-  }, 150);
+  }, 150)
 
   if (cookies.isKey('auth_token')) {
     try {

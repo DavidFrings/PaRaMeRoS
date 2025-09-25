@@ -68,6 +68,7 @@ pub async fn new_post(
     let mut media_type = None;
     let mut media_name = None;
     let mut media_data = None;
+    let mut media_creator = None;
 
     while let Some(item) = payload.next().await {
         let mut field = item
@@ -102,6 +103,7 @@ pub async fn new_post(
                 "heading" => heading = Some(text),
                 "content" => content = Some(text),
                 "media_type" => media_type = Some(text),
+                "media_creator" => media_creator = Some(text),
                 _ => return Err(bad_request(format!("Unexpected field: {}", field_name))),
             }
         }
@@ -155,6 +157,7 @@ pub async fn new_post(
         content,
         media_type: db_media_type,
         media_name: db_media_name,
+        media_creator,
         created_at: Utc::now().naive_utc(),
         updated_at: None,
     };

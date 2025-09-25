@@ -75,13 +75,14 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let logger = Logger::default();
         let cors = Cors::default()
-            .allowed_origin("http://127.0.0.1:3000")
+            .allowed_origin("http://localhost:3000")
+            .allowed_origin("https://www.PaRaMeRoS.net")
             .allowed_origin("https://PaRaMeRoS.net")
             .allowed_origin("https://PaRaMeRoS.DavidFrings.dev")
-            .allow_any_origin() // Dev
+            //.allow_any_origin() // Dev
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
-            .allow_any_header() // Dev
+            //.allow_any_header() // Dev
             .supports_credentials();
 
         App::new()

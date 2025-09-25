@@ -13,10 +13,11 @@ interface Post {
   content: string
   media_type?: 'img' | 'vid'
   media_name?: string
+  media_creator?: string
 }
 
 const posts = ref<Post[]>([])
-const api = window.__ENV__.API;
+const api = window.__ENV__.API
 
 onMounted(async () => {
   try {
@@ -38,6 +39,7 @@ onMounted(async () => {
       :content="p.content"
       :media_type="p.media_type"
       :media="p.media_name"
+      :media_creator="p.media_creator"
     />
   </div>
 </template>
