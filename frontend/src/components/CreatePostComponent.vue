@@ -61,7 +61,7 @@ function handleFileChange(e: Event) {
     } else {
       media_type.value = null
       media.value = null
-      media_creator.value = ''
+      media_creator.value = 'Privat'
     }
   }
 }
