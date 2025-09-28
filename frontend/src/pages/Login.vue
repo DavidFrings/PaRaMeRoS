@@ -49,7 +49,7 @@ async function handleSubmit(e: Event) {
     })
 
     cookies.set('auth_token', res.headers['authorization'], '3h')
-    await router.push('/')
+    await router.push('/team')
   } catch (err: unknown) {
     const errorObj = err as { response?: { data?: string } }
     error.value = errorObj.response?.data || 'Ein Fehler ist aufgetreten!'
@@ -255,6 +255,7 @@ input[type='submit'] {
   font: var(--h4);
   padding: var(--margin-xxs) var(--margin-xl);
   color: #f2f2f2ff;
+  font-weight: bold;
   text-transform: uppercase;
   cursor: pointer;
   transition: 0.5s ease-in-out;

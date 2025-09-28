@@ -79,6 +79,14 @@ async fn main() -> std::io::Result<()> {
             .allowed_origin("https://www.PaRaMeRoS.net")
             .allowed_origin("https://PaRaMeRoS.net")
             .allowed_origin("https://PaRaMeRoS.DavidFrings.dev")
+            .allowed_origin_fn(|origin, _req_head| {
+                // Postman & Curl
+                if origin.as_bytes().is_empty() {
+                    true
+                } else {
+                    false
+                }
+            })
             //.allow_any_origin() // Dev
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
