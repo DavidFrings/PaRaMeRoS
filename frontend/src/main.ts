@@ -17,10 +17,9 @@ import type {
   PreferencesModalLayout,
 } from 'vanilla-cookieconsent'
 
-
-const name = window.__ENV__.NAME;
-const desc = window.__ENV__.DESC;
-const keywords = window.__ENV__.KEYWORDS;
+const name = window.__ENV__.NAME
+const desc = window.__ENV__.DESC
+const keywords = window.__ENV__.KEYWORDS
 
 const app = createApp(AppMain)
 const CookieConsentVue = {

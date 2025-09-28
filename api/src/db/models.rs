@@ -43,6 +43,7 @@ pub struct Post {
     pub content: String,
     pub media_type: Option<String>,
     pub media_name: Option<String>,
+    pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -56,6 +57,7 @@ pub struct NewPost {
     pub content: String,
     pub media_type: Option<String>,
     pub media_name: Option<String>,
+    pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -103,6 +105,7 @@ pub struct PostResponse {
     pub content: String,
     pub media_type: Option<String>,
     pub media_name: Option<String>,
+    pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
 }
@@ -116,6 +119,7 @@ impl From<Post> for PostResponse {
             content: post.content,
             media_type: post.media_type,
             media_name: post.media_name,
+            media_creator: post.media_creator,
             created_at: post.created_at,
             updated_at: post.updated_at,
         }

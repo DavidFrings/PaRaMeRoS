@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+const props = defineProps<{
   selector?: string
   heading: string
   content: string
@@ -7,18 +9,32 @@ defineProps<{
   btnLink?: string
   media_type?: 'img' | 'vid'
   media?: string
-  creator?: string
+  media_creator?: string
 }>()
+
+const validateMedia = computed(() => {
+  const hasMedia = !!props.media
+  const hasType = !!props.media_type
+  const hasCreator = !!props.media_creator
+
+  return {
+    isValid: (!hasMedia && !hasType && !hasCreator) || (hasMedia && hasType && hasCreator),
+    error:
+      (hasMedia || hasType || hasCreator) && !(hasMedia && hasType && hasCreator)
+        ? 'All media attributes must be given! (media, media_type und media_creator)'
+        : null,
+  }
+})
 </script>
 
 <template>
-  <section :class="`flex margin-xl ${selector}`">
+  <section :class="`flex margin-xxl ${selector}`">
     <div>
       <h2>{{ heading }}</h2>
-      <p v-html="content"></p>
+      <p v-html="content" :class="{ 'extended-content': !media }"></p>
       <a class="btn" v-if="btnText" :href="btnLink">{{ btnText }}</a>
     </div>
-    <div id="media-div">
+    <div v-if="validateMedia.isValid && media" id="media-div">
       <img v-if="media_type == 'img'" :src="media" alt="" class="media" />
       <video
         v-if="media_type == 'vid'"
@@ -30,7 +46,7 @@ defineProps<{
       >
         <source :src="media" type="video/mp4" />
       </video>
-      <p v-if="media" id="creator">by: {{ creator }}</p>
+      <p v-if="media" id="creator">by: {{ media_creator }}</p>
     </div>
   </section>
 </template>
@@ -43,8 +59,25 @@ div {
   text-wrap: auto;
 }
 
+h2 {
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 p {
   margin-top: var(--margin-xs);
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.extended-content {
+  -webkit-line-clamp: 8;
 }
 
 a {

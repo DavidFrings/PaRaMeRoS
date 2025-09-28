@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { onMounted, ref } from 'vue'
 import axios from 'axios'
 
-const api = window.__ENV__.API;
+const api = window.__ENV__.API
 
 const heading = ref('')
 const content = ref('')

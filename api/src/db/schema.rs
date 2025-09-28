@@ -9,6 +9,7 @@ diesel::table! {
         content -> Varchar,
         media_type -> Nullable<Varchar>,
         media_name -> Nullable<Varchar>,
+        media_creator -> Nullable<Varchar>,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
     }

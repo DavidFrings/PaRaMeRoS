@@ -2,7 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 
 import Vue from '@vitejs/plugin-vue'
-import VueDevTools from 'vite-plugin-vue-devtools'
+import VueDevTools from 'vite-plugin-vue-devtools' // eslint-disable-line @typescript-eslint/no-unused-vars
 import VueRouter from 'unplugin-vue-router/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -24,7 +24,7 @@ export default defineConfig({
       logs: false,
     }),
     Vue(),
-    VueDevTools(),
+    //VueDevTools(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {

@@ -8,6 +8,7 @@ defineProps<{
   id: string
   media_type?: 'img' | 'vid'
   media?: string
+  media_creator?: string
 }>()
 
 const media_prefix = window.location.origin + '/uploads/'
@@ -21,6 +22,7 @@ const media_prefix = window.location.origin + '/uploads/'
     btn-text="Mehr Erfahren"
     :media_type="media_type"
     :media="media_prefix + media"
+    :media_creator="media_creator"
   />
 </template>
 
