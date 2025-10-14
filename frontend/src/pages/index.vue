@@ -10,6 +10,8 @@ import { useRoute } from 'vue-router'
 import * as CookieConsent from 'vanilla-cookieconsent'
 
 const skipAnimations = ref(false)
+let animationTimer: number | undefined
+let consentInterval: number | undefined
 onMounted(() => {
   const route = useRoute()
   skipAnimations.value = route.query.skipAnimation === 'true'
@@ -18,19 +20,29 @@ onMounted(() => {
     window.scrollTo(0, 0)
     document.body.classList.add('no-scroll')
 
-    const timer = setTimeout(() => {
+    animationTimer = window.setTimeout(() => {
       document.body.classList.remove('no-scroll')
     }, 4010)
-
-    onBeforeUnmount(() => {
-      clearTimeout(timer)
-      document.body.classList.remove('no-scroll')
-    })
   }
 
-  while (!CookieConsent.validConsent()) {
-    console.log('Waiting for cookie consent... CookieConsent:', CookieConsent)
+  if (!CookieConsent.validConsent()) {
+    document.getElementById('index')?.classList.add('no-animations')
+    CookieConsent.show?.()
+    console.log('Waiting for cookie consent...')
+    consentInterval = window.setInterval(() => {
+      if (CookieConsent.validConsent()) {
+        clearInterval(consentInterval)
+        document.getElementById('index')?.classList.remove('no-animations')
+        console.log('Received cookie consent')
+      }
+    }, 500)
   }
+})
+
+onBeforeUnmount(() => {
+  if (animationTimer) clearTimeout(animationTimer)
+  if (consentInterval) clearInterval(consentInterval)
+  document.body.classList.remove('no-scroll')
 })
 </script>
 
@@ -200,13 +212,19 @@ section {
 .skip-animations .landing h3 span,
 .skip-animations .landing #more p,
 .skip-animations .landing #more svg,
-.skip-animations .content {
+.skip-animations .content,
+.no-animations .landing h1,
+.no-animations .landing h3 span,
+.no-animations .landing #more p,
+.no-animations .landing #more svg,
+.no-animations .content {
   opacity: 1;
   transform: translateY(0);
   animation: none;
 }
 
-.skip-animations .nav-block {
+.skip-animations .nav-block,
+.no-animations .nav-block {
   opacity: 0;
   z-index: 0;
   animation: none;
