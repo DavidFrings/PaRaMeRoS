@@ -23,7 +23,7 @@ jobs:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -43,7 +43,7 @@ jobs:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -63,7 +63,7 @@ jobs:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
