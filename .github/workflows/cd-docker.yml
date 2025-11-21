@@ -10,7 +10,7 @@ jobs:
     name: "Create and Push Docker Image - API"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install jq
         run: sudo apt install -y jq
 
@@ -52,7 +52,7 @@ jobs:
     name: "Create and Push Docker Image - Frontend"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install jq
         run: sudo apt install -y jq
 

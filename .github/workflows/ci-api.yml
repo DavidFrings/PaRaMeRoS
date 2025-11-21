@@ -15,7 +15,7 @@ jobs:
     name: "Format"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Format
         run: cargo fmt --all
         #add to commit if there are changes
@@ -24,7 +24,7 @@ jobs:
     needs: format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Clippy
         run: cargo clippy --fix
   type-check:
@@ -32,6 +32,6 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Check
         run: cargo check
