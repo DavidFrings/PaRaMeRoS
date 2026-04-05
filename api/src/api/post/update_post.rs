@@ -40,7 +40,7 @@ pub async fn update_post(
     let data = update_data.into_inner();
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
-        .map_err(|err| return bad_request(format!("Invalid UUID format: {}", err)))?;
+        .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
 
     let mut conn = db(&env).await?;
     let mut was_updated = false;

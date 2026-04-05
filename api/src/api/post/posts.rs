@@ -25,7 +25,7 @@ pub async fn posts(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, H
 
     let json: Vec<PostResponse> = posts
         .into_iter()
-        .map(|post| PostResponse::from(post))
+        .map(PostResponse::from)
         .collect();
 
     Ok(HttpResponse::Ok().json(json))
