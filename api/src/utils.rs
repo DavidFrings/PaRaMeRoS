@@ -13,7 +13,8 @@ use diesel::prelude::*;
 use diesel_async::{
     AsyncPgConnection, RunQueryDsl, pooled_connection::AsyncDieselConnectionManager,
 };
-use jsonwebtoken::{DecodingKey, Validation, decode};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+use log::warn;
 
 #[macro_export]
 macro_rules! query {
@@ -75,22 +76,31 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
         .headers()
         .get(AUTHORIZATION)
         .and_then(|header| header.to_str().ok())
-        .ok_or_else(|| return bad_request("Missing Authorization header!"))?;
+        .ok_or_else(|| bad_request("Missing Authorization header!"))?;
 
     let token = auth_header.replace("Bearer ", "");
+
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.validate_exp = true;
 
     let req_id: i32 = decode::<Claims>(
         &token,
         &DecodingKey::from_secret(env.jwt_secret.as_bytes()),
-        &Validation::default(),
+        &validation,
     )
-    .map_err(|err| return unauthorized(format!("Invalid token: {}", err)))?
+    .map_err(|err| {
+        warn!("Token verification failed: {}", err);
+        unauthorized("Invalid token")
+    })?
     .claims
     .sub
     .parse()
-    .map_err(|err| return internal_error(format!("Failed to parse id: {}", err)))?;
+    .map_err(|err| {
+        warn!("Token subject parsing failed: {}", err);
+        unauthorized("Invalid token")
+    })?;
 
-    let mut conn = db(&env).await?;
+    let mut conn = db(env).await?;
 
     query!(
         users
@@ -104,11 +114,11 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
 
 pub async fn db(
     env: &Data<Env>,
-) -> Result<bb8::PooledConnection<AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
+) -> Result<bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
     let conn = env
         .pool
         .get()
         .await
-        .map_err(|err| return internal_error(format!("Database connection error: {}", err)))?;
+        .map_err(|err| internal_error(format!("Database connection error: {}", err)))?;
     Ok(conn)
 }

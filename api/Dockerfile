@@ -23,4 +23,5 @@ RUN apk add --no-cache libpq
 COPY --from=builder /work/target/release/parameros-api /usr/local/bin/api
 RUN mkdir -p /api/uploads
 RUN chown -R 65532:65532 /api/uploads
+USER 65532:65532
 CMD ["api"]

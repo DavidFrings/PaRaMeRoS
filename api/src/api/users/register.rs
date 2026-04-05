@@ -24,7 +24,7 @@ pub async fn register(
     }
 
     let hashed = hash(&req.password, DEFAULT_COST)
-        .map_err(|err| return internal_error(format!("Password hashing failed: {}", err)))?;
+        .map_err(|err| internal_error(format!("Password hashing failed: {}", err)))?;
 
     let new_user = NewUser {
         username: req.username,

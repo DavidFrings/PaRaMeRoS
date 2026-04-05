@@ -24,7 +24,7 @@ pub async fn delete_post(
 
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
-        .map_err(|err| return bad_request(format!("Invalid UUID format: {}", err)))?;
+        .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
 
     let mut conn = db(&env).await?;
 
@@ -39,7 +39,7 @@ pub async fn delete_post(
         let file_path = format!("{}/{}", UPLOAD_DIR, media_name);
 
         fs::remove_file(&file_path)
-            .map_err(|err| return internal_error(format!("Failed to delete image: {}", err)))?;
+            .map_err(|err| internal_error(format!("Failed to delete image: {}", err)))?;
         info!("Deleted image: {}", file_path);
     }
 

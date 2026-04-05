@@ -6,6 +6,9 @@ on:
   push:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: api
@@ -16,22 +19,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Format
-        run: cargo fmt --all
-        #add to commit if there are changes
+        run: cargo fmt --all -- --check
   lint:
     name: "Lint"
     needs: format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Clippy
-        run: cargo clippy --fix
+        run: cargo clippy --all-targets --all-features -- -D warnings
   type-check:
     name: "Type Check"
     needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Check
-        run: cargo check
+        run: cargo check --locked --all-targets --all-features
+
+  security-audit:
+    name: "Security Audit"
+    needs: type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Audit dependencies
+        run: cargo audit

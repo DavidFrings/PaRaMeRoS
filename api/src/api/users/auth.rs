@@ -15,7 +15,7 @@ use chrono::{Duration, Utc};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use jsonwebtoken::{EncodingKey, Header, encode};
-use log::info;
+use log::{error, info};
 
 #[post("/auth")]
 pub async fn auth(
@@ -32,11 +32,12 @@ pub async fn auth(
         .limit(1)
         .get_result::<User>(&mut conn)
         .await
-        .map_err(|_| return unauthorized("Invalid username or password"))?;
+        .map_err(|_| unauthorized("Invalid username or password"))?;
 
     // Verify password
     let password_matches = verify(&data.password, &usr.password).map_err(|err| {
-        return internal_error(format!("Password verification error: {}", err));
+        error!("Password verification error: {}", err);
+        internal_error("Authentication failed")
     })?;
 
     if !password_matches {
@@ -61,7 +62,10 @@ pub async fn auth(
         &claims,
         &EncodingKey::from_secret(env.jwt_secret.as_bytes()),
     )
-    .map_err(|err| return internal_error(format!("Could not create a token: {}", err)))?;
+    .map_err(|err| {
+        error!("Could not create token: {}", err);
+        internal_error("Authentication failed")
+    })?;
 
     Ok(HttpResponse::Ok()
         .insert_header((AUTHORIZATION, format!("Bearer {}", token)))
