@@ -28,6 +28,6 @@ bb8 = "^0.9"
 #tokio-postgres = "^0.7"
 bcrypt = "^0.17"
 jsonwebtoken = "^9.3"
-image = { version = "^0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+image = { version = "^0.25", features = ["jpeg", "png", "webp"] }
 webp = "^0.3"
 actix-cors = "^0.7"
