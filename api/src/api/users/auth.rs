@@ -32,7 +32,7 @@ pub async fn auth(
         .limit(1)
         .get_result::<User>(&mut conn)
         .await
-        .map_err(|_| return unauthorized("Invalid username or password"))?;
+        .map_err(|_| unauthorized("Invalid username or password"))?;
 
     // Verify password
     let password_matches = verify(&data.password, &usr.password).map_err(|err| {

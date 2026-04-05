@@ -76,7 +76,7 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
         .headers()
         .get(AUTHORIZATION)
         .and_then(|header| header.to_str().ok())
-        .ok_or_else(|| return bad_request("Missing Authorization header!"))?;
+        .ok_or_else(|| bad_request("Missing Authorization header!"))?;
 
     let token = auth_header.replace("Bearer ", "");
 
@@ -100,7 +100,7 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
         unauthorized("Invalid token")
     })?;
 
-    let mut conn = db(&env).await?;
+    let mut conn = db(env).await?;
 
     query!(
         users
@@ -119,6 +119,6 @@ pub async fn db(
         .pool
         .get()
         .await
-        .map_err(|err| return internal_error(format!("Database connection error: {}", err)))?;
+        .map_err(|err| internal_error(format!("Database connection error: {}", err)))?;
     Ok(conn)
 }
