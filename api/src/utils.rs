@@ -13,7 +13,8 @@ use diesel::prelude::*;
 use diesel_async::{
     AsyncPgConnection, RunQueryDsl, pooled_connection::AsyncDieselConnectionManager,
 };
-use jsonwebtoken::{DecodingKey, Validation, decode};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+use log::warn;
 
 #[macro_export]
 macro_rules! query {
@@ -79,16 +80,25 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
 
     let token = auth_header.replace("Bearer ", "");
 
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.validate_exp = true;
+
     let req_id: i32 = decode::<Claims>(
         &token,
         &DecodingKey::from_secret(env.jwt_secret.as_bytes()),
-        &Validation::default(),
+        &validation,
     )
-    .map_err(|err| return unauthorized(format!("Invalid token: {}", err)))?
+    .map_err(|err| {
+        warn!("Token verification failed: {}", err);
+        unauthorized("Invalid token")
+    })?
     .claims
     .sub
     .parse()
-    .map_err(|err| return internal_error(format!("Failed to parse id: {}", err)))?;
+    .map_err(|err| {
+        warn!("Token subject parsing failed: {}", err);
+        unauthorized("Invalid token")
+    })?;
 
     let mut conn = db(&env).await?;
 

@@ -27,6 +27,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRE=${JWT_EXPIRE}
       - ADMIN_PASS=${ADMIN_PASS}
+      - CORS_ORIGINS=${CORS_ORIGINS}
       - RUST_LOG=debug
       - RUST_BACKTRACE=1
     ports:
@@ -36,6 +37,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
     # Not working because of Chainguard image limitations (no shell)
     #healthcheck:
     #  test: ["CMD", "curl -f http://127.0.0.1:8080/health"]
@@ -61,6 +64,8 @@ services:
       - api
       #api:
       #  condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
 
 volumes:

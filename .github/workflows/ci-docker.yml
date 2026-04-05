@@ -6,12 +6,22 @@ on:
   push:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 jobs:
-  docker:
-    name: "Docker deployment"
+  docker-security:
+    name: "Docker Security Scan"
     environment: Docker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Dummy Step
-        run: echo "This is a dummy job that always succeeds"
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'

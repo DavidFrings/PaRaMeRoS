@@ -24,6 +24,7 @@ pub(crate) struct Env {
     jwt_secret: String,
     jwt_expire: i64,
     admin_pass: String,
+    cors_origins: Vec<String>,
 }
 
 impl Env {
@@ -36,6 +37,17 @@ impl Env {
             jwt_secret: get_env_var("JWT_SECRET"),
             jwt_expire: get_env_var("JWT_EXPIRE").parse().unwrap_or(1),
             admin_pass: get_env_var("ADMIN_PASS"),
+            cors_origins: get_env_var_optional("CORS_ORIGINS")
+                .map(|value| {
+                    value
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|origin| !origin.is_empty())
+                        .map(str::to_owned)
+                        .collect::<Vec<String>>()
+                })
+                .filter(|origins| !origins.is_empty())
+                .unwrap_or_else(default_cors_origins),
         }
     }
 }
@@ -43,6 +55,19 @@ impl Env {
 /// Helper function to read an environment variable
 fn get_env_var(var: &str) -> String {
     std::env::var(var).unwrap_or_else(|_| panic!("Environment variable {} not set!", var))
+}
+
+fn get_env_var_optional(var: &str) -> Option<String> {
+    std::env::var(var).ok()
+}
+
+fn default_cors_origins() -> Vec<String> {
+    vec![
+        "http://localhost:3000".to_string(),
+        "https://www.PaRaMeRoS.net".to_string(),
+        "https://PaRaMeRoS.net".to_string(),
+        "https://PaRaMeRoS.DavidFrings.dev".to_string(),
+    ]
 }
 
 /// Health check endpoint
@@ -56,7 +81,7 @@ async fn main() -> std::io::Result<()> {
     // Only runs if not in release mode
     #[cfg(debug_assertions)]
     {
-        dotenv::dotenv().ok();
+        dotenvy::dotenv().ok();
         unsafe {
             std::env::set_var("RUST_LOG", "debug");
             std::env::set_var("RUST_BACKTRACE", "1");
@@ -74,11 +99,13 @@ async fn main() -> std::io::Result<()> {
     // Start the Actix web server
     HttpServer::new(move || {
         let logger = Logger::default();
-        let cors = Cors::default()
-            .allowed_origin("http://localhost:3000")
-            .allowed_origin("https://www.PaRaMeRoS.net")
-            .allowed_origin("https://PaRaMeRoS.net")
-            .allowed_origin("https://PaRaMeRoS.DavidFrings.dev")
+        let mut cors = Cors::default();
+
+        for origin in &env_data.cors_origins {
+            cors = cors.allowed_origin(origin);
+        }
+
+        let cors = cors
             .allowed_origin_fn(|origin, _req_head| {
                 // Postman & Curl
                 if origin.as_bytes().is_empty() {
