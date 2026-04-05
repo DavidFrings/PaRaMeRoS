@@ -2,6 +2,5 @@
 .env.docker
 /.idea
 /target
-Cargo.lock
 #**/schema.rs
 /tmp
