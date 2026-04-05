@@ -1,4 +1,4 @@
-name: CD - Docker
+name: CD - Docker x86_64
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
 
       - name: Format image name
         id: img
-        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_API }}" >> $GITHUB_OUTPUT
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_API }}-x86_64" >> $GITHUB_OUTPUT
       
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -64,7 +64,7 @@ jobs:
 
       - name: Get version from pnpm
         id: version
-        run: echo "version=$(cd frontend && pnpm pkg get version --json | jq -r .)" >> $GITHUB_OUTPUT
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_FRONTEND }}-x86_64" >> $GITHUB_OUTPUT
 
       - name: Format image name
         id: img
