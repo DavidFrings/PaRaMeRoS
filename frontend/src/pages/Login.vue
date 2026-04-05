@@ -48,7 +48,7 @@ async function handleSubmit(e: Event) {
       password: data.value.password,
     })
 
-    cookies.set('auth_token', res.headers['authorization'], '3h')
+    cookies.set('auth_token', res.headers['authorization'], '3h', '/', '', true, 'Strict')
     await router.push('/team')
   } catch (err: unknown) {
     const errorObj = err as { response?: { data?: string } }
@@ -68,7 +68,7 @@ function togglePass(e: Event) {
     <form @submit="handleSubmit">
       <img :src="Logo" alt="" />
       <h2>Log In</h2>
-      <div v-if="error" v-html="error" class="error"></div>
+      <div v-if="error" class="error">{{ error }}</div>
       <div class="input">
         <input
           type="text"
