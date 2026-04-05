@@ -3,7 +3,9 @@ mod db;
 mod utils;
 
 use crate::api::post::delete_post::delete_post;
-use crate::api::post::{get_post::post, new_post::new_post, posts::posts, update_post::update_post};
+use crate::api::post::{
+    get_post::post, new_post::new_post, posts::posts, update_post::update_post,
+};
 use crate::api::users::{auth::auth, register::register, verify::auth_verify};
 use crate::db::{connection, connection::DbPool};
 use actix_cors::Cors;

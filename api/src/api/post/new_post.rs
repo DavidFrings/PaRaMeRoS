@@ -19,8 +19,8 @@ async fn process_field(field: &mut Field) -> Result<Vec<u8>, HttpError> {
     let mut content = Vec::new();
 
     while let Some(chunk) = field.next().await {
-        let bytes = chunk
-            .map_err(|err| internal_error(format!("Failed to read content: {}", err)))?;
+        let bytes =
+            chunk.map_err(|err| internal_error(format!("Failed to read content: {}", err)))?;
         content
             .write_all(&bytes)
             .await
@@ -71,8 +71,8 @@ pub async fn new_post(
     let mut media_creator = None;
 
     while let Some(item) = payload.next().await {
-        let mut field = item
-            .map_err(|err| internal_error(format!("Failed to read Multipart: {}", err)))?;
+        let mut field =
+            item.map_err(|err| internal_error(format!("Failed to read Multipart: {}", err)))?;
 
         let content_disposition = field
             .content_disposition()
