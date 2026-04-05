@@ -114,7 +114,7 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
 
 pub async fn db(
     env: &Data<Env>,
-) -> Result<bb8::PooledConnection<AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
+) -> Result<bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
     let conn = env
         .pool
         .get()
