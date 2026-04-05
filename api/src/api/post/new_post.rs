@@ -115,7 +115,9 @@ pub async fn new_post(
     let mut db_media_type = None;
     let mut db_media_name = None;
 
-    if let (Some(media_type), Some(media_name), Some(media_data)) = (media_type, media_name, media_data) {
+    if let (Some(media_type), Some(media_name), Some(media_data)) =
+        (media_type, media_name, media_data)
+    {
         match media_type.to_lowercase().as_str() {
             "img" => {
                 let webp_data = to_webp(&media_data).await?;
@@ -131,9 +133,8 @@ pub async fn new_post(
 
                 db_media_type = Some("img".to_string());
                 db_media_name = Some(webp_name);
-            },
+            }
             "vid" => {
-
                 let mp4_name = if media_name.contains('.') {
                     let parts: Vec<&str> = media_name.rsplitn(2, '.').collect();
                     format!("{}.mp4", parts[1])
@@ -145,7 +146,7 @@ pub async fn new_post(
 
                 db_media_type = Some("vid".to_string());
                 db_media_name = Some(mp4_name);
-            },
+            }
             _ => return Err(bad_request(format!("Invalid media type: {}", media_type))),
         }
     }

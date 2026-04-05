@@ -132,7 +132,7 @@ async fn main() -> std::io::Result<()> {
             .service(new_post)
             .service(update_post)
             .service(delete_post)
-          //.service(health)
+        //.service(health)
     })
     .bind(format!("{}:{}", host, port))?
     .run()
