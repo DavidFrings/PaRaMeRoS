@@ -49,15 +49,13 @@ jobs:
           fi
           git commit -m "$PR_TITLE"
           git push --force-with-lease origin "$BRANCH"
-          PR_BODY=$(cat <<'EOF'
-          Bumps the project version to `${{ steps.version.outputs.version }}` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release.
-
-          **Files changed:**
-          - `api/Cargo.toml`
-          - `api/Cargo.lock`
-          - `frontend/package.json`
-          EOF
-          )
+          PR_BODY=$(printf '%s\n' \
+            "Bumps the project version to \`${{ steps.version.outputs.version }}\` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release." \
+            "" \
+            "**Files changed:**" \
+            "- \`api/Cargo.toml\`" \
+            "- \`api/Cargo.lock\`" \
+            "- \`frontend/package.json\`")
           PR_URL=$(gh pr list \
             --head "$BRANCH" \
             --base "$BASE_BRANCH" \
