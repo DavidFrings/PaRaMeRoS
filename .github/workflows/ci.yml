@@ -115,7 +115,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: ESLint
-        run: npx eslint . --max-warnings 0
+        run: pnpm exec eslint . --max-warnings 0
 
   frontend-type-check:
     name: "Frontend / Type Check"
