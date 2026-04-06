@@ -91,7 +91,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Format
-        run: npx prettier --check src/
+        run: pnpm exec prettier --check src/
 
   frontend-lint:
     name: "Frontend / Lint"
