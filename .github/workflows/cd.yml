@@ -1,4 +1,4 @@
-name: CD - Docker x86_64
+name: CD
 
 on:
   push:
@@ -6,11 +6,19 @@ on:
 
 jobs:
   api:
+    name: "Docker / API (${{ matrix.arch }})"
     environment: Build
-    name: "Create and Push Docker Image - API"
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v5
+
       - name: Install jq
         run: sudo apt install -y jq
 
@@ -20,8 +28,8 @@ jobs:
 
       - name: Format image name
         id: img
-        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_API }}-x86_64" >> $GITHUB_OUTPUT
-      
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_API }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -30,7 +38,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=api
-            type=raw,value=${{steps.version.outputs.version}}
+            type=raw,value=${{ steps.version.outputs.version }}
 
       - name: Login to container registry
         uses: docker/login-action@v3
@@ -53,11 +61,19 @@ jobs:
           cache-to: type=gha,mode=max
 
   frontend:
+    name: "Docker / Frontend (${{ matrix.arch }})"
     environment: Build
-    name: "Create and Push Docker Image - Frontend"
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v5
+
       - name: Install jq
         run: sudo apt install -y jq
 
@@ -73,7 +89,7 @@ jobs:
 
       - name: Format image name
         id: img
-        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_FRONTEND }}-x86_64" >> $GITHUB_OUTPUT
+        run: echo "img=$(echo '${{ vars.REGISTRY }}' | tr -d '\n')/${{ vars.IMAGE_NAME_FRONTEND }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -83,7 +99,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=frontend
-            type=raw,value=${{steps.version.outputs.version}}
+            type=raw,value=${{ steps.version.outputs.version }}
 
       - name: Login to container registry
         uses: docker/login-action@v3

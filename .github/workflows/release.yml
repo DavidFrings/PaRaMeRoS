@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    name: "Bump Version"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update API version in Cargo.toml
+        run: sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version }}"/' api/Cargo.toml
+
+      - name: Update API version in Cargo.lock
+        run: sed -i '/^name = "parameros-api"/{n; s/^version = ".*"/version = "${{ steps.version.outputs.version }}"/}' api/Cargo.lock
+
+      - name: Update Frontend version in package.json
+        run: npm pkg set version="${{ steps.version.outputs.version }}" --prefix frontend
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="release/v${{ steps.version.outputs.version }}"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git checkout -b "$BRANCH"
+          git add api/Cargo.toml api/Cargo.lock frontend/package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore: bump version to ${{ steps.version.outputs.version }}" \
+            --body "Bumps the project version to \`${{ steps.version.outputs.version }}\` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release.
+
+          **Files changed:**
+          - \`api/Cargo.toml\`
+          - \`api/Cargo.lock\`
+          - \`frontend/package.json\`" \
+            --base "${{ github.event.repository.default_branch }}"
