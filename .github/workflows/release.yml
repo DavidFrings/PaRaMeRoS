@@ -47,11 +47,7 @@ jobs:
             echo "No version changes detected; skipping PR creation."
             exit 0
           fi
-          if git diff --cached --quiet; then
-            echo "No version changes to commit"
-          else
-            git commit -m "$PR_TITLE"
-          fi
+          git commit -m "$PR_TITLE"
           git push --force-with-lease origin "$BRANCH"
           PR_BODY=$(cat <<'EOF'
           Bumps the project version to `${{ steps.version.outputs.version }}` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release.
