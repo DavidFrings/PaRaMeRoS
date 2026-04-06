@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    name: "Bump Version"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ "$TAG" != v* ]]; then
+            echo "Invalid release tag '$TAG': expected format 'v<semver>' (for example, v1.2.3)." >&2
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          if [ -z "$VERSION" ] || ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){2}(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag '$TAG': expected format 'v<semver>' (for example, v1.2.3)." >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Use Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="release/v${{ steps.version.outputs.version }}"
+          BASE_BRANCH="${{ github.event.repository.default_branch }}"
+          PR_TITLE="chore: bump version to ${{ steps.version.outputs.version }}"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git fetch origin "$BASE_BRANCH"
+          git checkout -B "$BRANCH" "origin/$BASE_BRANCH"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("api/Cargo.toml")
+          version = "${{ steps.version.outputs.version }}"
+          lines = path.read_text().splitlines(keepends=True)
+
+          in_package = False
+          updated = False
+          result = []
+
+          for line in lines:
+              stripped = line.strip()
+              if stripped.startswith("[") and stripped.endswith("]"):
+                  in_package = stripped == "[package]"
+              elif in_package and not updated and re.match(r'^version\s*=\s*".*"$', stripped):
+                  leading = line[: len(line) - len(line.lstrip())]
+                  newline = "\n" if line.endswith("\n") else ""
+                  line = f'{leading}version = "{version}"{newline}'
+                  updated = True
+              result.append(line)
+
+          if not updated:
+              raise SystemExit("Failed to update [package] version in api/Cargo.toml")
+
+          path.write_text("".join(result))
+          PY
+          sed -i '/^name = "parameros-api"/{n; s/^version = ".*"/version = "${{ steps.version.outputs.version }}"/}' api/Cargo.lock
+          npm pkg set version="${{ steps.version.outputs.version }}" --prefix frontend
+          git add api/Cargo.toml api/Cargo.lock frontend/package.json
+          if git diff --cached --quiet; then
+            echo "No version changes detected; skipping PR creation."
+            exit 0
+          fi
+          git commit -m "$PR_TITLE"
+          git push --force-with-lease origin "$BRANCH"
+          PR_BODY=$(printf '%s\n' \
+            "Bumps the project version to \`${{ steps.version.outputs.version }}\` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release." \
+            "" \
+            "**Files changed:**" \
+            "- \`api/Cargo.toml\`" \
+            "- \`api/Cargo.lock\`" \
+            "- \`frontend/package.json\`")
+          PR_URL=$(gh pr list \
+            --head "$BRANCH" \
+            --base "$BASE_BRANCH" \
+            --state open \
+            --json url \
+            --jq '.[0].url // empty')
+          if [ -n "$PR_URL" ]; then
+            gh pr edit "$PR_URL" \
+              --title "$PR_TITLE" \
+              --body "$PR_BODY"
+          else
+            gh pr create \
+              --title "$PR_TITLE" \
+              --body "$PR_BODY" \
+              --base "$BASE_BRANCH" \
+              --head "$BRANCH"
+          fi
