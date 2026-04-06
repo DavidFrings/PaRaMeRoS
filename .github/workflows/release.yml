@@ -36,18 +36,42 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH="release/v${{ steps.version.outputs.version }}"
+          BASE_BRANCH="${{ github.event.repository.default_branch }}"
+          PR_TITLE="chore: bump version to ${{ steps.version.outputs.version }}"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git checkout -b "$BRANCH"
+          git fetch origin "$BASE_BRANCH"
+          git checkout -B "$BRANCH" "origin/$BASE_BRANCH"
           git add api/Cargo.toml api/Cargo.lock frontend/package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
-          git push origin "$BRANCH"
-          gh pr create \
-            --title "chore: bump version to ${{ steps.version.outputs.version }}" \
-            --body "Bumps the project version to \`${{ steps.version.outputs.version }}\` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release.
+          if git diff --cached --quiet; then
+            echo "No version changes to commit"
+          else
+            git commit -m "$PR_TITLE"
+          fi
+          git push --force-with-lease origin "$BRANCH"
+          PR_BODY=$(cat <<'EOF'
+          Bumps the project version to `${{ steps.version.outputs.version }}` following the [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) release.
 
           **Files changed:**
-          - \`api/Cargo.toml\`
-          - \`api/Cargo.lock\`
-          - \`frontend/package.json\`" \
-            --base "${{ github.event.repository.default_branch }}"
+          - `api/Cargo.toml`
+          - `api/Cargo.lock`
+          - `frontend/package.json`
+          EOF
+          )
+          PR_URL=$(gh pr list \
+            --head "$BRANCH" \
+            --base "$BASE_BRANCH" \
+            --state open \
+            --json url \
+            --jq '.[0].url')
+          if [ -n "$PR_URL" ]; then
+            gh pr edit "$PR_URL" \
+              --title "$PR_TITLE" \
+              --body "$PR_BODY"
+          else
+            gh pr create \
+              --title "$PR_TITLE" \
+              --body "$PR_BODY" \
+              --base "$BASE_BRANCH" \
+              --head "$BRANCH"
+          fi
