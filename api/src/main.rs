@@ -84,12 +84,12 @@ async fn main() -> std::io::Result<()> {
     #[cfg(debug_assertions)]
     {
         dotenvy::dotenv().ok();
-        unsafe {
-            std::env::set_var("RUST_LOG", "debug");
-            std::env::set_var("RUST_BACKTRACE", "1");
-        }
+        env_logger::Builder::from_default_env()
+            .filter_level(log::LevelFilter::Debug)
+            .init();
     }
 
+    #[cfg(not(debug_assertions))]
     env_logger::init();
 
     let host = get_env_var("HOST");
