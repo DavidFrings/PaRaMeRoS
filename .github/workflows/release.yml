@@ -63,8 +63,9 @@ jobs:
               if stripped.startswith("[") and stripped.endswith("]"):
                   in_package = stripped == "[package]"
               elif in_package and not updated and re.match(r'^version\s*=\s*".*"$', stripped):
+                  leading = line[: len(line) - len(line.lstrip())]
                   newline = "\n" if line.endswith("\n") else ""
-                  line = f'version = "{version}"{newline}'
+                  line = f'{leading}version = "{version}"{newline}'
                   updated = True
               result.append(line)
 
