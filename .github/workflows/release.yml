@@ -46,7 +46,33 @@ jobs:
           git config user.name "github-actions[bot]"
           git fetch origin "$BASE_BRANCH"
           git checkout -B "$BRANCH" "origin/$BASE_BRANCH"
-          sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version }}"/' api/Cargo.toml
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("api/Cargo.toml")
+          version = "${{ steps.version.outputs.version }}"
+          lines = path.read_text().splitlines(keepends=True)
+
+          in_package = False
+          updated = False
+          result = []
+
+          for line in lines:
+              stripped = line.strip()
+              if stripped.startswith("[") and stripped.endswith("]"):
+                  in_package = stripped == "[package]"
+              elif in_package and not updated and re.match(r'^version\s*=\s*".*"$', stripped):
+                  newline = "\n" if line.endswith("\n") else ""
+                  line = f'version = "{version}"{newline}'
+                  updated = True
+              result.append(line)
+
+          if not updated:
+              raise SystemExit("Failed to update [package] version in api/Cargo.toml")
+
+          path.write_text("".join(result))
+          PY
           sed -i '/^name = "parameros-api"/{n; s/^version = ".*"/version = "${{ steps.version.outputs.version }}"/}' api/Cargo.lock
           npm pkg set version="${{ steps.version.outputs.version }}" --prefix frontend
           git add api/Cargo.toml api/Cargo.lock frontend/package.json
