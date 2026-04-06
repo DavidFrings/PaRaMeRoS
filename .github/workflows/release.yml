@@ -22,14 +22,10 @@ jobs:
           VERSION="${TAG#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update API version in Cargo.toml
-        run: sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version }}"/' api/Cargo.toml
-
-      - name: Update API version in Cargo.lock
-        run: sed -i '/^name = "parameros-api"/{n; s/^version = ".*"/version = "${{ steps.version.outputs.version }}"/}' api/Cargo.lock
-
-      - name: Update Frontend version in package.json
-        run: npm pkg set version="${{ steps.version.outputs.version }}" --prefix frontend
+      - name: Use Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
 
       - name: Create pull request
         env:
@@ -42,6 +38,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git fetch origin "$BASE_BRANCH"
           git checkout -B "$BRANCH" "origin/$BASE_BRANCH"
+          sed -i 's/^version = ".*"/version = "${{ steps.version.outputs.version }}"/' api/Cargo.toml
+          sed -i '/^name = "parameros-api"/{n; s/^version = ".*"/version = "${{ steps.version.outputs.version }}"/}' api/Cargo.lock
+          npm pkg set version="${{ steps.version.outputs.version }}" --prefix frontend
           git add api/Cargo.toml api/Cargo.lock frontend/package.json
           if git diff --cached --quiet; then
             echo "No version changes detected; skipping PR creation."
