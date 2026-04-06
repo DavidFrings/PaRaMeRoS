@@ -67,7 +67,7 @@ jobs:
             --base "$BASE_BRANCH" \
             --state open \
             --json url \
-            --jq '.[0].url')
+            --jq '.[0].url // empty')
           if [ -n "$PR_URL" ]; then
             gh pr edit "$PR_URL" \
               --title "$PR_TITLE" \
