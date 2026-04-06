@@ -55,7 +55,7 @@ jobs:
   frontend:
     environment: Build
     name: "Create and Push Docker Image - Frontend"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v5
       - name: Install jq
