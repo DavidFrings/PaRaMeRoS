@@ -44,7 +44,7 @@ pub async fn auth(
         return Err(unauthorized("Invalid username or password"));
     }
 
-    info!("User logged in: {}", usr.username);
+    info!("User logged in");
 
     // JWT token
     let expiration = Utc::now()
