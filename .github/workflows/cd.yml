@@ -81,7 +81,7 @@ jobs:
         run: sudo apt install -y jq
 
       - name: Use pnpm ${{ vars.PNPM_VERSION }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
