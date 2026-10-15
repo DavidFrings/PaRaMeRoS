@@ -7,7 +7,7 @@ use crate::api::post::{
     get_post::post, new_post::new_post, posts::posts, update_post::update_post,
 };
 use crate::api::users::{auth::auth, register::register, verify::auth_verify};
-use crate::db::{connection, connection::DbPool};
+use crate::db::{connection, connection::DbPool, redis::Cache};
 use actix_cors::Cors;
 use actix_web::{
     App, HttpServer,
@@ -23,6 +23,7 @@ const UPLOAD_DIR: &str = "/api/uploads";
 #[derive(Clone)]
 pub(crate) struct Env {
     pool: DbPool,
+    cache: Cache,
     jwt_secret: String,
     jwt_expire: i64,
     admin_pass: String,
@@ -34,8 +35,11 @@ impl Env {
     async fn init() -> Self {
         let pool = connection::establish(get_env_var("DATABASE_URL")).await;
 
+        let cache = Cache::establish(get_env_var("REDIS_URL")).await;
+
         Self {
             pool,
+            cache,
             jwt_secret: get_env_var("JWT_SECRET"),
             jwt_expire: get_env_var("JWT_EXPIRE").parse().unwrap_or(1),
             admin_pass: get_env_var("ADMIN_PASS"),
@@ -69,6 +73,8 @@ fn default_cors_origins() -> Vec<String> {
         "https://www.PaRaMeRoS.net".to_string(),
         "https://PaRaMeRoS.net".to_string(),
         "https://PaRaMeRoS.DavidFrings.dev".to_string(),
+        "https://PaRaMeRoS.de".to_string(),
+        "https://www.PaRaMeRoS.de".to_string(),
     ]
 }
 
