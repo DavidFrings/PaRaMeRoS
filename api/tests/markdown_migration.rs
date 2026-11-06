@@ -6,11 +6,10 @@ use diesel_async::{AsyncPgConnection, RunQueryDsl, SimpleAsyncConnection};
 const UP: &str = include_str!("../migrations/w03-content-markdown/up.sql");
 const DOWN: &str = include_str!("../migrations/w03-content-markdown/down.sql");
 
-#[allow(clippy::redundant_field_names)] // diesel derive expansion
 #[derive(diesel::QueryableByName)]
 struct Out {
-    #[diesel(sql_type = Text)]
-    r: String,
+    #[diesel(sql_type = Text, column_name = r)]
+    value: String,
 }
 
 async fn md(conn: &mut AsyncPgConnection, html: &str) -> String {
@@ -19,7 +18,7 @@ async fn md(conn: &mut AsyncPgConnection, html: &str) -> String {
         .get_result::<Out>(conn)
         .await
         .unwrap()
-        .r
+        .value
 }
 
 async fn content(conn: &mut AsyncPgConnection, name: &str) -> String {
@@ -28,7 +27,7 @@ async fn content(conn: &mut AsyncPgConnection, name: &str) -> String {
         .get_result::<Out>(conn)
         .await
         .unwrap()
-        .r
+        .value
 }
 
 async fn insert(conn: &mut AsyncPgConnection, name: &str, content: &str) {
@@ -92,7 +91,7 @@ async fn plain_rows_untouched_and_unbacked() {
     .get_result(c)
     .await
     .unwrap();
-    assert_eq!(n.r, "0");
+    assert_eq!(n.value, "0");
 }
 
 #[actix_web::test]
