@@ -32,7 +32,8 @@ pub async fn delete_post(
         posts
             .filter(uuid_schema.eq(&req_uuid))
             .limit(1)
-            .get_result::<Post>(&mut conn)
+            .select(Post::as_select())
+            .get_result(&mut conn)
     );
 
     if let Some(media_name) = post.media_name {

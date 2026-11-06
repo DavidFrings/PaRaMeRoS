@@ -24,7 +24,8 @@ pub async fn post(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, Ht
         posts
             .filter(uuid_schema.eq(&req_uuid))
             .limit(1)
-            .get_result::<Post>(&mut conn)
+            .select(Post::as_select())
+            .get_result(&mut conn)
     );
 
     let json = PostResponse::from(post);

@@ -15,6 +15,7 @@ diesel::table! {
         heading_en -> Nullable<Varchar>,
         content_en -> Nullable<Varchar>,
         season -> Nullable<Varchar>,
+        content_html_backup -> Nullable<Varchar>,
     }
 }
 

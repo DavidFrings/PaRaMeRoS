@@ -22,7 +22,8 @@ pub async fn posts(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, H
         posts_dsl
             .filter(name.eq(section))
             .order(created_at.desc())
-            .get_results::<Post>(&mut conn)
+            .select(Post::as_select())
+            .get_results(&mut conn)
     );
 
     let json: Vec<PostResponse> = posts.into_iter().map(PostResponse::from).collect();
