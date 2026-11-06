@@ -96,8 +96,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .landing {
-  padding-top: calc(50vh - 15rem);
-  min-height: 50vh;
+  padding-top: clamp(5rem, 18vh, 12rem);
+  min-height: 58vh;
   width: 100%;
   display: flex;
   align-items: center;
@@ -107,7 +107,7 @@ onBeforeUnmount(() => {
 }
 
 .landing h1 {
-  font-size: 7rem;
+  font-size: clamp(3.2rem, 9vw, 7rem);
   color: transparent;
   background: linear-gradient(
     160deg,
@@ -126,6 +126,8 @@ onBeforeUnmount(() => {
 
 .landing h3 {
   color: var(--text-muted);
+  text-align: center;
+  font: var(--h4);
 }
 
 .landing h3 span {
@@ -145,7 +147,7 @@ onBeforeUnmount(() => {
 }
 
 .landing #more {
-  margin-top: 8rem;
+  margin-top: clamp(4rem, 10vh, 8rem);
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -171,7 +173,7 @@ onBeforeUnmount(() => {
 }
 
 section {
-  margin-top: 10rem;
+  margin-top: clamp(4rem, 9vh, 10rem);
 }
 
 .content {
@@ -186,12 +188,13 @@ section {
   top: 0;
   height: 6rem;
   width: 100%;
-  background: var(--bg-dark);
+  background: hsla(var(--bg-dark-val), 0.68);
   left: 0;
   z-index: 3;
   opacity: 1;
   animation: fadeOut 0.6s forwards;
   animation-delay: 4s;
+  backdrop-filter: blur(8px);
 }
 
 @keyframes fadeInUp {
@@ -228,5 +231,11 @@ section {
   opacity: 0;
   z-index: 0;
   animation: none;
+}
+
+@media (max-width: 700px) {
+  .landing h3 span {
+    display: block;
+  }
 }
 </style>

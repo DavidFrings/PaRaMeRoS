@@ -3,36 +3,44 @@
 /* +-----------------------------------------------------------+ */
 
 :root {
-  --primary-val: 24, 75%, 50%;
-  --secondary: hsl(103, 49%, 40%);
-  --bg-dark-val: 29, 15%, 97%;
-  --bg: hsl(29, 15%, 90%);
-  --bg-light: hsl(29, 15%, 87%);
-  --text: hsl(0, 0%, 15%);
-  --text-muted: hsl(0, 0%, 25%);
-  --highlight: hsl(0 0% 65%);
-  --border: hsl(0 0% 50%);
-  --border-muted: hsl(340 0% 62%);
-  --danger: hsl(0, 70%, 55%);
-  --warning: hsl(45, 80%, 55%);
-  --success: hsl(120, 60%, 50%);
-  --info: hsl(200, 60%, 55%);
+  --primary-val: 24, 89%, 56%;
+  --secondary: hsl(146, 48%, 42%);
+  --bg-dark-val: 26, 26%, 97%;
+  --bg: hsl(24, 28%, 92%);
+  --bg-light: hsl(24, 32%, 95%);
+  --surface: hsla(0, 0%, 100%, 0.84);
+  --surface-muted: hsla(0, 0%, 100%, 0.62);
+  --text: hsl(20, 18%, 14%);
+  --text-muted: hsl(18, 12%, 33%);
+  --highlight: hsl(24, 89%, 56%);
+  --border: hsla(18, 20%, 35%, 0.26);
+  --border-muted: hsla(18, 14%, 28%, 0.16);
+  --danger: hsl(0, 68%, 56%);
+  --warning: hsl(45, 88%, 58%);
+  --success: hsl(136, 54%, 44%);
+  --info: hsl(204, 62%, 54%);
+  --shadow-soft: 0 18px 45px -30px hsla(18, 25%, 28%, 0.46);
+  --shadow-strong: 0 26px 70px -32px hsla(18, 28%, 22%, 0.5);
   --primary: hsl(var(--primary-val));
   --bg-dark: hsl(var(--bg-dark-val));
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary-val: 24, 67%, 59%;
-    --secondary: hsl(103, 49%, 40%);
-    --bg-dark-val: 336, 0%, 2%;
-    --bg: hsl(300 0% 4%);
-    --bg-light: hsl(0 0% 6%);
-    --text: hsl(300 0% 95%);
-    --text-muted: hsl(300 0% 84%);
-    --highlight: hsl(330 0% 39%);
-    --border: hsl(0 0% 28%);
-    --border-muted: hsl(300 0% 18%);
+    --primary-val: 24, 85%, 62%;
+    --secondary: hsl(150, 46%, 48%);
+    --bg-dark-val: 222, 22%, 8%;
+    --bg: hsl(220, 20%, 13%);
+    --bg-light: hsl(220, 20%, 16%);
+    --surface: hsla(222, 18%, 14%, 0.82);
+    --surface-muted: hsla(222, 18%, 16%, 0.66);
+    --text: hsl(30, 24%, 95%);
+    --text-muted: hsl(28, 16%, 74%);
+    --highlight: hsl(28, 92%, 66%);
+    --border: hsla(30, 20%, 70%, 0.22);
+    --border-muted: hsla(30, 14%, 76%, 0.14);
+    --shadow-soft: 0 24px 50px -34px hsla(216, 38%, 2%, 0.9);
+    --shadow-strong: 0 28px 82px -30px hsla(216, 38%, 2%, 0.95);
   }
 }
 /* +-----------------------------------------------------------+ */
@@ -47,7 +55,12 @@
   --margin-l: 1.25rem;
   --margin-xl: 1.75rem;
   --margin-xxl: 2.5rem;
-  --margin: 80%;
+  --margin: min(92%, 1260px);
+  --content-max: 1080px;
+  --radius-s: 0.65rem;
+  --radius-m: 1rem;
+  --radius-l: 1.35rem;
+  --radius-xl: 1.85rem;
 }
 
 .padding-xxs {
@@ -110,12 +123,12 @@
   --font:
     Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --h1: bold 4rem/1em var(--font);
-  --h2: bold 3rem/1.2em var(--font);
-  --h3: bold 2.25rem/1.2em var(--font);
-  --h4: bold 1.5rem/1.6em var(--font);
-  --p-big: 1.25rem/1.6em var(--font);
-  --p: 1rem/1.6em var(--font);
+  --h1: 700 clamp(2.5rem, 5vw, 4.3rem) / 1.05em var(--font);
+  --h2: 700 clamp(2rem, 4vw, 3.1rem) / 1.15em var(--font);
+  --h3: 700 clamp(1.6rem, 3vw, 2.3rem) / 1.2em var(--font);
+  --h4: 700 clamp(1.2rem, 2vw, 1.5rem) / 1.45em var(--font);
+  --p-big: clamp(1.05rem, 1.5vw, 1.2rem) / 1.7em var(--font);
+  --p: clamp(0.97rem, 1.2vw, 1.05rem) / 1.7em var(--font);
   --p-small: 0.75rem/2em var(--font);
 }
 

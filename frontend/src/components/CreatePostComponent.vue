@@ -166,6 +166,9 @@ p {
 #media-div {
   display: inline-block;
   position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-soft);
 }
 
 .file-label {
@@ -189,9 +192,9 @@ p {
 
 input[type='text'],
 textarea {
-  background: var(--bg);
-  border: none;
-  border-radius: var(--margin-s);
+  background: var(--surface);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-s);
   outline: none;
   color: var(--text);
   resize: none;
@@ -240,7 +243,7 @@ form {
     var(--secondary) 95%
   );
   border: none;
-  border-radius: var(--margin-xs);
+  border-radius: var(--radius-m);
   outline: none;
   color: #f2f2f2ff;
   font: var(--p-big);
@@ -250,5 +253,6 @@ form {
   justify-self: flex-end;
   cursor: pointer;
   display: flex;
+  box-shadow: var(--shadow-soft);
 }
 </style>

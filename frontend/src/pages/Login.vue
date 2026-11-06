@@ -142,15 +142,16 @@ form {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--bg);
+  background: var(--surface);
   flex-direction: column;
   padding: 0 var(--margin-xxl);
   text-align: center;
-  border-radius: var(--margin-m);
-  border: 2px solid var(--primary);
+  border-radius: var(--radius-xl);
+  border: 1px solid hsla(var(--primary-val), 0.42);
   max-width: 40rem;
   min-height: 60vh;
-  box-shadow: 3px 10px 30px -5px var(--primary);
+  box-shadow: var(--shadow-strong);
+  backdrop-filter: blur(12px);
 }
 
 img {
@@ -173,6 +174,7 @@ h2 {
   border-radius: var(--margin-l);
   font: var(--p-big);
   transition: 0.5s ease-in-out;
+  box-shadow: var(--shadow-soft);
 }
 
 #eye {
@@ -259,8 +261,9 @@ input[type='submit'] {
   text-transform: uppercase;
   cursor: pointer;
   transition: 0.5s ease-in-out;
-  border-radius: var(--margin-xxl);
+  border-radius: var(--radius-xl);
   width: 10rem;
+  box-shadow: var(--shadow-soft);
 }
 
 input[type='submit']:hover {

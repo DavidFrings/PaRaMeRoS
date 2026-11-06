@@ -26,11 +26,16 @@ main {
 }
 
 body {
-  text-wrap: balance;
+  text-wrap: pretty;
   width: var(--margin);
   min-height: 100vh;
+  margin: 0 auto;
   justify-self: center;
   overflow-x: hidden;
+  background:
+    radial-gradient(circle at 8% -5%, hsla(var(--primary-val), 0.2), transparent 42%),
+    radial-gradient(circle at 92% -10%, hsla(146, 48%, 42%, 0.2), transparent 34%),
+    var(--bg-dark);
 }
 
 body.no-scroll {
@@ -40,13 +45,13 @@ body.no-scroll {
 
 img {
   width: 100%;
-  border-radius: var(--margin-m);
+  border-radius: var(--radius-m);
   user-select: none;
 }
 
 video {
   width: 100%;
-  border-radius: var(--margin-m);
+  border-radius: var(--radius-m);
   user-select: none;
 }
 
@@ -65,16 +70,19 @@ a:hover {
 button {
   display: inline-block;
   padding: var(--margin-xs) var(--margin-m);
-  background-color: var(--bg);
+  background-color: var(--surface);
+  color: var(--text);
   font: var(--p);
-  border: 2.5px solid hsl(var(--primary-val));
-  border-radius: var(--margin-m);
-  transition: all 0.4s ease;
+  border: 1px solid hsla(var(--primary-val), 0.5);
+  border-radius: var(--radius-m);
+  transition: all 0.32s ease;
   outline: none;
   overflow: hidden;
   cursor: pointer;
   user-select: none;
   position: relative;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(6px);
 }
 
 .btn::after,
@@ -101,8 +109,10 @@ button:hover::after {
 
 .btn:hover,
 button:hover {
-  border-color: hsla(var(--primary-val), 0.75);
+  border-color: hsla(var(--primary-val), 0.8);
   color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-strong);
 }
 
 /* +-----------------------------------------------------------+ */
@@ -111,7 +121,7 @@ button:hover {
 
 section {
   width: 100%;
-  max-width: 1080px;
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 
@@ -127,13 +137,13 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--margin-m);
+  gap: var(--margin-xl);
   flex-wrap: wrap;
 }
 
 .flex > * {
   flex: 1;
-  min-width: 400px;
+  min-width: min(100%, 400px);
 }
 
 .reverse {
@@ -142,4 +152,24 @@ section {
 
 .column-reverse {
   flex-direction: column-reverse;
+}
+
+@media (max-width: 900px) {
+  main {
+    margin-top: 5rem;
+  }
+
+  .flex {
+    gap: var(--margin-l);
+  }
+
+  .flex > * {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  :root {
+    --margin: 94%;
+  }
 }

@@ -52,6 +52,14 @@ const validateMedia = computed(() => {
 </template>
 
 <style scoped>
+section {
+  background: var(--surface);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-xl);
+  padding: clamp(1rem, 1.5vw, 1.8rem);
+  box-shadow: var(--shadow-soft);
+}
+
 div {
   display: flex;
   flex-direction: column;
@@ -71,7 +79,7 @@ p {
   margin-top: var(--margin-xs);
   overflow-wrap: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 6;
+  -webkit-line-clamp: 7;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -95,12 +103,15 @@ a {
   margin: 0;
   background: hsla(var(--bg-dark-val), 0.45);
   padding: var(--margin-xxs) var(--margin-s);
-  border-radius: var(--margin-s);
+  border-radius: var(--radius-s);
   font-size: 0.9rem;
 }
 
 #media-div {
   display: inline-block;
   position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-soft);
 }
 </style>

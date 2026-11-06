@@ -137,7 +137,8 @@ nav {
 
 #nav {
   height: 100%;
-  background-color: var(--bg-light);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   width: 0;
   position: fixed;
   z-index: 1;
@@ -150,6 +151,8 @@ nav {
   flex-direction: column;
   scrollbar-width: thin;
   scrollbar-color: var(--text-muted) var(--bg-light);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-strong);
 }
 
 #nav-main {
@@ -162,7 +165,7 @@ a {
   color: var(--text);
   transition: 0.3s;
   white-space: nowrap;
-  border-radius: var(--margin-m);
+  border-radius: var(--radius-m);
   margin: var(--margin-xxs) var(--margin-m);
   position: sticky;
   font: var(--h4);
@@ -171,13 +174,22 @@ a {
 }
 
 #nav a:hover {
-  color: var(--bg);
-  background-color: var(--text-muted);
+  color: var(--bg-dark);
+  background: linear-gradient(
+    135deg,
+    hsla(var(--primary-val), 0.92) 12%,
+    hsla(146, 48%, 42%, 0.92) 100%
+  );
 }
 
 #nav a.router-link-exact-active {
-  color: var(--bg);
-  background-color: var(--text-muted);
+  color: var(--bg-dark);
+  background: linear-gradient(
+    135deg,
+    hsla(var(--primary-val), 0.95) 0%,
+    hsla(146, 48%, 42%, 0.95) 100%
+  );
+  box-shadow: var(--shadow-soft);
 }
 
 #nav span {
@@ -239,10 +251,12 @@ a {
 
 #bg {
   position: fixed;
-  background: hsla(var(--bg-dark-val), 0.45);
+  background: hsla(var(--bg-dark-val), 0.58);
   z-index: 0;
   height: 5.5rem;
   width: 100%;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-muted);
 }
 
 #logo {
@@ -251,19 +265,21 @@ a {
   justify-content: space-around;
   flex-wrap: nowrap;
   align-items: center;
-  width: 23rem;
+  width: min(23rem, 100%);
   font: var(--h2);
   color: var(--text);
   font-weight: 600;
-  padding: var(--margin-s);
+  padding: var(--margin-xs) var(--margin-s);
   font-family: monospace;
   transition: 0.5s ease-in-out;
+  border-radius: var(--radius-l);
 }
 
 #logo img {
   height: 4rem;
   width: 4rem;
-  border-radius: var(--margin-s);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-soft);
 }
 
 input[type='checkbox'] {
@@ -285,10 +301,40 @@ input[type='checkbox'] {
   width: 100%;
   height: 0.45rem;
   background: var(--text);
-  border-radius: var(--margin-xxl);
+  border-radius: var(--radius-xl);
   display: inline-block;
   transition: 0.5s ease;
   left: 0;
+}
+
+@media (max-width: 900px) {
+  #logo {
+    font: var(--h3);
+    gap: var(--margin-xs);
+  }
+
+  #logo img {
+    height: 3.4rem;
+    width: 3.4rem;
+  }
+}
+
+@media (max-width: 700px) {
+  #logo span {
+    display: none;
+  }
+
+  .cross {
+    width: 2.4rem;
+  }
+
+  .cross span {
+    height: 0.35rem;
+  }
+
+  .cross span.middle {
+    top: 0.85rem;
+  }
 }
 
 .cross span.top {
