@@ -28,11 +28,7 @@ pub fn cors(origins: &[String]) -> Cors {
         cors = cors.allowed_origin(origin);
     }
 
-    cors.allowed_origin_fn(|origin, _req_head| {
-        // Postman & Curl
-        origin.as_bytes().is_empty()
-    })
-    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-    .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
-    .supports_credentials()
+    cors.allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+        .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
+        .supports_credentials()
 }

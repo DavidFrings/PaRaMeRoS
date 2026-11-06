@@ -15,7 +15,7 @@ use crate::db::{
         uuid as uuid_schema,
     },
 };
-use crate::utils::{HttpError, bad_request, db, internal_error, verify};
+use crate::utils::{HttpError, bad_request, db, verify};
 use crate::{Env, query};
 
 macro_rules! update {

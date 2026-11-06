@@ -2,7 +2,7 @@ use crate::db::{
     models::{AuthVerifyResponse, User},
     schema::users::{dsl::users, id},
 };
-use crate::utils::{HttpError, db, internal_error, verify};
+use crate::utils::{HttpError, db, verify};
 use crate::{Env, query};
 use actix_web::{HttpRequest, HttpResponse, get, web::Data};
 use diesel::prelude::*;

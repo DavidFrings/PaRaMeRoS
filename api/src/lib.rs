@@ -1,6 +1,7 @@
 pub mod api;
 pub mod app;
 pub mod db;
+pub mod media;
 pub mod migrate;
 pub mod utils;
 

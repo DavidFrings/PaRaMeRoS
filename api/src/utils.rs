@@ -14,14 +14,18 @@ use diesel_async::{
     AsyncPgConnection, RunQueryDsl, pooled_connection::AsyncDieselConnectionManager,
 };
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-use log::warn;
+use log::{error, warn};
 
 #[macro_export]
 macro_rules! query {
     ($query:expr) => {
-        $query
-            .await
-            .map_err(|err| internal_error(format!("Failed to find req in the db: {}", err)))?
+        $query.await.map_err(|err| match err {
+            diesel::result::Error::NotFound => $crate::utils::not_found("Not found"),
+            err => {
+                log::error!("Database error: {}", err);
+                $crate::utils::internal_error("Database error")
+            }
+        })?
     };
 }
 
@@ -63,6 +67,10 @@ pub fn internal_error(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::INTERNAL_SERVER_ERROR)
 }
 
+pub fn not_found(msg: impl Into<String>) -> HttpError {
+    HttpError::new(msg, StatusCode::NOT_FOUND)
+}
+
 pub fn unauthorized(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::UNAUTHORIZED)
 }
@@ -78,13 +86,15 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
         .and_then(|header| header.to_str().ok())
         .ok_or_else(|| bad_request("Missing Authorization header!"))?;
 
-    let token = auth_header.replace("Bearer ", "");
+    let token = auth_header
+        .strip_prefix("Bearer ")
+        .ok_or_else(|| unauthorized("Invalid token"))?;
 
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = true;
 
     let req_id: i32 = decode::<Claims>(
-        &token,
+        token,
         &DecodingKey::from_secret(env.jwt_secret.as_bytes()),
         &validation,
     )
@@ -102,12 +112,18 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
 
     let mut conn = db(env).await?;
 
-    query!(
-        users
-            .filter(id.eq(&req_id))
-            .limit(1)
-            .get_result::<User>(&mut conn)
-    );
+    users
+        .filter(id.eq(&req_id))
+        .limit(1)
+        .get_result::<User>(&mut conn)
+        .await
+        .map_err(|err| match err {
+            diesel::result::Error::NotFound => unauthorized("Invalid token"),
+            err => {
+                error!("Database error: {}", err);
+                internal_error("Database error")
+            }
+        })?;
 
     Ok(req_id)
 }

@@ -2,8 +2,9 @@ use crate::db::{
     models::Post,
     schema::posts::{dsl::posts, uuid as uuid_schema},
 };
-use crate::utils::{HttpError, bad_request, db, internal_error, verify};
-use crate::{Env, UPLOAD_DIR, query};
+use crate::media::files::remove_media_files;
+use crate::utils::{HttpError, bad_request, db, verify};
+use crate::{Env, query};
 use actix_web::{
     HttpRequest, HttpResponse, delete,
     web::{Data, Path},
@@ -11,7 +12,6 @@ use actix_web::{
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use log::info;
-use std::fs;
 use uuid::Uuid;
 
 #[delete("/post/{post_id}")]
@@ -36,11 +36,7 @@ pub async fn delete_post(
     );
 
     if let Some(media_name) = post.media_name {
-        let file_path = format!("{}/{}", UPLOAD_DIR, media_name);
-
-        fs::remove_file(&file_path)
-            .map_err(|err| internal_error(format!("Failed to delete image: {}", err)))?;
-        info!("Deleted image: {}", file_path);
+        remove_media_files(&env.upload_dir, &media_name);
     }
 
     query!(diesel::delete(posts.filter(uuid_schema.eq(&req_uuid))).execute(&mut conn));

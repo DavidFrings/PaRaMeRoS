@@ -1,8 +1,8 @@
 use crate::db::{
     models::{Post, PostResponse},
-    schema::posts::{dsl::posts as posts_dsl, name},
+    schema::posts::{created_at, dsl::posts as posts_dsl, name},
 };
-use crate::utils::{HttpError, db, internal_error};
+use crate::utils::{HttpError, db};
 use crate::{Env, query};
 use actix_web::{
     HttpResponse, get,
@@ -20,6 +20,7 @@ pub async fn posts(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, H
     let posts = query!(
         posts_dsl
             .filter(name.eq(&req_path))
+            .order(created_at.desc())
             .get_results::<Post>(&mut conn)
     );
 

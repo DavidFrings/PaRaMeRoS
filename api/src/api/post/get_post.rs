@@ -2,7 +2,7 @@ use crate::db::{
     models::{Post, PostResponse},
     schema::posts::{dsl::posts, uuid as uuid_schema},
 };
-use crate::utils::{HttpError, bad_request, db, internal_error};
+use crate::utils::{HttpError, bad_request, db};
 use crate::{Env, query};
 use actix_web::{
     HttpResponse, get,

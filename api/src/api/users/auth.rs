@@ -17,6 +17,9 @@ use diesel_async::RunQueryDsl;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use log::{error, info};
 
+// bcrypt hash at DEFAULT_COST (12) so unknown users cost as much as real ones
+const DUMMY_HASH: &str = "$2b$12$iEGsObAItIyS3tRrXZXu3uH5g7cIFZl.bcy4DmIj5C0le..4D3wRm";
+
 #[post("/auth")]
 pub async fn auth(
     login_data: Json<LoginRequest>,
@@ -32,7 +35,14 @@ pub async fn auth(
         .limit(1)
         .get_result::<User>(&mut conn)
         .await
-        .map_err(|_| unauthorized("Invalid username or password"))?;
+        .map_err(|err| {
+            if !matches!(err, diesel::result::Error::NotFound) {
+                error!("Database error: {}", err);
+            }
+            // Equalise timing with the real-user path to prevent username enumeration
+            let _ = verify(&data.password, DUMMY_HASH);
+            unauthorized("Invalid username or password")
+        })?;
 
     // Verify password
     let password_matches = verify(&data.password, &usr.password).map_err(|err| {
