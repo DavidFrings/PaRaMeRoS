@@ -1,3 +1,4 @@
+#![allow(clippy::redundant_field_names)] // diesel QueryableByName expansion
 mod common;
 
 use diesel::sql_types::Text;
