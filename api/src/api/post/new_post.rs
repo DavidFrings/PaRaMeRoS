@@ -3,57 +3,16 @@ use crate::db::{
     models::{NewPost, NewPostResponse, Post},
     schema::posts::dsl::posts,
 };
-use crate::utils::{HttpError, bad_request, db, internal_error, verify};
-use crate::{Env, UPLOAD_DIR, query};
-use actix_multipart::{Field, Multipart};
+use crate::media::{read_form, store_upload};
+use crate::utils::{HttpError, bad_request, db, verify};
+use crate::{Env, query};
+use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, post, web::Data};
 use chrono::Utc;
 use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
-use futures::{AsyncWriteExt, StreamExt};
 use log::info;
-use std::fs;
 use uuid::Uuid;
-use webp::{Encoder, WebPMemory};
-
-async fn process_field(field: &mut Field) -> Result<Vec<u8>, HttpError> {
-    let mut content = Vec::new();
-
-    while let Some(chunk) = field.next().await {
-        let bytes =
-            chunk.map_err(|err| internal_error(format!("Failed to read content: {}", err)))?;
-        content
-            .write_all(&bytes)
-            .await
-            .map_err(|err| internal_error(format!("Failed to process content: {}", err)))?;
-    }
-
-    Ok(content)
-}
-
-async fn to_webp(data: &[u8]) -> Result<Vec<u8>, HttpError> {
-    let img = image::load_from_memory(data)
-        .map_err(|err| internal_error(format!("Failed to load image: {}", err)))?;
-    let encoder = Encoder::from_image(&img)
-        .map_err(|err| internal_error(format!("Failed to encode: {}", err)))?;
-    let webp: WebPMemory = encoder.encode(80.0);
-
-    Ok(webp.to_vec())
-}
-
-async fn save_media(name: &String, data: Vec<u8>) -> Result<(), HttpError> {
-    if name.contains("..") || name.contains('/') || name.contains('\\') {
-        return Err(bad_request("Invalid filename!"));
-    }
-
-    let file_path = format!("{}/{}", UPLOAD_DIR, name);
-
-    fs::write(&file_path, data)
-        .map_err(|err| internal_error(format!("Failed to save media: {}", err)))?;
-
-    info!("Saved media: {}", file_path);
-    Ok(())
-}
 
 #[post("/post")]
 pub async fn new_post(
@@ -63,106 +22,45 @@ pub async fn new_post(
 ) -> Result<HttpResponse, HttpError> {
     verify(&req, &env).await?;
 
-    let mut name = None;
-    let mut heading = None;
-    let mut content = None;
-    let mut media_type = None;
-    let mut media_name = None;
-    let mut media_data = None;
-    let mut media_creator = None;
-    let mut heading_en = None;
-    let mut content_en = None;
-    let mut season = None;
+    let mut form = read_form(
+        &mut payload,
+        &[
+            "name",
+            "heading",
+            "content",
+            "media_type",
+            "media_creator",
+            "heading_en",
+            "content_en",
+            "season",
+        ],
+    )
+    .await?;
+    let mut take = |key: &str| form.text.remove(key);
+    let non_empty = |v: Option<String>| v.filter(|t| !t.is_empty());
 
-    while let Some(item) = payload.next().await {
-        let mut field =
-            item.map_err(|err| internal_error(format!("Failed to read Multipart: {}", err)))?;
-
-        let content_disposition = field
-            .content_disposition()
-            .ok_or_else(|| bad_request("Missing Content-Disposition header!"))?;
-        let field_name = content_disposition
-            .get_name()
-            .ok_or_else(|| bad_request("Field name missing!"))?
-            .to_string();
-        let filename = content_disposition.get_filename().map(|f| f.to_owned());
-
-        if let Some(filename) = filename {
-            let data = process_field(&mut field).await?;
-
-            media_name = Some(format!(
-                "{}-{}",
-                Utc::now().format("%d%m%Y-%H%M%S"),
-                filename.to_owned()
-            ));
-            media_data = Some(data);
-        } else {
-            let text_content = process_field(&mut field).await?;
-
-            let text = String::from_utf8(text_content)
-                .map_err(|err| bad_request(format!("Invalid UTF-8: {}", err)))?;
-
-            match field_name.as_str() {
-                "name" => name = Some(text),
-                "heading" => heading = Some(text),
-                "content" => content = Some(text),
-                "media_type" => media_type = Some(text),
-                "media_creator" => media_creator = Some(text),
-                "heading_en" => heading_en = Some(text).filter(|t| !t.is_empty()),
-                "content_en" => content_en = Some(text).filter(|t| !t.is_empty()),
-                "season" => season = Some(text).filter(|t| !t.is_empty()),
-                _ => return Err(bad_request(format!("Unexpected field: {}", field_name))),
-            }
-        }
-    }
-
-    let name = normalize_section(&name.ok_or_else(|| bad_request("Name missing!"))?)?;
+    let name = normalize_section(&take("name").ok_or_else(|| bad_request("Name missing!"))?)?;
+    let season = non_empty(take("season"));
     if let Some(season) = &season {
         validate_season(season)?;
     }
-    let heading = heading.ok_or_else(|| bad_request("Heading missing!"))?;
-    let content = content.ok_or_else(|| bad_request("Content missing!"))?;
-    let mut db_media_type = None;
-    let mut db_media_name = None;
+    let heading = take("heading").ok_or_else(|| bad_request("Heading missing!"))?;
+    let content = take("content").ok_or_else(|| bad_request("Content missing!"))?;
+    let heading_en = non_empty(take("heading_en"));
+    let content_en = non_empty(take("content_en"));
+    let media_creator = take("media_creator");
+    let post_uuid = Uuid::new_v4();
 
-    if let (Some(media_type), Some(media_name), Some(media_data)) =
-        (media_type, media_name, media_data)
-    {
-        match media_type.to_lowercase().as_str() {
-            "img" => {
-                let webp_data = to_webp(&media_data).await?;
-
-                let webp_name = if media_name.contains('.') {
-                    let parts: Vec<&str> = media_name.rsplitn(2, '.').collect();
-                    format!("{}.webp", parts[1])
-                } else {
-                    format!("{}.webp", media_name)
-                };
-
-                save_media(&webp_name, webp_data).await?;
-
-                db_media_type = Some("img".to_string());
-                db_media_name = Some(webp_name);
-            }
-            "vid" => {
-                let mp4_name = if media_name.contains('.') {
-                    let parts: Vec<&str> = media_name.rsplitn(2, '.').collect();
-                    format!("{}.mp4", parts[1])
-                } else {
-                    format!("{}.mp4", media_name)
-                };
-
-                save_media(&mp4_name, media_data).await?;
-
-                db_media_type = Some("vid".to_string());
-                db_media_name = Some(mp4_name);
-            }
-            _ => return Err(bad_request(format!("Invalid media type: {}", media_type))),
+    let (db_media_type, db_media_name) = match (take("media_type"), form.file) {
+        (Some(media_type), Some(data)) => {
+            let (t, n) = store_upload(env.upload_dir.clone(), post_uuid, &media_type, data).await?;
+            (Some(t), Some(n))
         }
-    }
+        _ => (None, None),
+    };
 
     let new_post = NewPost {
-        uuid: Uuid::new_v4(),
+        uuid: post_uuid,
         name: name.to_string(),
         heading,
         content,

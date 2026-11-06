@@ -107,6 +107,11 @@ pub struct NewPostResponse {
 }
 
 #[derive(Serialize, Debug)]
+pub struct MediaResponse {
+    pub media_name: String,
+}
+
+#[derive(Serialize, Debug)]
 pub struct PostResponse {
     pub uuid: Uuid,
     pub name: String,

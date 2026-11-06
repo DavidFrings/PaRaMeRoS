@@ -1,5 +1,9 @@
 use crate::api::post::{
-    delete_post::delete_post, get_post::post, new_post::new_post, posts::posts,
+    delete_post::delete_post,
+    get_post::post,
+    media::{delete_media, replace_media},
+    new_post::new_post,
+    posts::posts,
     update_post::update_post,
 };
 use crate::api::tournament::{delete::delete_tournament, get::get_tournament, put::put_tournament};
@@ -20,6 +24,8 @@ pub fn configure(cfg: &mut ServiceConfig) {
         .service(new_post)
         .service(update_post)
         .service(delete_post)
+        .service(replace_media)
+        .service(delete_media)
         .service(get_tournament)
         .service(put_tournament)
         .service(delete_tournament);

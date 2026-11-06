@@ -8,8 +8,6 @@ pub mod utils;
 use crate::db::{connection, connection::DbPool};
 use std::path::PathBuf;
 
-pub const UPLOAD_DIR: &str = "/api/uploads";
-
 /// Struct to hold environment configuration
 #[derive(Clone)]
 pub struct Env {
@@ -45,7 +43,7 @@ impl Env {
                 .filter(|origins| !origins.is_empty())
                 .unwrap_or_else(default_cors_origins),
             upload_dir: get_env_var_optional("UPLOAD_DIR")
-                .map_or_else(|| PathBuf::from(UPLOAD_DIR), PathBuf::from),
+                .map_or_else(|| PathBuf::from("/api/uploads"), PathBuf::from),
             redis: None,
             site_url: get_env_var_optional("SITE_URL")
                 .unwrap_or_else(|| "http://localhost:3000".to_string()),

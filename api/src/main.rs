@@ -1,6 +1,6 @@
 use actix_web::{App, HttpServer, middleware::Logger, web::Data};
 use log::{error, info};
-use parameros_api::{Env, app, get_env_var, migrate::run_migrations};
+use parameros_api::{Env, app, get_env_var, media::backfill::backfill, migrate::run_migrations};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -28,7 +28,8 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting server on {}:{}", host, port);
 
-    HttpServer::new(move || {
+    let upload_dir = env_data.upload_dir.clone();
+    let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
             .wrap(app::cors(&env_data.cors_origins))
@@ -36,6 +37,8 @@ async fn main() -> std::io::Result<()> {
             .configure(app::configure)
     })
     .bind(format!("{}:{}", host, port))?
-    .run()
-    .await
+    .run();
+
+    actix_web::rt::spawn(backfill(upload_dir));
+    server.await
 }

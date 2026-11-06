@@ -62,11 +62,15 @@ pub async fn test_app() -> (
         jwt_expire: 5,
         admin_pass: "admin-pass".into(),
         cors_origins: vec![],
-        upload_dir: std::env::temp_dir().join("parameros-test-uploads"),
+        // Unique per test so file assertions can't see other tests' uploads.
+        upload_dir: tempfile::Builder::new()
+            .prefix("parameros-test-uploads-")
+            .tempdir()
+            .expect("upload dir")
+            .keep(),
         redis,
         site_url: site_url().into(),
     };
-    std::fs::create_dir_all(&env.upload_dir).expect("upload dir");
 
     let app = init_service(
         App::new()

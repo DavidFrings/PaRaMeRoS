@@ -71,6 +71,10 @@ pub fn not_found(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::NOT_FOUND)
 }
 
+pub fn payload_too_large(msg: impl Into<String>) -> HttpError {
+    HttpError::new(msg, StatusCode::PAYLOAD_TOO_LARGE)
+}
+
 pub fn unauthorized(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::UNAUTHORIZED)
 }

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Website for PaRaMeRoS (https://PaRaMeRoS.net). Two independently built parts, wired together by Docker Compose:
 
-- `api/` — Rust (edition 2024, MSRV 1.87) Actix-web backend with Diesel (async via `diesel-async` + bb8) on PostgreSQL.
+- `api/` — Rust (edition 2024, MSRV 1.92) Actix-web backend with Diesel (async via `diesel-async` + bb8) on PostgreSQL.
 - `frontend/` — Vue 3 + TypeScript SPA built with Vite, served by nginx in production. UI text is German.
 
 Both share a version number (`api/Cargo.toml` and `frontend/package.json`); publishing a GitHub release `v<semver>` triggers `.github/workflows/release.yml`, which opens a version-bump PR.
