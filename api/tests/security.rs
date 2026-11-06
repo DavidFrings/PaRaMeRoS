@@ -29,6 +29,9 @@ fn new_post(name: &str, heading: &str, media_name: Option<&str>) -> NewPost {
         media_creator: media_name.map(|_| "x".into()),
         created_at: Utc::now().naive_utc(),
         updated_at: None,
+        heading_en: None,
+        content_en: None,
+        season: None,
     }
 }
 

@@ -1,3 +1,4 @@
+use super::section::{normalize_section, validate_season};
 use crate::db::{
     models::{NewPost, NewPostResponse, Post},
     schema::posts::dsl::posts,
@@ -69,6 +70,9 @@ pub async fn new_post(
     let mut media_name = None;
     let mut media_data = None;
     let mut media_creator = None;
+    let mut heading_en = None;
+    let mut content_en = None;
+    let mut season = None;
 
     while let Some(item) = payload.next().await {
         let mut field =
@@ -104,12 +108,18 @@ pub async fn new_post(
                 "content" => content = Some(text),
                 "media_type" => media_type = Some(text),
                 "media_creator" => media_creator = Some(text),
+                "heading_en" => heading_en = Some(text).filter(|t| !t.is_empty()),
+                "content_en" => content_en = Some(text).filter(|t| !t.is_empty()),
+                "season" => season = Some(text).filter(|t| !t.is_empty()),
                 _ => return Err(bad_request(format!("Unexpected field: {}", field_name))),
             }
         }
     }
 
-    let name = name.ok_or_else(|| bad_request("Name missing!"))?;
+    let name = normalize_section(&name.ok_or_else(|| bad_request("Name missing!"))?)?;
+    if let Some(season) = &season {
+        validate_season(season)?;
+    }
     let heading = heading.ok_or_else(|| bad_request("Heading missing!"))?;
     let content = content.ok_or_else(|| bad_request("Content missing!"))?;
     let mut db_media_type = None;
@@ -153,7 +163,7 @@ pub async fn new_post(
 
     let new_post = NewPost {
         uuid: Uuid::new_v4(),
-        name,
+        name: name.to_string(),
         heading,
         content,
         media_type: db_media_type,
@@ -161,6 +171,9 @@ pub async fn new_post(
         media_creator,
         created_at: Utc::now().naive_utc(),
         updated_at: None,
+        heading_en,
+        content_en,
+        season,
     };
 
     let mut conn = db(&env).await?;

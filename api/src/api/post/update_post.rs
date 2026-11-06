@@ -7,11 +7,12 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
+use super::section::{normalize_section, validate_season};
 use crate::db::schema::posts::updated_at;
 use crate::db::{
     models::UpdatePostRequest,
     schema::posts::{
-        dsl::{content, heading, name, posts},
+        dsl::{content, content_en, heading, heading_en, name, posts, season},
         uuid as uuid_schema,
     },
 };
@@ -42,10 +43,15 @@ pub async fn update_post(
     let req_uuid = Uuid::parse_str(&req_path)
         .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
 
+    if let Some(s) = data.season.as_deref().filter(|s| !s.is_empty()) {
+        validate_season(s)?;
+    }
+
     let mut conn = db(&env).await?;
     let mut was_updated = false;
 
     if let Some(new_name) = data.name {
+        let new_name = normalize_section(&new_name)?;
         update!(name, new_name, &req_uuid, &mut conn);
         was_updated = true;
     }
@@ -55,6 +61,21 @@ pub async fn update_post(
     }
     if let Some(new_content) = data.content {
         update!(content, new_content, &req_uuid, &mut conn);
+        was_updated = true;
+    }
+
+    // An empty string clears the optional field to NULL.
+    let opt = |v: String| Some(v).filter(|v| !v.is_empty());
+    if let Some(v) = data.heading_en {
+        update!(heading_en, opt(v), &req_uuid, &mut conn);
+        was_updated = true;
+    }
+    if let Some(v) = data.content_en {
+        update!(content_en, opt(v), &req_uuid, &mut conn);
+        was_updated = true;
+    }
+    if let Some(v) = data.season {
+        update!(season, opt(v), &req_uuid, &mut conn);
         was_updated = true;
     }
 

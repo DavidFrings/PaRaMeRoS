@@ -1,3 +1,4 @@
+use super::section::normalize_section;
 use crate::db::{
     models::{Post, PostResponse},
     schema::posts::{created_at, dsl::posts as posts_dsl, name},
@@ -13,13 +14,13 @@ use diesel_async::RunQueryDsl;
 
 #[get("/posts/{name}")]
 pub async fn posts(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, HttpError> {
-    let req_path = path.into_inner();
+    let section = normalize_section(&path.into_inner())?;
 
     let mut conn = db(&env).await?;
 
     let posts = query!(
         posts_dsl
-            .filter(name.eq(&req_path))
+            .filter(name.eq(section))
             .order(created_at.desc())
             .get_results::<Post>(&mut conn)
     );

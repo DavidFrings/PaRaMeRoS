@@ -46,6 +46,9 @@ pub struct Post {
     pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 #[derive(Insertable, Deserialize, Debug)]
@@ -60,6 +63,9 @@ pub struct NewPost {
     pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 //*****************************//
@@ -85,6 +91,9 @@ pub struct UpdatePostRequest {
     pub name: Option<String>,
     pub heading: Option<String>,
     pub content: Option<String>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
@@ -108,6 +117,9 @@ pub struct PostResponse {
     pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 impl From<Post> for PostResponse {
@@ -122,6 +134,9 @@ impl From<Post> for PostResponse {
             media_creator: post.media_creator,
             created_at: post.created_at,
             updated_at: post.updated_at,
+            heading_en: post.heading_en,
+            content_en: post.content_en,
+            season: post.season,
         }
     }
 }
