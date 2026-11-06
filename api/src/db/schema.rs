@@ -20,6 +20,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    tournament (id) {
+        id -> Int4,
+        name -> Varchar,
+        place -> Nullable<Varchar>,
+        starts_at -> Timestamptz,
+        ends_at -> Nullable<Timestamptz>,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         username -> Varchar,
@@ -28,4 +39,4 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(posts, users,);
+diesel::allow_tables_to_appear_in_same_query!(posts, tournament, users,);

@@ -1,5 +1,5 @@
-use crate::db::schema::{posts, users};
-use chrono::NaiveDateTime;
+use crate::db::schema::{posts, tournament, users};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -139,4 +139,15 @@ impl From<Post> for PostResponse {
             season: post.season,
         }
     }
+}
+
+#[derive(Queryable, Selectable, Insertable, AsChangeset, Serialize, Debug)]
+#[diesel(table_name = tournament)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Tournament {
+    pub name: String,
+    pub place: Option<String>,
+    pub starts_at: DateTime<Utc>,
+    pub ends_at: Option<DateTime<Utc>>,
+    pub updated_at: DateTime<Utc>,
 }

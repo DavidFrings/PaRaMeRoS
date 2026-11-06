@@ -33,7 +33,7 @@ pub async fn test_app() -> (
     {
         let mut conn = pool.get().await.expect("db connection");
         let conn: &mut AsyncPgConnection = &mut conn;
-        conn.batch_execute("TRUNCATE posts, users RESTART IDENTITY CASCADE")
+        conn.batch_execute("TRUNCATE posts, users, tournament RESTART IDENTITY CASCADE")
             .await
             .expect("truncate");
         diesel::insert_into(users::table)
