@@ -11,6 +11,7 @@ WORKDIR /work
 COPY ./Cargo.toml ./
 COPY --from=lockfile /work/Cargo.lock ./
 COPY ./src ./src
+COPY ./migrations ./migrations
 RUN cargo clean --package parameros-api
 RUN cargo build --release
 

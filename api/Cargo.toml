@@ -10,6 +10,9 @@ repository = "https://github.com/DavidFrings/PaRaMeRoS"
 rust-version = "1.87"
 edition = "2024"
 
+[lib]
+name = "parameros_api"
+
 [dependencies]
 actix-web = "^4.11"
 actix-multipart = "^0.7"
@@ -23,7 +26,10 @@ futures = "^0.3"
 dotenvy = "^0.15"
 #diesel = { version = "^2.2", features = ["postgres", "r2d2"] }
 diesel = { version = "^2.2", features = ["chrono", "uuid"] }
-diesel-async = { version = "^0.6", features = ["postgres", "tokio", "bb8"] }
+diesel-async = { version = "^0.6", features = ["postgres", "tokio", "bb8", "async-connection-wrapper"] }
+diesel_migrations = "^2.2"
+anyhow = "^1"
+redis = { version = "^0.32", features = ["tokio-comp", "connection-manager"] }
 bb8 = "^0.9"
 #tokio-postgres = "^0.7"
 bcrypt = "^0.17"
@@ -31,3 +37,7 @@ jsonwebtoken = "^9.3"
 image = { version = "^0.25", features = ["jpeg", "png", "webp"] }
 webp = "^0.3"
 actix-cors = "^0.7"
+
+[dev-dependencies]
+actix-http = "^3"
+serde_json = "^1"

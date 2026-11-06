@@ -1,82 +1,6 @@
-mod api;
-mod db;
-mod utils;
-
-use crate::api::post::delete_post::delete_post;
-use crate::api::post::{
-    get_post::post, new_post::new_post, posts::posts, update_post::update_post,
-};
-use crate::api::users::{auth::auth, register::register, verify::auth_verify};
-use crate::db::{connection, connection::DbPool};
-use actix_cors::Cors;
-use actix_web::{
-    App, HttpServer,
-    http::header::{AUTHORIZATION, CONTENT_TYPE},
-    middleware::Logger,
-    web::Data,
-};
-use log::info;
-
-const UPLOAD_DIR: &str = "/api/uploads";
-
-/// Struct to hold environment configuration
-#[derive(Clone)]
-pub(crate) struct Env {
-    pool: DbPool,
-    jwt_secret: String,
-    jwt_expire: i64,
-    admin_pass: String,
-    cors_origins: Vec<String>,
-}
-
-impl Env {
-    /// Initialize the Env struct by reading environment variables
-    async fn init() -> Self {
-        let pool = connection::establish(get_env_var("DATABASE_URL")).await;
-
-        Self {
-            pool,
-            jwt_secret: get_env_var("JWT_SECRET"),
-            jwt_expire: get_env_var("JWT_EXPIRE").parse().unwrap_or(1),
-            admin_pass: get_env_var("ADMIN_PASS"),
-            cors_origins: get_env_var_optional("CORS_ORIGINS")
-                .map(|value| {
-                    value
-                        .split(',')
-                        .map(str::trim)
-                        .filter(|origin| !origin.is_empty())
-                        .map(str::to_owned)
-                        .collect::<Vec<String>>()
-                })
-                .filter(|origins| !origins.is_empty())
-                .unwrap_or_else(default_cors_origins),
-        }
-    }
-}
-
-/// Helper function to read an environment variable
-fn get_env_var(var: &str) -> String {
-    std::env::var(var).unwrap_or_else(|_| panic!("Environment variable {} not set!", var))
-}
-
-fn get_env_var_optional(var: &str) -> Option<String> {
-    std::env::var(var).ok()
-}
-
-fn default_cors_origins() -> Vec<String> {
-    vec![
-        "http://localhost:3000".to_string(),
-        "https://www.PaRaMeRoS.net".to_string(),
-        "https://PaRaMeRoS.net".to_string(),
-        "https://PaRaMeRoS.DavidFrings.dev".to_string(),
-    ]
-}
-
-/// Health check endpoint
-//#[get("/health")]
-//async fn health() -> HttpResponse {
-//    HttpResponse::Ok().body("Ok")
-//}
+use actix_web::{App, HttpServer, middleware::Logger, web::Data};
+use log::{error, info};
+use parameros_api::{Env, app, get_env_var, migrate::run_migrations};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -94,43 +18,22 @@ async fn main() -> std::io::Result<()> {
 
     let host = get_env_var("HOST");
     let port = get_env_var("PORT");
+
+    if let Err(err) = run_migrations(&get_env_var("DATABASE_URL")).await {
+        error!("Migrations failed: {err}");
+        std::process::exit(1);
+    }
+
     let env_data = Env::init().await;
 
     info!("Starting server on {}:{}", host, port);
 
-    // Start the Actix web server
     HttpServer::new(move || {
-        let logger = Logger::default();
-        let mut cors = Cors::default();
-
-        for origin in &env_data.cors_origins {
-            cors = cors.allowed_origin(origin);
-        }
-
-        let cors = cors
-            .allowed_origin_fn(|origin, _req_head| {
-                // Postman & Curl
-                origin.as_bytes().is_empty()
-            })
-            //.allow_any_origin() // Dev
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-            .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
-            //.allow_any_header() // Dev
-            .supports_credentials();
-
         App::new()
-            .wrap(logger)
-            .wrap(cors)
+            .wrap(Logger::default())
+            .wrap(app::cors(&env_data.cors_origins))
             .app_data(Data::new(env_data.clone()))
-            .service(register)
-            .service(auth)
-            .service(auth_verify)
-            .service(post)
-            .service(posts)
-            .service(new_post)
-            .service(update_post)
-            .service(delete_post)
-        //.service(health)
+            .configure(app::configure)
     })
     .bind(format!("{}:{}", host, port))?
     .run()
