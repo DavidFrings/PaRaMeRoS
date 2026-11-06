@@ -8,7 +8,9 @@ RUN cargo generate-lockfile
 ### Build stage
 FROM cgr.dev/chainguard/rust:latest-dev AS builder
 # cmake + clang build the vendored libjxl (jpegxl-rs)
+USER root
 RUN apk add --no-cache cmake clang
+USER nonroot
 WORKDIR /work
 COPY ./Cargo.toml ./
 COPY --from=lockfile /work/Cargo.lock ./
