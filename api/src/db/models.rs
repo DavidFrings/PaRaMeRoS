@@ -143,6 +143,7 @@ impl From<Post> for PostResponse {
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset, Serialize, Debug)]
 #[diesel(table_name = tournament)]
+#[diesel(treat_none_as_null = true)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Tournament {
     pub name: String,
