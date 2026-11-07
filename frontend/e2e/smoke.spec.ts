@@ -154,15 +154,24 @@ for (const [lang, c] of Object.entries(L)) {
       await expectPage(page, c.logbuch, c.notFound)
     })
 
-    test('admin_create_logbuch_post_flow', async ({ page, created }) => {
-      await page.goto(`${c.prefix}/Login`)
+    test('admin_requires_login_and_returns_after_login', async ({ page }) => {
+      await page.goto(`${c.prefix}/admin`)
+      await expect(page).toHaveURL(`${c.prefix}/Login?next=${c.prefix}/admin`)
       await expectPage(page, c.login, c.notFound)
       await page.getByLabel(c.username).fill('admin')
       await page.getByLabel(c.password, { exact: true }).fill('secret')
       await page.getByRole('button', { name: c.login, exact: true }).click()
-      // Login returns to the start page; the admin area is opened from there.
-      await expect(page).toHaveURL(`${c.prefix}/`)
+      await expect(page).toHaveURL(`${c.prefix}/admin`)
+      await expectPage(page, c.admin, c.notFound)
+    })
+
+    test('admin_create_logbuch_post_flow', async ({ page, created }) => {
+      // The guard sends logged-out visitors to Login?next=/admin and back.
       await page.goto(`${c.prefix}/admin`)
+      await expectPage(page, c.login, c.notFound)
+      await page.getByLabel(c.username).fill('admin')
+      await page.getByLabel(c.password, { exact: true }).fill('secret')
+      await page.getByRole('button', { name: c.login, exact: true }).click()
       await expectPage(page, c.admin, c.notFound)
       await page
         .locator('[data-section="logbuch"]')
