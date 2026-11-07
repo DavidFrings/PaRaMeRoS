@@ -167,8 +167,24 @@ Task 10
 3. Before the deploy, run the built frontend image once and check the generated `config.js`, `/tmp/csp.conf`, and `curl -I` on `/`, `/config.js` and `/uploads/x.webp`.
 4. Deploy API and frontend together. The new frontend needs the API CORS change (`Authorization` and `Retry-After` exposed) and the API change set from the earlier phases.
 5. After the deploy, run the import script once: `API=https://parameros.net/api USERNAME=… PASSWORD=… node scripts/import-legacy-content.mjs` (try `--dry-run` first; see `scripts/README.md`). It is safe to re-run.
+6. Narrow the user permissions. Existing non-admin users get all five permissions on deploy, so narrow them after deploy, for example:
+   ```sql
+   UPDATE users SET permissions = ARRAY['logbuch','tournament'] WHERE username = '…';
+   ```
 
 Notes:
 - HSTS (`max-age=31536000; includeSubDomains`) tells browsers to use HTTPS for one year on the domain and all subdomains. Every subdomain must serve HTTPS before this ships.
 - Set `VITE_API` to the real API origin as `https://host[:port][/path]`; the CSP `connect-src` is derived from it at container start. Only a value with unsafe characters (anything outside `A-Za-z0-9.:/-`) logs a warning. A relative value like `/api`, an uppercase scheme (`HTTPS://`) or a missing scheme falls back to same-origin only without any warning, and cross-origin API calls would then be blocked.
 - Returning visitors get the new service worker on their next visit (`autoUpdate`).
+
+## (g) Per-user permissions
+
+Each account can now be limited to certain areas. The values are `logbuch`, `team`, `coaches`, `forest-project` (Wald-Projekt) and `tournament`. An admin account (`admin = true`) may do everything. Any other account may only change the areas in its `permissions` list. The API refuses everything else (HTTP 403), the site then shows "Dafür fehlt die Berechtigung", and `/admin` shows only the allowed areas. Reading stays public.
+
+Set or change an account's permissions directly in the database:
+
+```sql
+UPDATE users SET permissions = ARRAY['logbuch','tournament'] WHERE username = '…';
+```
+
+The change applies to the next request, even with an existing login. A new account gets its list through `POST /register` (`"permissions": [...]`, see `api/README.md`).

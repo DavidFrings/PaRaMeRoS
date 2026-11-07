@@ -21,4 +21,12 @@
 
 Permissions: `logbuch`, `team`, `coaches`, `forest-project`, `tournament` (section permissions equal post `name` values; `progress-logs` maps to `logbuch`). `admin: true` holds every permission; other users only those in `permissions`. "Section" writes need the permission of the post's section: on POST the new `name`, on PUT/DELETE the post's current section, and on a PUT that changes `name` also the new one. A missing permission returns 403 ("Missing permission"); an unknown uuid stays 404, checked before the permission. Reads are public.
 
+To change a user's permissions, update the row directly; it applies to the user's next request, even with an existing token:
+
+```sql
+UPDATE users SET permissions = ARRAY['logbuch','tournament'] WHERE username = '…';
+```
+
+Migration `w05-user-permissions` gives every existing non-admin user all five permissions; narrow them after deploy.
+
 `media_creator` is required together with media (POST /post and PUT /post/{uuid}/media: 400 if missing). On POST /post a creator without media is ignored.
