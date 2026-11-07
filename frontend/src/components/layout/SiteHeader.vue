@@ -32,9 +32,10 @@ const links = [
 ]
 
 const isActive = (to: string) => {
-  const p = localePath(to).toLowerCase()
-  const cur = route.path.toLowerCase()
-  return to === '/' ? cur === p || cur === `${p}/` : cur.startsWith(p)
+  const trim = (x: string) => x.toLowerCase().replace(/(?<=.)\/$/, '')
+  const p = trim(localePath(to))
+  const cur = trim(route.path)
+  return to === '/' ? cur === p : cur.startsWith(p)
 }
 </script>
 

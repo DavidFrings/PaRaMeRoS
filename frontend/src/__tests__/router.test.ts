@@ -16,7 +16,14 @@ describe('router', () => {
     expect(r.meta.locale).toBe('en')
     expect(r.matched.length).toBeGreaterThan(0)
     expect(make().resolve('/en/nope/x').meta.locale).toBe('en')
-    expect(make().resolve('/en/').meta.locale).toBe('en')
+    const home = make().resolve('/').name
+    for (const p of ['/en', '/en/']) {
+      const m = make().resolve(p).matched.at(-1)
+      expect(m?.meta.locale).toBe('en')
+      expect(m?.name).toBe(`en-${String(home)}`)
+    }
+    expect(make().resolve('/en/nope').name).not.toBe(`en-${String(home)}`)
+    expect(make().resolve('/en/nope').meta.locale).toBe('en')
   })
 
   it('progress_logs_redirects', async () => {

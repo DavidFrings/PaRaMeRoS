@@ -5,10 +5,11 @@ import { LANG_KEY } from '@/composables/useLocale'
 
 const isCatchAll = (r: RouteRecordRaw) => r.path.includes('(.*)')
 
+// '(.*)' would also match '/en/' and beat the EN home; '(.+)' needs a segment.
 const twin = (r: RouteRecordRaw): RouteRecordRaw =>
   ({
     ...r,
-    path: r.path === '/' ? '/en' : `/en${r.path}`,
+    path: r.path === '/' ? '/en' : `/en${r.path.replace('(.*)', '(.+)')}`,
     name: r.name ? `en-${String(r.name)}` : undefined,
     meta: { ...r.meta, locale: 'en' },
   }) as RouteRecordRaw
@@ -33,7 +34,7 @@ export function createAppRouter(history: RouterHistory) {
     if (from !== START_LOCATION || to.path !== '/') return
     try {
       if (localStorage.getItem(LANG_KEY) === null && !navigator.language.startsWith('de'))
-        return '/en/'
+        return { path: '/en/', query: to.query, hash: to.hash }
     } catch {
       /* storage blocked: stay on German */
     }
