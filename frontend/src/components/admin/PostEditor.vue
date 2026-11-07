@@ -43,6 +43,8 @@ const error = ref<string | null>(null)
 const expired = ref(false)
 const relogged = ref(false)
 const busy = ref(false)
+// The API changes the credit only together with new media.
+const creatorLocked = computed(() => !!props.post && !file.value)
 
 const tabs = [
   { key: 'de', label: 'admin.editor.tabDe' },
@@ -255,8 +257,14 @@ const hint = 'text-[13px] text-(--muted)'
             v-model="creator"
             class="field"
             autocomplete="name"
+            :readonly="creatorLocked"
+            :class="creatorLocked && 'text-(--text-2)'"
             :aria-required="file ? 'true' : undefined"
+            :aria-describedby="creatorLocked ? 'pe-creator-hint' : undefined"
           />
+          <p v-if="creatorLocked" id="pe-creator-hint" :class="hint">
+            {{ t('admin.editor.creatorLocked') }}
+          </p>
         </div>
         <label
           v-if="post?.media_name && !file"

@@ -104,6 +104,7 @@ export default {
       media: 'Foto oder Video',
       mediaHint: 'JPEG, PNG oder WebP bis 15 MB, MP4 oder WebM bis 100 MB',
       creator: 'Foto oder Video von',
+      creatorLocked: 'Die Angabe lässt sich nur zusammen mit einer neuen Datei ändern',
       creatorRequired: 'Bitte angeben, von wem das Foto oder Video ist',
       removeMedia: 'Vorhandenes Foto oder Video entfernen',
       preview: 'Vorschau',

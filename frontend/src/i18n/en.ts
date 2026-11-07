@@ -106,6 +106,7 @@ const en: typeof de = {
       media: 'Photo or video',
       mediaHint: 'JPEG, PNG or WebP up to 15 MB, MP4 or WebM up to 100 MB',
       creator: 'Photo or video by',
+      creatorLocked: 'The credit can only be changed together with a new file',
       creatorRequired: 'Please say who took the photo or video',
       removeMedia: 'Remove the current photo or video',
       preview: 'Preview',

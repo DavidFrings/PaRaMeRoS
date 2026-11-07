@@ -103,6 +103,20 @@ describe('PostEditor', () => {
     expect(createPost).not.toHaveBeenCalled()
     expect(w.get('[role=alert]').text()).toContain('15 MB')
   })
+
+  it('editor_credit_readonly_without_new_file', async () => {
+    const p = post({ media_type: 'img', media_name: 'a.webp', media_creator: 'Anna' })
+    const { w } = await mountAt(PostEditor, { section: 'coaches', post: p })
+    const credit = () => w.get('#pe-creator').element as HTMLInputElement
+    expect(credit().value).toBe('Anna')
+    expect(credit().readOnly).toBe(true)
+    chooseFile(
+      w.get('input[type=file]').element as HTMLInputElement,
+      new File(['x'], 'b.jpg', { type: 'image/jpeg' }),
+    )
+    await flushPromises()
+    expect(credit().readOnly).toBe(false)
+  })
 })
 
 describe('TournamentForm', () => {

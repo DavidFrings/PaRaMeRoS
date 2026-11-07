@@ -29,6 +29,7 @@ async function answer(yes: boolean) {
     role="group"
     :aria-label="props.question"
     class="inline-flex flex-wrap items-center gap-2"
+    @keydown.esc="answer(false)"
   >
     <span class="text-[14px] text-(--text-2)">{{ props.question }}</span>
     <button type="button" class="btn-primary" @click="answer(true)">{{ props.label }}</button>
