@@ -12,7 +12,8 @@ let started = false
 let consumers = 0
 let timer: ReturnType<typeof setInterval> | undefined
 
-async function refresh() {
+/** Re-fetch the shared list, e.g. after an admin change. */
+export async function refreshLogbuch() {
   try {
     const list = await getPosts('logbuch')
     posts.value = [...list].sort(
@@ -26,8 +27,8 @@ async function refresh() {
 
 const visible = () => document.visibilityState === 'visible'
 const liveNow = () => isLive(posts.value[0], new Date())
-const onVisible = () => visible() && void refresh()
-const tick = () => liveNow() && visible() && void refresh()
+const onVisible = () => visible() && void refreshLogbuch()
+const tick = () => liveNow() && visible() && void refreshLogbuch()
 
 function stop() {
   clearInterval(timer)
@@ -49,7 +50,7 @@ export function useLogbuch() {
 
   if (!started) {
     started = true
-    void refresh()
+    void refreshLogbuch()
   }
   if (consumers++ === 0) {
     timer = setInterval(tick, POLL_MS)
@@ -59,5 +60,5 @@ export function useLogbuch() {
     if (--consumers === 0) stop()
   })
 
-  return { posts, live, refresh }
+  return { posts, live, refresh: refreshLogbuch }
 }

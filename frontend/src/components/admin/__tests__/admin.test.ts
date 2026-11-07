@@ -28,6 +28,7 @@ vi.mock('@/api/auth', () => ({
 import {
   AuthExpiredError,
   createPost,
+  deletePost,
   getPost,
   getPosts,
   getTournament,
@@ -35,6 +36,7 @@ import {
 } from '@/api/client'
 import PostEditor from '../PostEditor.vue'
 import TournamentForm from '../TournamentForm.vue'
+import PostAdminActions from '../PostAdminActions.vue'
 import AdminPage from '@/pages/admin/index.vue'
 
 const post = (o: Partial<Post> = {}): Post => ({
@@ -149,6 +151,39 @@ describe('TournamentForm', () => {
       starts_at: '2027-03-28T10:00:00+02:00',
       ends_at: null,
     })
+  })
+})
+
+describe('shared data refresh', () => {
+  it('editor_save_refreshes_logbuch', async () => {
+    vi.mocked(createPost).mockResolvedValue('n1')
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    await w.get('#pe-heading-de').setValue('H')
+    await w.get('#pe-content-de').setValue('C')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(getPosts).toHaveBeenCalledWith('logbuch')
+  })
+
+  it('post_delete_refreshes_logbuch', async () => {
+    vi.mocked(deletePost).mockResolvedValue()
+    const { w } = await mountAt(PostAdminActions, { uuid: 'u1', title: 'T' })
+    await w.get('button').trigger('click')
+    await w.get('[role=group] .btn-primary').trigger('click')
+    await flushPromises()
+    expect(deletePost).toHaveBeenCalledWith('u1')
+    expect(getPosts).toHaveBeenCalledWith('logbuch')
+  })
+
+  it('tournament_save_refreshes_tournament', async () => {
+    vi.mocked(putTournament).mockImplementation(async (t) => ({ ...t, updated_at: 'x' }))
+    const { w } = await mountAt(TournamentForm)
+    const before = vi.mocked(getTournament).mock.calls.length
+    await w.get('#tf-name').setValue('R')
+    await w.get('#tf-start').setValue('2027-03-28T10:00')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(getTournament).toHaveBeenCalledTimes(before + 1)
   })
 })
 

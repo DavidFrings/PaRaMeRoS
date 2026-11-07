@@ -8,6 +8,7 @@ import {
   getTournament,
   putTournament,
 } from '@/api/client'
+import { refreshTournament } from '@/composables/useTournament'
 import { berlinToRfc3339, rfc3339ToBerlinLocal } from '@/lib/time'
 import AuthExpiredNotice from './AuthExpiredNotice.vue'
 import ConfirmButton from './ConfirmButton.vue'
@@ -44,6 +45,7 @@ async function run(action: () => Promise<void>, done: string) {
   try {
     await action()
     status.value = done
+    void refreshTournament()
   } catch (e) {
     if (e instanceof AuthExpiredError) expired.value = true
     else {

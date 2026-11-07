@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { AuthExpiredError, deletePost, describeError } from '@/api/client'
 import { useAuth } from '@/api/auth'
 import { useLocale } from '@/composables/useLocale'
+import { refreshLogbuch } from '@/composables/useLogbuch'
 import AuthExpiredNotice from './AuthExpiredNotice.vue'
 import ConfirmButton from './ConfirmButton.vue'
 
@@ -18,6 +19,7 @@ async function remove() {
   error.value = null
   try {
     await deletePost(props.uuid)
+    void refreshLogbuch()
     emit('deleted')
   } catch (e) {
     if (e instanceof AuthExpiredError) error.value = 'expired'

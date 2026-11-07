@@ -11,6 +11,7 @@ import {
   type Section,
 } from '@/api/client'
 import MarkdownContent from '@/components/MarkdownContent.vue'
+import { refreshLogbuch } from '@/composables/useLogbuch'
 import type { Post } from '@/lib/post'
 import { seasonOf } from '@/lib/season'
 import AuthExpiredNotice from './AuthExpiredNotice.vue'
@@ -126,6 +127,7 @@ async function submit() {
         file: file.value ?? undefined,
         media_creator: file.value ? creator.value.trim() : undefined,
       })
+    void refreshLogbuch()
     emit('saved')
   } catch (e) {
     if (e instanceof AuthExpiredError) expired.value = true
