@@ -249,7 +249,7 @@ const hint = 'text-[13px] text-(--muted)'
             id="pe-file"
             type="file"
             accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
-            class="text-[15px] file:mr-3 file:min-h-11 file:rounded-[10px] file:border file:border-(--line) file:bg-(--card) file:px-4 file:text-(--text)"
+            class="text-[15px] file:mr-3 file:min-h-11 file:rounded-[10px] file:border file:border-(--field-border) file:bg-(--card) file:px-4 file:text-(--text)"
             aria-describedby="pe-file-hint"
             @change="onFile"
           />

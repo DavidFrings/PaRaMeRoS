@@ -20,6 +20,8 @@
   --text-2: #5e554a;
   --muted: #6f665a;
   --line: rgb(31 27 22 / 0.09);
+  /* Form control boundary, >= 3:1 against --card and --bg (WCAG 1.4.11). */
+  --field-border: #8f8578;
   --green: #22774a;
   --green-tag: #22774a;
   --orange: #f17a2e;
@@ -35,6 +37,7 @@
     --text-2: #aaa398;
     --muted: #8a847a;
     --line: rgb(239 233 222 / 0.08);
+    --field-border: #6f6a62;
     --green: #4cbb7f;
     --green-tag: #2a8052;
   }
@@ -73,7 +76,7 @@
 }
 
 @utility field {
-  @apply min-h-11 w-full rounded-[10px] border border-(--line) bg-(--card) px-3 py-2 text-[16px] text-(--text) placeholder:text-(--muted);
+  @apply min-h-11 w-full rounded-[10px] border border-(--field-border) bg-(--card) px-3 py-2 text-[16px] text-(--text) placeholder:text-(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
