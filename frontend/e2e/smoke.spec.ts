@@ -262,6 +262,30 @@ for (const [lang, c] of Object.entries(L)) {
   })
 }
 
+test.describe('session', () => {
+  test.use({ locale: 'de-DE' })
+  test('editor_shows_relogin_when_cookie_expired', async ({ page, created }) => {
+    await adminLogin(page)
+    await page.goto('/admin')
+    await expectPage(page, L.de.admin, L.de.notFound)
+    await page
+      .locator('[data-section="logbuch"]')
+      .getByRole('button', { name: L.de.newPost })
+      .click()
+    await page.getByLabel(L.de.heading).first().fill('Nicht verlieren')
+    await page.getByLabel(L.de.content).first().fill('Langer Text')
+    // The browser drops the cookie when the token's exp passes.
+    await page.context().clearCookies({ name: 'auth_token' })
+    await page.getByRole('button', { name: L.de.publish }).click()
+    await expect(page.getByText('Sitzung abgelaufen. Bitte erneut anmelden')).toBeVisible()
+    expect(created).toHaveLength(0)
+    await expect(page.getByLabel(L.de.heading).first()).toHaveValue('Nicht verlieren')
+    await expect(page.getByLabel(L.de.content).first()).toHaveValue('Langer Text')
+    await page.getByRole('alert').getByRole('button', { name: L.de.login }).click()
+    await expect(page.getByRole('dialog', { name: L.de.login })).toBeVisible()
+  })
+})
+
 test.describe('phone', () => {
   test('no_horizontal_scroll_on_phone', async ({ page }, info) => {
     test.skip(info.project.name !== 'phone')

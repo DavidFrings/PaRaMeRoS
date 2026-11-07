@@ -37,6 +37,12 @@ describe('authed calls', () => {
     await expect(updatePost('u', { name: 'team' })).rejects.toBeInstanceOf(AuthExpiredError)
   })
 
+  it('missing_cookie_throws_AuthExpiredError_without_request', async () => {
+    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    await expect(updatePost('u', { name: 'team' })).rejects.toBeInstanceOf(AuthExpiredError)
+    expect(request).not.toHaveBeenCalled()
+  })
+
   it('other errors propagate unchanged', async () => {
     const err = { response: { status: 500 } }
     request.mockRejectedValue(err)

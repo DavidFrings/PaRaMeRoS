@@ -24,8 +24,10 @@ export const describeError = (e: unknown): string => {
 export async function request<T = unknown>(config: AxiosRequestConfig, authed = false) {
   const headers = { ...config.headers } as Record<string, string>
   if (authed) {
+    // The cookie expires with the token; without it the API answers 400, not 401.
     const token = readToken()
-    if (token) headers.Authorization = token
+    if (!token) throw new AuthExpiredError()
+    headers.Authorization = token
   }
   try {
     return await axios.request<T>({ ...config, baseURL: window.__ENV__.API, headers })

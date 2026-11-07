@@ -129,10 +129,14 @@ export const test = base.extend<Opts & { created: string[] }>({
           : route.fulfill({ status: 204, headers: cors })
       if (method === 'POST' && pathname === '/auth')
         return json(route, {}, { Authorization: fakeJwt() })
+      // Like the API's verify(): no header is a 400, not a 401.
+      if (method !== 'GET' && !(method === 'POST' && pathname === '/auth'))
+        if (!req.headers()['authorization'])
+          return route.fulfill({ status: 400, body: 'Missing Authorization header!', headers: cors })
       if (method === 'GET' && pathname === '/auth/verify')
         return req.headers()['authorization']
           ? json(route, { admin: true })
-          : route.fulfill({ status: 401, headers: cors })
+          : route.fulfill({ status: 400, body: 'Missing Authorization header!', headers: cors })
       if (method === 'POST' && pathname === '/post') {
         created.push(req.postData() ?? '')
         return json(route, { id: IDS.newest })
