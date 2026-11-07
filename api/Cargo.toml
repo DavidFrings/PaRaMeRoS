@@ -14,7 +14,8 @@ edition = "2024"
 name = "parameros_api"
 
 [dependencies]
-actix-web = "^4.11"
+# no http2: h2 0.3 (RUSTSEC-2026-0258) has no 0.3 fix; nginx proxies HTTP/1.1
+actix-web = { version = "^4.11", default-features = false, features = ["macros", "compress-brotli", "compress-gzip", "compress-zstd", "cookies", "unicode", "compat", "ws"] }
 actix-multipart = "^0.7"
 uuid = { version = "^1.18", features = ["serde", "v4"] }
 serde = { version = "^1", features = ["derive"] }
@@ -25,9 +26,9 @@ chrono = { version = "^0.4", features = ["serde"] }
 futures = "^0.3"
 dotenvy = "^0.15"
 #diesel = { version = "^2.2", features = ["postgres", "r2d2"] }
-diesel = { version = "^2.2", features = ["chrono", "uuid"] }
-diesel-async = { version = "^0.6", features = ["postgres", "tokio", "bb8", "async-connection-wrapper"] }
-diesel_migrations = "^2.2"
+diesel = { version = "^2.3", features = ["chrono", "uuid"] }
+diesel-async = { version = "^0.7", features = ["postgres", "tokio", "bb8", "async-connection-wrapper"] }
+diesel_migrations = "^2.3"
 anyhow = "^1"
 redis = { version = "^0.32", features = ["tokio-comp", "connection-manager"] }
 bb8 = "^0.9"
