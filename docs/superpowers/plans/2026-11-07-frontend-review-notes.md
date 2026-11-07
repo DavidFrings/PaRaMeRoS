@@ -67,6 +67,7 @@ Still to confirm:
 5. The Datenschutz "Stand" date is 7. November 2026. Confirm or change.
 6. About now says "seit 2017" (taken from the home page and coaches text). Confirm.
 7. Markdown images are disabled in posts (`![x](url)` renders nothing), so post text can never load third-party images. Photos still come through the upload field.
+8. A first visit to `/` without a stored language choice and with a non-German browser language redirects to `/en/` in the client (spec 8). Googlebot crawls as en-US with no stored choice, so it may never index the German home page. Options: add a crawler exception to the redirect, or rely on the hreflang alternates in the sitemap.
 
 ## (d) Security review findings
 
@@ -112,8 +113,8 @@ Task 3
 Task 4
 - First-visit language redirect drops query and hash.
 - `localePath` has no double-prefix guard and contains a no-op ternary.
-- Switching language on `/en?x=1` stays on `/en`.
-- "Home" is not marked active at `/en`.
+- Switching language on `/en?x=1` stays on `/en`. Resolved.
+- "Home" is not marked active at `/en`. Resolved.
 - Router tests lack later navigation to `/`, `localePath`/`switchTo`, and lang-attribute checks.
 - English route copies share child records (no nested routes today).
 - `twin()` rewrites only the first path pattern; deep paths like `/en/a/b` 404 and redirects with query/hash are untested.
@@ -148,7 +149,7 @@ Task 8
 - Focus falls to the page body after the re-login modal closes.
 - The jsdom-only `showModal` fallback ships in production.
 - `Retry-After` was not CORS-exposed (fixed in this task).
-- Logbuch cache is not refreshed after deleting from `/post/[id]`.
+- Logbuch cache is not refreshed after deleting from `/post/[id]`. Resolved in the final review fixes.
 
 Task 9
 - A network-level failure in the import script throws an uncaught error (still exits non-zero, no secret leak).
@@ -160,8 +161,14 @@ Task 10
 
 ## (f) Rollout
 
-- Deploy API and frontend together. The new frontend needs the API CORS change (`Authorization` and `Retry-After` exposed) and the API change set from the earlier phases.
-- After the deploy, run the import script once: `API=https://parameros.net/api USERNAME=… PASSWORD=… node scripts/import-legacy-content.mjs` (try `--dry-run` first; see `scripts/README.md`). It is safe to re-run.
+0. Do not merge `redesign` to `main` before Plan B is done and the version is bumped: CD publishes `:latest`, and migration w03 breaks the old frontend. Bump the version by publishing a GitHub release `v<semver>`; `.github/workflows/release.yml` then opens the version-bump PR. Do not edit the versions by hand.
+1. Back up the database with `pg_dump` and copy the `uploads` volume.
+2. Run the read-only pre-checks on the production data (section names, HTML tags in use, `__diesel_schema_migrations`). The exact queries and stop conditions are in Plan A, `docs/superpowers/plans/2026-11-07-api-rework.md`, section "Rollout", step 2.
+3. Before the deploy, run the built frontend image once and check the generated `config.js`, `/tmp/csp.conf`, and `curl -I` on `/`, `/config.js` and `/uploads/x.webp`.
+4. Deploy API and frontend together. The new frontend needs the API CORS change (`Authorization` and `Retry-After` exposed) and the API change set from the earlier phases.
+5. After the deploy, run the import script once: `API=https://parameros.net/api USERNAME=… PASSWORD=… node scripts/import-legacy-content.mjs` (try `--dry-run` first; see `scripts/README.md`). It is safe to re-run.
+
+Notes:
 - HSTS (`max-age=31536000; includeSubDomains`) tells browsers to use HTTPS for one year on the domain and all subdomains. Every subdomain must serve HTTPS before this ships.
 - Set `VITE_API` to the real API origin as `https://host[:port][/path]`; the CSP `connect-src` is derived from it at container start. Only a value with unsafe characters (anything outside `A-Za-z0-9.:/-`) logs a warning. A relative value like `/api`, an uppercase scheme (`HTTPS://`) or a missing scheme falls back to same-origin only without any warning, and cross-origin API calls would then be blocked.
 - Returning visitors get the new service worker on their next visit (`autoUpdate`).
