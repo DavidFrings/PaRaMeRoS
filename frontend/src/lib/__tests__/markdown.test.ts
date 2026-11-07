@@ -13,6 +13,9 @@ describe('renderMarkdown', () => {
   it('renderMarkdown_blocks_javascript_urls', () => {
     expect(renderMarkdown('[x](javascript:alert(1))')).not.toContain('href="javascript:')
   })
+  it('renderMarkdown_drops_images', () => {
+    expect(renderMarkdown('![x](https://evil.test/p.png)')).not.toContain('<img')
+  })
   it('external links open in new tab with rel', () => {
     const out = renderMarkdown('[x](https://example.com)')
     expect(out).toContain('rel="noopener noreferrer"')

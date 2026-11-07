@@ -2,6 +2,7 @@ import MarkdownIt from 'markdown-it'
 
 // html must stay false: the API stores decoded HTML entities as Markdown text.
 const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
+md.disable('image') // post text must never load third-party images
 
 const defaultLinkOpen =
   md.renderer.rules.link_open ??
