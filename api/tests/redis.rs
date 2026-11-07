@@ -211,8 +211,13 @@ async fn api_works_when_redis_down() {
             std::thread::spawn(move || {
                 use std::io::{Read, Write};
                 let mut buf = [0u8; 4096];
-                while matches!(s.read(&mut buf), Ok(n) if n > 0) {
-                    if s.write_all(b"-ERR down\r\n").is_err() {
+                while let Ok(n @ 1..) = s.read(&mut buf) {
+                    // One error reply per command (RESP arrays start a line with '*').
+                    let cmds = (0..n)
+                        .filter(|&i| buf[i] == b'*' && (i == 0 || buf[i - 1] == b'\n'))
+                        .count()
+                        .max(1);
+                    if s.write_all(&b"-ERR down\r\n".repeat(cmds)).is_err() {
                         break;
                     }
                 }
@@ -249,4 +254,37 @@ async fn api_works_when_redis_down() {
     );
     let res = call_service(&app, TestRequest::get().uri("/posts/team").to_request()).await;
     assert_eq!(res.status(), 200);
+}
+
+#[actix_web::test]
+async fn put_invalidates_post_and_list_cache() {
+    if !has_redis() {
+        return;
+    }
+    let (app, env) = common::test_app().await;
+    let auth = common::login(&app).await;
+    insert_row(&env, "old").await;
+    let list: Vec<Value> = read_body_json(
+        call_service(&app, TestRequest::get().uri("/posts/team").to_request()).await,
+    )
+    .await;
+    let id = list[0]["uuid"].as_str().unwrap().to_owned();
+    let uri = format!("/post/{id}");
+    call_service(&app, TestRequest::get().uri(&uri).to_request()).await;
+
+    let req = TestRequest::put()
+        .uri(&uri)
+        .insert_header((AUTHORIZATION, auth))
+        .set_json(json!({"heading": "new"}))
+        .to_request();
+    assert_eq!(call_service(&app, req).await.status(), 202);
+
+    let one: Value =
+        read_body_json(call_service(&app, TestRequest::get().uri(&uri).to_request()).await).await;
+    assert_eq!(one["heading"], "new");
+    let list: Vec<Value> = read_body_json(
+        call_service(&app, TestRequest::get().uri("/posts/team").to_request()).await,
+    )
+    .await;
+    assert_eq!(list[0]["heading"], "new");
 }

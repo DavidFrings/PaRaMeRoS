@@ -3,7 +3,7 @@ use crate::db::{
     models::{Post, PostResponse},
     schema::posts::{created_at, dsl::posts as posts_dsl, name},
 };
-use crate::redis_store::{cache_get, cache_set};
+use crate::redis_store::{CACHE_TTL_SECS, cache_get, cache_set};
 use crate::utils::{HttpError, db, internal_error};
 use crate::{Env, query};
 use actix_web::{
@@ -38,7 +38,7 @@ pub async fn posts(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, H
 
     let body = serde_json::to_string(&json)
         .map_err(|err| internal_error(format!("Serialization failed: {err}")))?;
-    cache_set(&env, &key, &body, 300).await;
+    cache_set(&env, &key, &body, CACHE_TTL_SECS).await;
 
     Ok(HttpResponse::Ok()
         .content_type("application/json")

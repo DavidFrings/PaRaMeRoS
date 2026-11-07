@@ -14,6 +14,9 @@ use bcrypt::{DEFAULT_COST, hash};
 use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
 
+const REGISTER_MAX_ATTEMPTS: u32 = 3;
+const REGISTER_WINDOW_SECS: u64 = 3600;
+
 #[post("/register")]
 pub async fn register(
     http_req: HttpRequest,
@@ -23,8 +26,8 @@ pub async fn register(
     if let Some(retry) = hit_limit(
         &env,
         &format!("rl:register:{}", client_ip(&http_req)),
-        3,
-        3600,
+        REGISTER_MAX_ATTEMPTS,
+        REGISTER_WINDOW_SECS,
     )
     .await
     {

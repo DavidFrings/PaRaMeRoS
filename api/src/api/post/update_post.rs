@@ -4,10 +4,11 @@ use actix_web::{
 };
 use chrono::Utc;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
 use uuid::Uuid;
 
 use super::section::{normalize_section, validate_season};
+use crate::Env;
 use crate::db::schema::posts::updated_at;
 use crate::db::{
     models::UpdatePostRequest,
@@ -17,16 +18,14 @@ use crate::db::{
     },
 };
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, verify};
-use crate::{Env, query};
+use crate::utils::{HttpError, bad_request, db, internal_error, verify};
 
 macro_rules! update {
     ($content:expr, $new_content:expr, $uuid:expr, $conn:expr) => {
-        query!(
-            diesel::update(posts.filter(uuid_schema.eq($uuid)))
-                .set($content.eq($new_content))
-                .execute($conn)
-        )
+        diesel::update(posts.filter(uuid_schema.eq($uuid)))
+            .set($content.eq($new_content))
+            .execute($conn)
+            .await?
     };
 }
 
@@ -48,41 +47,56 @@ pub async fn update_post(
         validate_season(s)?;
     }
 
+    let new_name = data.name.as_deref().map(normalize_section).transpose()?;
+
     let mut conn = db(&env).await?;
-    let mut was_updated = false;
 
-    if let Some(new_name) = data.name {
-        let new_name = normalize_section(&new_name)?;
-        update!(name, new_name, &req_uuid, &mut conn);
-        was_updated = true;
-    }
-    if let Some(new_heading) = data.heading {
-        update!(heading, new_heading, &req_uuid, &mut conn);
-        was_updated = true;
-    }
-    if let Some(new_content) = data.content {
-        update!(content, new_content, &req_uuid, &mut conn);
-        was_updated = true;
-    }
+    // One transaction: a failing statement must not leave a half-applied update.
+    let uuid = &req_uuid;
+    let data = &data;
+    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        async move {
+            let mut was_updated = false;
+            if let Some(new_name) = new_name {
+                update!(name, new_name, uuid, conn);
+                was_updated = true;
+            }
+            if let Some(v) = &data.heading {
+                update!(heading, v, uuid, conn);
+                was_updated = true;
+            }
+            if let Some(v) = &data.content {
+                update!(content, v, uuid, conn);
+                was_updated = true;
+            }
 
-    // An empty string clears the optional field to NULL.
-    let opt = |v: String| Some(v).filter(|v| !v.is_empty());
-    if let Some(v) = data.heading_en {
-        update!(heading_en, opt(v), &req_uuid, &mut conn);
-        was_updated = true;
-    }
-    if let Some(v) = data.content_en {
-        update!(content_en, opt(v), &req_uuid, &mut conn);
-        was_updated = true;
-    }
-    if let Some(v) = data.season {
-        update!(season, opt(v), &req_uuid, &mut conn);
-        was_updated = true;
-    }
+            // An empty string clears the optional field to NULL.
+            let opt = |v: &String| Some(v.clone()).filter(|v| !v.is_empty());
+            if let Some(v) = &data.heading_en {
+                update!(heading_en, opt(v), uuid, conn);
+                was_updated = true;
+            }
+            if let Some(v) = &data.content_en {
+                update!(content_en, opt(v), uuid, conn);
+                was_updated = true;
+            }
+            if let Some(v) = &data.season {
+                update!(season, opt(v), uuid, conn);
+                was_updated = true;
+            }
 
-    if was_updated {
-        update!(updated_at, Utc::now().naive_utc(), &req_uuid, &mut conn);
-    }
+            if was_updated {
+                update!(updated_at, Utc::now().naive_utc(), uuid, conn);
+            }
+            Ok(())
+        }
+        .scope_boxed()
+    })
+    .await
+    .map_err(|err| {
+        log::error!("Database error: {}", err);
+        internal_error("Database error")
+    })?;
 
     cache_clear_posts(&env).await;
     Ok(HttpResponse::Accepted().finish())

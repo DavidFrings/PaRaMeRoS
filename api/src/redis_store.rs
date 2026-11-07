@@ -6,6 +6,7 @@ use log::warn;
 use redis::{AsyncCommands, aio::ConnectionManager};
 use std::{future::Future, time::Duration};
 
+pub const CACHE_TTL_SECS: u64 = 600;
 const OP_TIMEOUT: Duration = Duration::from_millis(500);
 
 /// Run a Redis operation with a timeout; `None` when Redis is absent, failing or slow.
