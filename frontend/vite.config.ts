@@ -29,7 +29,11 @@ export default defineConfig({
     //VueDevTools(),
     VitePWA({
       registerType: 'autoUpdate',
-      workbox: { globIgnores: ['**/config.js'] }, // config.js is runtime config, never precache it
+      workbox: {
+        globIgnores: ['**/config.js'], // config.js is runtime config, never precache it
+        // Served by nginx, not the SPA: keep them out of the index.html fallback.
+        navigateFallbackDenylist: [/^\/sitemap\.xml$/, /^\/uploads\//],
+      },
       manifest: {
         name: 'PaRaMeRoS',
         short_name: 'PaRaMeRoS',
