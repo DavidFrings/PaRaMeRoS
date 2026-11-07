@@ -1,4 +1,4 @@
-use crate::client_ip::client_ip;
+use crate::client_ip::{client_ip, rate_limit_key_ip};
 use crate::db::{
     models::{NewUser, RegisterRequest, User},
     schema::users::dsl::users,
@@ -25,7 +25,7 @@ pub async fn register(
 ) -> Result<HttpResponse, HttpError> {
     if let Some(retry) = hit_limit(
         &env,
-        &format!("rl:register:{}", client_ip(&http_req)),
+        &format!("rl:register:{}", rate_limit_key_ip(client_ip(&http_req))),
         REGISTER_MAX_ATTEMPTS,
         REGISTER_WINDOW_SECS,
     )

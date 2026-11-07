@@ -68,3 +68,5 @@ The API has integration tests (`api/tests/`); the frontend has none.
 
 - `docker-compose.yml` (prod) / `docker-compose.dev.yml` (dev) run Chainguard Postgres, the API and the nginx frontend. Images are Chainguard-based (no shell, so no container healthchecks).
 - `.github/workflows/cd.yml` builds and pushes per-arch (x86_64/aarch64) images for both parts on pushes to `main`, tagged with the version from `Cargo.toml` / `package.json`.
+- Rate limits key on `X-Real-IP`. The host nginx must set it from a trusted source: `set_real_ip_from <Cloudflare ranges>; real_ip_header CF-Connecting-IP;` plus `proxy_set_header X-Real-IP $remote_addr;` (or firewall the origin to Cloudflare ranges). Never copy `$http_cf_connecting_ip` blindly: a direct hit on the origin could then spoof any IP.
+- Prod compose binds db, API and frontend ports to `127.0.0.1` only.

@@ -1,5 +1,5 @@
 use crate::Env;
-use crate::client_ip::client_ip;
+use crate::client_ip::{client_ip, rate_limit_key_ip};
 use crate::db::{
     models::{Claims, LoginRequest, User},
     schema::users::{dsl::users, username},
@@ -34,7 +34,7 @@ pub async fn auth(
     let data = login_data.into_inner();
 
     // Only failed attempts count; checked before the expensive bcrypt work.
-    let limit_key = format!("rl:login:{}", client_ip(&req));
+    let limit_key = format!("rl:login:{}", rate_limit_key_ip(client_ip(&req)));
     if let Some(retry) = check_limit(&env, &limit_key, LOGIN_MAX_FAILURES).await {
         return Err(too_many_requests(retry));
     }
