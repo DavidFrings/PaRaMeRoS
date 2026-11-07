@@ -11,7 +11,7 @@ use crate::api::tournament::{delete::delete_tournament, get::get_tournament, put
 use crate::api::users::{auth::auth, register::register, verify::auth_verify};
 use actix_cors::Cors;
 use actix_web::{
-    http::header::{AUTHORIZATION, CONTENT_TYPE},
+    http::header::{AUTHORIZATION, CONTENT_TYPE, RETRY_AFTER},
     web::ServiceConfig,
 };
 
@@ -42,5 +42,34 @@ pub fn cors(origins: &[String]) -> Cors {
 
     cors.allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
         .allowed_headers(vec![CONTENT_TYPE, AUTHORIZATION])
+        .expose_headers(vec![AUTHORIZATION, RETRY_AFTER])
         .supports_credentials()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{App, HttpResponse, test, web};
+
+    #[actix_web::test]
+    async fn cors_exposes_authorization_and_retry_after() {
+        let app = test::init_service(
+            App::new()
+                .wrap(cors(&["http://a.test".into()]))
+                .route("/", web::get().to(HttpResponse::Ok)),
+        )
+        .await;
+        let req = test::TestRequest::get()
+            .uri("/")
+            .insert_header(("Origin", "http://a.test"))
+            .to_request();
+        let res = test::call_service(&app, req).await;
+        let exposed = res
+            .headers()
+            .get("access-control-expose-headers")
+            .map(|v| v.to_str().unwrap().to_lowercase())
+            .unwrap_or_default();
+        assert!(exposed.contains("authorization"), "{exposed}");
+        assert!(exposed.contains("retry-after"), "{exposed}");
+    }
 }
