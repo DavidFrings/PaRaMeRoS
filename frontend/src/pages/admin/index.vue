@@ -25,6 +25,7 @@ const ready = ref(false)
 const lists = ref<Partial<Record<Section, Post[]>>>({})
 const loadFailed = ref(false)
 const notFound = ref(false)
+const forbidden = ref(false)
 const editing = ref<{ section: Section; post: Post | null } | null>(null)
 
 // Only the areas this account may write; the API enforces the same rule.
@@ -55,7 +56,7 @@ async function load() {
 }
 
 async function openFromQuery(id: unknown) {
-  notFound.value = false
+  notFound.value = forbidden.value = false
   if (typeof id !== 'string' || !id) {
     if (editing.value?.post) editing.value = null
     return
@@ -70,6 +71,12 @@ async function openFromQuery(id: unknown) {
       notFound.value = true
       return
     }
+  }
+  // A deep link may point at a section this account cannot write; the API would 403 the save.
+  if (!can(post.name)) {
+    forbidden.value = true
+    if (editing.value?.post) editing.value = null
+    return
   }
   editing.value = { section: sectionOf(post.name), post }
 }
@@ -136,6 +143,7 @@ watch(
         <button type="button" class="btn" @click="signOut">{{ t('admin.logout') }}</button>
       </div>
       <p v-if="notFound" role="alert" class="mt-4 text-[15px]">{{ t('admin.editor.notFound') }}</p>
+      <p v-if="forbidden" role="alert" class="mt-4 text-[15px]">{{ t('admin.forbidden') }}</p>
       <p v-if="loadFailed" role="alert" class="mt-4 text-[15px]">{{ t('admin.loadFailed') }}</p>
       <p v-if="!groups.length && !can('tournament')" class="mt-4 text-[15px]">
         {{ t('admin.noPermission') }}

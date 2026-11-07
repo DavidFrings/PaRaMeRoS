@@ -277,6 +277,14 @@ describe('permissions', () => {
     expect(w.find('[data-section=team]').exists()).toBe(true)
   })
 
+  it('admin_blocks_editing_forbidden_post', async () => {
+    perms.value = ['logbuch']
+    vi.mocked(getPost).mockResolvedValue(post({ uuid: 'f1', name: 'forest-project' }))
+    const { w } = await mountAt(AdminPage, {}, '/admin?edit=f1')
+    expect(w.get('[role=alert]').text()).toBe('Dafür fehlt die Berechtigung')
+    expect(w.find('#pe-heading-de').exists()).toBe(false)
+  })
+
   it('admin_without_permissions_shows_note', async () => {
     perms.value = []
     const { w } = await mountAt(AdminPage)
