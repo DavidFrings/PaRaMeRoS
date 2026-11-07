@@ -5,7 +5,7 @@ use crate::db::{
 };
 use crate::media::{read_form, store_upload};
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, verify};
+use crate::utils::{HttpError, bad_request, db, require, verify};
 use crate::{Env, query};
 use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, post, web::Data};
@@ -21,7 +21,7 @@ pub async fn new_post(
     mut payload: Multipart,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    let user = verify(&req, &env).await?;
 
     let mut form = read_form(
         &mut payload,
@@ -41,6 +41,7 @@ pub async fn new_post(
     let non_empty = |v: Option<String>| v.filter(|t| !t.is_empty());
 
     let name = normalize_section(&take("name").ok_or_else(|| bad_request("Name missing!"))?)?;
+    require(&user, name)?;
     let season = non_empty(take("season"));
     if let Some(season) = &season {
         validate_season(season)?;

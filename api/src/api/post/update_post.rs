@@ -8,7 +8,6 @@ use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt
 use uuid::Uuid;
 
 use super::section::{normalize_section, validate_season};
-use crate::Env;
 use crate::db::schema::posts::updated_at;
 use crate::db::{
     models::UpdatePostRequest,
@@ -18,7 +17,8 @@ use crate::db::{
     },
 };
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, internal_error, not_found, verify};
+use crate::utils::{HttpError, bad_request, db, internal_error, not_found, require, verify};
+use crate::{Env, query};
 
 macro_rules! update {
     ($content:expr, $new_content:expr, $uuid:expr, $conn:expr) => {
@@ -36,7 +36,7 @@ pub async fn update_post(
     update_data: Json<UpdatePostRequest>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    let user = verify(&req, &env).await?;
 
     let data = update_data.into_inner();
     let req_path = path.into_inner();
@@ -50,6 +50,18 @@ pub async fn update_post(
     let new_name = data.name.as_deref().map(normalize_section).transpose()?;
 
     let mut conn = db(&env).await?;
+
+    // Writing needs the current section, and the new one when the post moves.
+    let current: String = query!(
+        posts
+            .filter(uuid_schema.eq(&req_uuid))
+            .select(name)
+            .first(&mut conn)
+    );
+    require(&user, &current)?;
+    if let Some(new_name) = new_name {
+        require(&user, new_name)?;
+    }
 
     // One transaction: a failing statement must not leave a half-applied update.
     let uuid = &req_uuid;

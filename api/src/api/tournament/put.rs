@@ -1,5 +1,5 @@
 use crate::db::{models::Tournament, schema::tournament::dsl::tournament};
-use crate::utils::{HttpError, bad_request, db, verify};
+use crate::utils::{HttpError, authorize, bad_request, db};
 use crate::{Env, query};
 use actix_web::{
     HttpRequest, HttpResponse, put,
@@ -24,7 +24,7 @@ pub async fn put_tournament(
     body: Json<TournamentBody>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    authorize(&req, &env, "tournament").await?;
 
     let body = body.into_inner();
     let name = body.name.trim().to_owned();

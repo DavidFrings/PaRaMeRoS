@@ -4,7 +4,7 @@ use crate::db::{
 };
 use crate::media::files::remove_media_files;
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, verify};
+use crate::utils::{HttpError, bad_request, db, require, verify};
 use crate::{Env, query};
 use actix_web::{
     HttpRequest, HttpResponse, delete,
@@ -21,7 +21,7 @@ pub async fn delete_post(
     path: Path<String>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    let user = verify(&req, &env).await?;
 
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
@@ -36,6 +36,7 @@ pub async fn delete_post(
             .select(Post::as_select())
             .get_result(&mut conn)
     );
+    require(&user, &post.name)?;
 
     query!(diesel::delete(posts.filter(uuid_schema.eq(&req_uuid))).execute(&mut conn));
 

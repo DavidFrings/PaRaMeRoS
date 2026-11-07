@@ -22,6 +22,7 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub admin: bool,
+    pub permissions: Vec<String>,
 }
 
 #[derive(Insertable, Deserialize, Debug)]
@@ -30,6 +31,7 @@ pub struct NewUser {
     pub username: String,
     pub password: String,
     pub admin: bool,
+    pub permissions: Vec<String>,
 }
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, Debug)]
@@ -78,6 +80,9 @@ pub struct RegisterRequest {
     pub password: String,
     pub admin: bool,
     pub admin_pass: String,
+    /// Sections (and `tournament`) a non-admin may write; checked against `PERMISSIONS`.
+    #[serde(default)]
+    pub permissions: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -99,6 +104,7 @@ pub struct UpdatePostRequest {
 #[derive(Serialize, Debug)]
 pub struct AuthVerifyResponse {
     pub admin: bool,
+    pub permissions: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]

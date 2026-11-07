@@ -99,7 +99,27 @@ pub fn too_many_requests(retry_after_secs: u64) -> HttpError {
     }
 }
 
-pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError> {
+/// Every permission value; section names equal post `name` values.
+pub const PERMISSIONS: [&str; 5] = ["logbuch", "team", "coaches", "forest-project", "tournament"];
+
+/// Admins hold every permission; everyone else only what `permissions` lists.
+pub fn require(user: &User, perm: &str) -> Result<(), HttpError> {
+    if user.admin || user.permissions.iter().any(|p| p == perm) {
+        Ok(())
+    } else {
+        Err(forbidden("Missing permission"))
+    }
+}
+
+/// `verify` plus a permission check: 401 without a valid token, 403 without `perm`.
+pub async fn authorize(req: &HttpRequest, env: &Data<Env>, perm: &str) -> Result<i32, HttpError> {
+    let user = verify(req, env).await?;
+    require(&user, perm)?;
+    Ok(user.id)
+}
+
+/// Validate the `Authorization: Bearer <JWT>` header and load its user.
+pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<User, HttpError> {
     let auth_header = req
         .headers()
         .get(AUTHORIZATION)
@@ -143,9 +163,7 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
                 error!("Database error: {}", err);
                 internal_error("Database error")
             }
-        })?;
-
-    Ok(req_id)
+        })
 }
 
 pub async fn db(

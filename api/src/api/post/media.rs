@@ -7,7 +7,7 @@ use crate::db::{
 };
 use crate::media::{files::remove_media_files, read_form, store_upload};
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, verify};
+use crate::utils::{HttpError, bad_request, db, require, verify};
 use crate::{Env, query};
 use actix_multipart::Multipart;
 use actix_web::{
@@ -41,9 +41,10 @@ pub async fn replace_media(
     mut payload: Multipart,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    let user = verify(&req, &env).await?;
     let id = parse_uuid(path)?;
     let old = find_post(&env, &id).await?;
+    require(&user, &old.name)?;
 
     let mut form = read_form(&mut payload, &["media_type", "media_creator"]).await?;
     let kind = form
@@ -90,9 +91,10 @@ pub async fn delete_media(
     path: Path<String>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    let user = verify(&req, &env).await?;
     let id = parse_uuid(path)?;
     let old = find_post(&env, &id).await?;
+    require(&user, &old.name)?;
 
     let mut conn = db(&env).await?;
     query!(

@@ -1,27 +1,21 @@
-use crate::db::{
-    models::{AuthVerifyResponse, User},
-    schema::users::{dsl::users, id},
-};
-use crate::utils::{HttpError, db, verify};
-use crate::{Env, query};
+use crate::Env;
+use crate::db::models::AuthVerifyResponse;
+use crate::utils::{HttpError, PERMISSIONS, verify};
 use actix_web::{HttpRequest, HttpResponse, get, web::Data};
-use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
 
 #[get("/auth/verify")]
 async fn auth_verify(req: HttpRequest, env: Data<Env>) -> Result<HttpResponse, HttpError> {
-    let usr_id = verify(&req, &env).await?;
+    let usr = verify(&req, &env).await?;
 
-    let mut conn = db(&env).await?;
+    // Admins get every permission so clients need only one rule.
+    let permissions = if usr.admin {
+        PERMISSIONS.map(String::from).to_vec()
+    } else {
+        usr.permissions
+    };
 
-    let usr = query!(
-        users
-            .filter(id.eq(&usr_id))
-            .limit(1)
-            .get_result::<User>(&mut conn)
-    );
-
-    let json = AuthVerifyResponse { admin: usr.admin };
-
-    Ok(HttpResponse::Ok().json(json))
+    Ok(HttpResponse::Ok().json(AuthVerifyResponse {
+        admin: usr.admin,
+        permissions,
+    }))
 }
