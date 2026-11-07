@@ -21,6 +21,7 @@ declare module 'vue-router/auto-routes' {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...404]': RouteRecordInfo<'/[...404]', '/:404(.*)', { 404: ParamValue<true> }, { 404: ParamValue<false> }>,
     '/About': RouteRecordInfo<'/About', '/About', Record<never, never>, Record<never, never>>,
+    '/admin/': RouteRecordInfo<'/admin/', '/admin', Record<never, never>, Record<never, never>>,
     '/Imprint': RouteRecordInfo<'/Imprint', '/Imprint', Record<never, never>, Record<never, never>>,
     '/logbuch/': RouteRecordInfo<'/logbuch/', '/logbuch', Record<never, never>, Record<never, never>>,
     '/Login': RouteRecordInfo<'/Login', '/Login', Record<never, never>, Record<never, never>>,
@@ -51,6 +52,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/About.vue': {
       routes: '/About'
+      views: never
+    }
+    'src/pages/admin/index.vue': {
+      routes: '/admin/'
       views: never
     }
     'src/pages/Imprint.vue': {

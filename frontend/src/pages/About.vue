@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight } from 'lucide-vue-next'
 import { getPosts } from '@/api/client'
+import PostAdminActions from '@/components/admin/PostAdminActions.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import PostMedia from '@/components/PostMedia.vue'
 import { useLocale } from '@/composables/useLocale'
@@ -49,6 +50,11 @@ const link = 'inline-flex min-h-11 items-center gap-1 text-[15px] font-medium te
       </h2>
       <MarkdownContent :source="coachesText.content" class="text-(--text-2)" />
       <PostMedia :post="coaches" size="full" :alt="t('about.coachesAlt')" />
+      <PostAdminActions
+        :uuid="coaches.uuid"
+        :title="coachesText.heading"
+        @deleted="coaches = null"
+      />
     </div>
 
     <RouterLink :to="localePath('/team')" :class="[link, 'mt-8']"

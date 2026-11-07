@@ -44,3 +44,45 @@ export const formatEdited = (d: Date, locale: Locale) =>
 /** Live = newest logbuch post is under 2 h old. */
 export const isLive = (newestLogbuch: { created_at: string } | undefined, now: Date) =>
   !!newestLogbuch && now.getTime() - parseApiTime(newestLogbuch.created_at).getTime() < 7_200_000
+
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** Berlin wall time of `d` as a `datetime-local` value ("YYYY-MM-DDTHH:mm"). */
+function berlinWall(d: Date) {
+  const p = Object.fromEntries(
+    fmt('en', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hourCycle: 'h23',
+    })
+      .formatToParts(d)
+      .map((x) => [x.type, Number(x.value)]),
+  )
+  return { y: p.year, mo: p.month, d: p.day, h: p.hour, mi: p.minute }
+}
+
+/** Berlin UTC offset in minutes at instant `ms`. */
+function berlinOffset(ms: number) {
+  const w = berlinWall(new Date(ms))
+  return (Date.UTC(w.y, w.mo - 1, w.d, w.h, w.mi) - Math.floor(ms / 60_000) * 60_000) / 60_000
+}
+
+/** `datetime-local` value read as Berlin wall time, to RFC 3339 with its DST-aware offset. */
+export function berlinToRfc3339(local: string) {
+  const [y, mo, d, h, mi] = local.split(/[-T:]/).map(Number)
+  const asUtc = Date.UTC(y, mo - 1, d, h, mi)
+  // Second pass corrects the guess when the first lands on the other side of a DST switch.
+  const off = berlinOffset(asUtc - berlinOffset(asUtc) * 60_000)
+  const sign = off < 0 ? '-' : '+'
+  const abs = Math.abs(off)
+  return `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
+}
+
+/** RFC 3339 instant to a Berlin `datetime-local` value. */
+export function rfc3339ToBerlinLocal(iso: string) {
+  const w = berlinWall(new Date(iso))
+  return `${w.y}-${pad(w.mo)}-${pad(w.d)}T${pad(w.h)}:${pad(w.mi)}`
+}

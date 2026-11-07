@@ -33,7 +33,7 @@ const posts = computed(() =>
     <p v-if="!posts.length" class="mt-8 text-[15px] text-(--text-2)">{{ t('logbuch.empty') }}</p>
     <ul v-else class="mt-8 grid gap-12 md:gap-16">
       <li v-for="p in posts" :key="p.uuid" class="border-t border-(--line) pt-6">
-        <PostEntry :post="p" />
+        <PostEntry :post="p" @deleted="loaded = loaded.filter((x) => x.uuid !== p.uuid)" />
       </li>
     </ul>
   </section>

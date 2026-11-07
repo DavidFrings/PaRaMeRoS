@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { formatEdited, formatTimestamp, isLive, parseApiTime } from '../time'
+import {
+  berlinToRfc3339,
+  formatEdited,
+  formatTimestamp,
+  isLive,
+  parseApiTime,
+  rfc3339ToBerlinLocal,
+} from '../time'
 
 const now = new Date('2026-02-14T12:00:00Z')
 const ago = (ms: number) => new Date(now.getTime() - ms)
@@ -50,5 +57,21 @@ describe('isLive', () => {
     expect(isLive({ created_at: '2026-02-14T10:01:00' }, now)).toBe(true)
     expect(isLive({ created_at: '2026-02-14T09:59:00' }, now)).toBe(false)
     expect(isLive(undefined, now)).toBe(false)
+  })
+})
+
+describe('Berlin wall time <-> RFC 3339', () => {
+  it('summer time gives +02:00', () => {
+    expect(berlinToRfc3339('2027-03-28T10:00')).toBe('2027-03-28T10:00:00+02:00')
+    expect(berlinToRfc3339('2027-10-30T12:00')).toBe('2027-10-30T12:00:00+02:00')
+  })
+  it('winter time gives +01:00', () => {
+    expect(berlinToRfc3339('2027-01-15T10:00')).toBe('2027-01-15T10:00:00+01:00')
+    expect(berlinToRfc3339('2027-03-28T01:30')).toBe('2027-03-28T01:30:00+01:00')
+    expect(berlinToRfc3339('2027-10-31T12:00')).toBe('2027-10-31T12:00:00+01:00')
+  })
+  it('back to wall time for datetime-local', () => {
+    expect(rfc3339ToBerlinLocal('2027-03-28T10:00:00+02:00')).toBe('2027-03-28T10:00')
+    expect(rfc3339ToBerlinLocal('2027-01-15T09:00:00Z')).toBe('2027-01-15T10:00')
   })
 })

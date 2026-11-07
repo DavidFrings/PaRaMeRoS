@@ -4,6 +4,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { getPosts } from '@/api/client'
+import PostAdminActions from '@/components/admin/PostAdminActions.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import PostMedia from '@/components/PostMedia.vue'
 import SeasonTag from '@/components/SeasonTag.vue'
@@ -54,6 +55,12 @@ watch(() => route.hash, scrollToHash)
           {{ x.heading }}
         </h2>
         <MarkdownContent :source="x.content" class="mt-2 text-(--text-2)" />
+        <PostAdminActions
+          :uuid="x.post.uuid"
+          :title="x.heading"
+          class="mt-4"
+          @deleted="loaded = loaded.filter((p) => p.uuid !== x.post.uuid)"
+        />
       </div>
       <PostMedia :post="x.post" size="full" :alt="t('team.alt', { season: x.season })" />
     </section>

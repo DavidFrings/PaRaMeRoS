@@ -1,13 +1,16 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getPost } from '@/api/client'
 import NotFound from '@/components/NotFound.vue'
 import PostEntry from '@/components/PostEntry.vue'
+import { useLocale } from '@/composables/useLocale'
 import type { Post } from '@/lib/post'
 
 const route = useRoute()
+const router = useRouter()
+const { localePath } = useLocale()
 const post = ref<Post | null>(null)
 const failed = ref(false)
 
@@ -30,6 +33,6 @@ watch(
 <template>
   <NotFound v-if="failed" />
   <section v-else-if="post" class="mx-auto max-w-[760px] px-5 pt-6 pb-8 md:px-8 lg:pt-12">
-    <PostEntry :post="post" as="h1" :link="false" />
+    <PostEntry :post="post" as="h1" :link="false" @deleted="router.replace(localePath('/'))" />
   </section>
 </template>

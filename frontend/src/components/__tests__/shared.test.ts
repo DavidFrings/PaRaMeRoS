@@ -5,7 +5,11 @@ import { createAppRouter } from '@/router'
 import { i18n } from '@/i18n'
 import type { Post } from '@/lib/post'
 
-vi.mock('@/api/client', () => ({ getPosts: vi.fn(), getTournament: vi.fn() }))
+vi.mock('@/api/client', async (orig) => ({
+  ...(await orig<typeof import('@/api/client')>()),
+  getPosts: vi.fn(),
+  getTournament: vi.fn(),
+}))
 import { getPosts, getTournament } from '@/api/client'
 import { __resetLogbuchForTests } from '@/composables/useLogbuch'
 import { __resetTournamentForTests } from '@/composables/useTournament'

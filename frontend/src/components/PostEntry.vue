@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useLocale } from '@/composables/useLocale'
 import { localizedPost, type Post } from '@/lib/post'
 import { seasonFromPost } from '@/lib/season'
+import PostAdminActions from './admin/PostAdminActions.vue'
 import MarkdownContent from './MarkdownContent.vue'
 import PostMedia from './PostMedia.vue'
 import PostTime from './PostTime.vue'
@@ -12,6 +13,7 @@ const props = withDefaults(defineProps<{ post: Post; as?: 'h1' | 'h2'; link?: bo
   as: 'h2',
   link: true,
 })
+defineEmits<{ deleted: [] }>()
 const { locale, localePath } = useLocale()
 const text = computed(() => localizedPost(props.post, locale.value))
 </script>
@@ -34,5 +36,6 @@ const text = computed(() => localizedPost(props.post, locale.value))
     <MarkdownContent :source="text.content" />
     <PostMedia :post="post" size="full" :alt="text.heading" />
     <div><SeasonTag :label="seasonFromPost(post)" /></div>
+    <PostAdminActions :uuid="post.uuid" :title="text.heading" @deleted="$emit('deleted')" />
   </article>
 </template>
