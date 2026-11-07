@@ -40,3 +40,10 @@
 #cc-main .cm__btn:hover {
   filter: brightness(0.95);
 }
+
+@media (max-width: 1023px) {
+  #cc-main .cm__btn,
+  #cc-main .pm__btn {
+    min-height: 44px;
+  }
+}
