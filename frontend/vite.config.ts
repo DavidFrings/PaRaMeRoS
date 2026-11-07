@@ -5,6 +5,7 @@ import Vue from '@vitejs/plugin-vue'
 import VueDevTools from 'vite-plugin-vue-devtools' // eslint-disable-line @typescript-eslint/no-unused-vars
 import VueRouter from 'unplugin-vue-router/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import Tailwind from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -24,6 +25,7 @@ export default defineConfig({
       logs: false,
     }),
     Vue(),
+    Tailwind(),
     //VueDevTools(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -31,8 +33,8 @@ export default defineConfig({
         name: "PaRaMeRoS",
         short_name: "PaRaMeRoS",
         start_url: "/",
-        theme_color: 'transparent',
-        background_color: 'transparent',
+        theme_color: '#161513',
+        background_color: '#161513',
         prefer_related_applications: true
       }
     })

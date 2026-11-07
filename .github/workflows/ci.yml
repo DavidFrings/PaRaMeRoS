@@ -179,6 +179,30 @@ jobs:
       - name: Check
         run: pnpm run type-check
 
+  frontend-test:
+    name: "Frontend / Test"
+    environment: Build
+    needs: frontend-format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use pnpm ${{ vars.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ vars.PNPM_VERSION }}
+          run_install: false
+      - name: Use Node.js ${{ vars.NODE_VERSION }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+
   frontend-security-audit:
     name: "Frontend / Security Audit"
     environment: Build
