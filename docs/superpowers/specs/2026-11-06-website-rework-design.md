@@ -176,7 +176,7 @@ Existing routes, methods and request/response fields stay valid. New fields are 
   - Login: 5 failed attempts per IP per 15 min.
   - Register: 3 attempts per IP per hour.
   - Over the limit, return `429` with `Retry-After`.
-- **Client IP:** the API reads it from `X-Real-IP`, which the owner's host nginx sets from Cloudflare's `CF-Connecting-IP`. When the header is missing, it uses the peer address. In `docker-compose.yml` the API port is published on `127.0.0.1` only, so the header cannot be spoofed from outside.
+- **Client IP:** the API reads it from `X-Real-IP`, which the owner's host nginx sets from Cloudflare's `CF-Connecting-IP`. When the header is missing, it uses the peer address. The host nginx must set it from a trusted source (`set_real_ip_from <Cloudflare ranges>; real_ip_header CF-Connecting-IP;` plus `proxy_set_header X-Real-IP $remote_addr;`, or firewall the origin to Cloudflare ranges). Binding the API port to `127.0.0.1` alone does not make a blindly copied header safe: a direct hit on the origin could spoof any IP.
 - **Cache:** `GET /posts/{name}` and `GET /post/{uuid}` responses are cached for 10 min. Any create, update or delete clears the affected keys.
 - **Redis down:** the API keeps working. It skips caching and rate limiting and logs a warning.
 
@@ -247,8 +247,8 @@ It is idempotent: it skips a season or the coaches post when one already exists.
 ## 12. Constraints
 
 - Docker images stay Chainguard-based, which means no shell in runtime images.
-- Production runs behind Cloudflare and the owner's own nginx. The owner adds `proxy_set_header X-Real-IP $http_cf_connecting_ip;`.
-- Rust edition 2024, MSRV 1.87. pnpm frontend.
+- Production runs behind Cloudflare and the owner's own nginx. The owner sets `set_real_ip_from <Cloudflare ranges>; real_ip_header CF-Connecting-IP;` and `proxy_set_header X-Real-IP $remote_addr;` (or firewalls the origin to Cloudflare ranges). Never copy `$http_cf_connecting_ip` blindly.
+- Rust edition 2024, MSRV 1.92. pnpm frontend.
 - Hooks in `.claude/settings.json` auto-format edited files. `schema.rs`, lock files and `.env` are protected from direct edits.
 
 ## 13. Left to the builder

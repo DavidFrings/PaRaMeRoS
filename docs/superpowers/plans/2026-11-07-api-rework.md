@@ -343,10 +343,12 @@
 
 ## Rollout (owner, after Plans A and B merge)
 
+0. Do not merge `redesign` to `main` before Plan B is done and the version is bumped: CD publishes `:latest`, and migration w03 breaks the old frontend.
 1. Back up the database with `pg_dump` and copy the `uploads` volume.
 2. Check the production data with read-only queries:
    - `SELECT DISTINCT name FROM posts;` should list only the 4 sections plus `progress-logs`.
    - `SELECT DISTINCT (regexp_matches(content, '<(/?[a-zA-Z]+)', 'g'))[1] FROM posts;` lists the HTML tags in use. Report any tag outside `b strong i em br a`.
+   - `SELECT * FROM __diesel_schema_migrations;` must list `posts` and `users`. If not, stop: the embedded runner would try to re-create the tables.
 3. Deploy the API and frontend images together. The API applies migrations w01 to w04 on start, and the backfill runs in the background.
 4. Host nginx: `set_real_ip_from <Cloudflare ranges>; real_ip_header CF-Connecting-IP;` and `proxy_set_header X-Real-IP $remote_addr;` (plain `$http_cf_connecting_ip` is spoofable if the origin is reachable directly).
 5. Once production looks right, a later release drops `content_html_backup` in a migration w05.

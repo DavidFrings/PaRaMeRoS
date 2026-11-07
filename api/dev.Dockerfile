@@ -1,11 +1,3 @@
-### Lockfile stage
-FROM cgr.dev/chainguard/rust:latest-dev AS lockfile
-WORKDIR /work
-COPY ./Cargo.toml ./
-COPY ./.build/src ./src
-RUN cargo generate-lockfile
-
-
 ### Build stage
 FROM cgr.dev/chainguard/rust:latest-dev AS builder
 # cmake + clang build the vendored libjxl (jpegxl-rs)
@@ -13,17 +5,16 @@ USER root
 RUN apk add --no-cache cmake clang
 USER nonroot
 WORKDIR /work
-COPY ./Cargo.toml ./
-COPY --from=lockfile /work/Cargo.lock ./
+COPY ./Cargo.toml ./Cargo.lock ./
 # Cache dependencies (Save time on rebuilds)
 COPY ./.build/src ./src
-RUN cargo build
+RUN cargo build --locked
 ARG CACHE_BUST=1
 # Docker starts here on rebuilds
 COPY ./src ./src
 COPY ./migrations ./migrations
 RUN cargo clean --package parameros-api
-RUN cargo build
+RUN cargo build --locked
 
 ### Production stage
 FROM cgr.dev/chainguard/wolfi-base

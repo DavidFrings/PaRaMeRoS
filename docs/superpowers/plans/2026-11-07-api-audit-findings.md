@@ -17,7 +17,7 @@ Scope: `redesign` vs `main`, plus `cargo audit`. SHAs refer to the `redesign` br
 | D2 | Medium | rollout note | Migration w03 turns `&lt;`/`&gt;` into raw `<`/`>`; the OLD frontend renders posts with `v-html`. Deploy API and new frontend together. |
 | D3 | Low | owner decision / known | Login rate limit is check-then-increment: concurrent requests can exceed the limit slightly. |
 | D4 | Low | known | If Redis is down at boot, rate limiting and caching stay disabled until restart (fail-open). |
-| D5 | Legal | owner decision | `jpegxl-rs` is GPL-3.0; licence compatibility with MPL-2.0 pending owner decision. |
+| D5 | Legal | owner decision | `jpegxl-rs` is GPL-3.0; decided by owner 2026-11-07: accepted; image labelled MPL-2.0 AND GPL-3.0-or-later. |
 
 ## cargo audit
 
@@ -27,3 +27,4 @@ Scope: `redesign` vs `main`, plus `cargo audit`. SHAs refer to the `redesign` br
 - diesel 2.2 was pinned by `diesel_migrations 2.2` / `diesel-async 0.6`. Bumped `diesel ^2.3`, `diesel_migrations ^2.3`, `diesel-async ^0.7` (0.7.4).
 - h2 0.3 (RUSTSEC-2026-0258) has no 0.3 fix and actix-http still uses 0.3. Disabled the `http2` feature of actix-web (nginx talks HTTP/1.1 to the API). Revisit when actix-http moves to h2 0.4.
 - Remaining warnings: `paste` unmaintained (transitive), `diesel-async` RUSTSEC-2026-0138 (MySQL backend only; this project uses Postgres; reported as warning, no patched 0.7 release).
+- Docker images now build with `cargo build --locked` from the committed `Cargo.lock` (the old `lockfile` stage regenerated it), so the 0-vulnerability result covers the shipped image.
