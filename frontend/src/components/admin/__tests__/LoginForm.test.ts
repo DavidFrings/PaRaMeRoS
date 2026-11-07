@@ -19,4 +19,17 @@ describe('LoginForm', () => {
     expect(a.text()).toBe('Datenschutzerklärung')
     expect(w.text()).toContain('Es gilt unsere')
   })
+
+  it('privacy_link_opens_new_tab_and_keeps_route', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    await router.push('/admin')
+    await router.isReady()
+    const w = mount(LoginForm, { global: { plugins: [router, i18n] } })
+    const a = w.find('a[href="/Privacy-Policy"]')
+    expect(a.attributes('target')).toBe('_blank')
+    expect(a.attributes('rel')).toContain('noopener')
+    await a.trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/admin')
+  })
 })

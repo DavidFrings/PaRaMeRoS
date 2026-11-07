@@ -11,6 +11,10 @@ Home (`/`)
 - Old button "Mehr erfahren" -> "Mehr über uns", "Team kennenlernen", "Zum Logbuch", "Alle Einträge".
 - New: "Das Robotik-Team der PRMRS", "Schülerinnen und Schüler der Pater-Rupert-Mayer-Realschule, seit 2017 in der FIRST LEGO League", "Wer wir sind", "Unsere Jahrgänge", "{n} Team(s) seit {oldest}", "Team {season}", "Logbuch".
 
+Cookie banner (Task 1 copy fixes)
+- "SChließen" -> "Schließen" (close button label).
+- Broken contact link `/impress` -> `/Imprint`.
+
 Navigation and footer
 - "Home" -> "Start"; "Über Uns" -> "Über uns"; "Entwicklung" (/progress-logs) -> "Logbuch" (/logbuch, old URL redirects); "Wald Projekt" -> "Wald-Projekt (9. Klassen PRMRS)"; "Cookies", "Impressum", "Datenschutz", "Sitemap" unchanged.
 - New: "Menü", "Menü schließen", "Hauptnavigation", "Zum Inhalt springen", "Sprache", "Pater-Rupert-Mayer-Realschule".
@@ -52,7 +56,7 @@ Everything in `frontend/src/i18n/en.ts` is a draft by the implementer and needs 
 ## (c) Owner decisions
 
 Decided by the owner:
-1. Login page has no privacy-consent checkbox any more: accepted. Instead a small line sits under the login button (also in the re-login modal): "Es gilt unsere Datenschutzerklärung" / "Our privacy policy applies", with the link going to the locale-aware privacy page. The footer "Datenschutz" link stays on every page.
+1. Login page has no privacy-consent checkbox any more: accepted. Instead a small line sits under the login button (also in the re-login modal): "Es gilt unsere Datenschutzerklärung" / "Our privacy policy applies", with the link going to the locale-aware privacy page. It opens in a new tab so that the re-login modal never loses typed editor text. The footer "Datenschutz" link stays on every page.
 2. The 2023/24 import text keeps its Markdown link "Zum Algorithmus" (GitHub wiki).
 3. Contrast fixes kept: light `--muted` #7b7266 -> #6f665a, dark `--green-tag` #2f8f5a -> #2a8052 (WCAG AA).
 
@@ -159,5 +163,5 @@ Task 10
 - Deploy API and frontend together. The new frontend needs the API CORS change (`Authorization` and `Retry-After` exposed) and the API change set from the earlier phases.
 - After the deploy, run the import script once: `API=https://parameros.net/api USERNAME=… PASSWORD=… node scripts/import-legacy-content.mjs` (try `--dry-run` first; see `scripts/README.md`). It is safe to re-run.
 - HSTS (`max-age=31536000; includeSubDomains`) tells browsers to use HTTPS for one year on the domain and all subdomains. Every subdomain must serve HTTPS before this ships.
-- Set `VITE_API` to the real API origin; the CSP `connect-src` is derived from it at container start. A relative or unusual value falls back to same-origin only (a warning appears in the container log).
+- Set `VITE_API` to the real API origin as `https://host[:port][/path]`; the CSP `connect-src` is derived from it at container start. Only a value with unsafe characters (anything outside `A-Za-z0-9.:/-`) logs a warning. A relative value like `/api`, an uppercase scheme (`HTTPS://`) or a missing scheme falls back to same-origin only without any warning, and cross-origin API calls would then be blocked.
 - Returning visitors get the new service worker on their next visit (`autoUpdate`).
