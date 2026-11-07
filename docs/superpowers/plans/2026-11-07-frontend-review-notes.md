@@ -161,7 +161,7 @@ Task 10
 
 ## (f) Rollout
 
-0. Do not merge `redesign` to `main` before Plan B is done and the version is bumped: CD publishes `:latest`, and migration w03 breaks the old frontend. Bump the version by publishing a GitHub release `v<semver>`; `.github/workflows/release.yml` then opens the version-bump PR. Do not edit the versions by hand.
+0. Do not merge `redesign` to `main` before Plan B is done: CD publishes `:latest`, and migration w03 breaks the old frontend. The version is bumped to 3.0.0 in this branch. After the merge, publish GitHub release `v3.0.0` on main; its bump job then has nothing to change.
 1. Back up the database with `pg_dump` and copy the `uploads` volume.
 2. Run the read-only pre-checks on the production data (section names, HTML tags in use, `__diesel_schema_migrations`). The exact queries and stop conditions are in Plan A, `docs/superpowers/plans/2026-11-07-api-rework.md`, section "Rollout", step 2.
 3. Before the deploy, run the built frontend image once and check the generated `config.js`, `/tmp/csp.conf`, and `curl -I` on `/`, `/config.js` and `/uploads/x.webp`.
