@@ -37,11 +37,11 @@ pub async fn delete_post(
             .get_result(&mut conn)
     );
 
+    query!(diesel::delete(posts.filter(uuid_schema.eq(&req_uuid))).execute(&mut conn));
+
     if let Some(media_name) = post.media_name {
         remove_media_files(&env.upload_dir, &media_name);
     }
-
-    query!(diesel::delete(posts.filter(uuid_schema.eq(&req_uuid))).execute(&mut conn));
 
     cache_clear_posts(&env).await;
     info!("Deleted post {} on {}", post.heading, post.name);

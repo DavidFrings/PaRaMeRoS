@@ -178,3 +178,15 @@ async fn migrations_w01_w02_down_up_roundtrip() {
         1
     );
 }
+
+#[actix_web::test]
+async fn put_unknown_post_returns_404() {
+    let (app, _env) = common::test_app().await;
+    let auth = common::login(&app).await;
+    let req = TestRequest::put()
+        .uri(&format!("/post/{}", uuid::Uuid::new_v4()))
+        .insert_header((AUTHORIZATION, auth))
+        .set_json(json!({ "heading": "x" }))
+        .to_request();
+    assert_eq!(call_service(&app, req).await.status(), 404);
+}

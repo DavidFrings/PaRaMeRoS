@@ -53,6 +53,12 @@ pub async fn replace_media(
     let data = form
         .file
         .ok_or_else(|| bad_request("Media file missing!"))?;
+    // DB CHECK media_fields needs a creator with the media; fail before any file is written.
+    let creator = form
+        .text
+        .remove("media_creator")
+        .filter(|c| !c.trim().is_empty())
+        .ok_or_else(|| bad_request("Media creator missing!"))?;
     let (new_type, new_name) = store_upload(env.upload_dir.clone(), id, &kind, data).await?;
 
     let mut conn = db(&env).await?;
@@ -61,7 +67,7 @@ pub async fn replace_media(
             .set((
                 media_type.eq(&new_type),
                 media_name.eq(&new_name),
-                media_creator.eq(form.text.remove("media_creator")),
+                media_creator.eq(creator),
                 updated_at.eq(Utc::now().naive_utc()),
             ))
             .execute(&mut conn)

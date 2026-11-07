@@ -18,7 +18,7 @@ use crate::db::{
     },
 };
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, internal_error, verify};
+use crate::utils::{HttpError, bad_request, db, internal_error, not_found, verify};
 
 macro_rules! update {
     ($content:expr, $new_content:expr, $uuid:expr, $conn:expr) => {
@@ -57,6 +57,11 @@ pub async fn update_post(
     conn.transaction::<_, diesel::result::Error, _>(|conn| {
         async move {
             let mut was_updated = false;
+            posts
+                .filter(uuid_schema.eq(uuid))
+                .select(uuid_schema)
+                .first::<Uuid>(conn)
+                .await?;
             if let Some(new_name) = new_name {
                 update!(name, new_name, uuid, conn);
                 was_updated = true;
@@ -93,9 +98,12 @@ pub async fn update_post(
         .scope_boxed()
     })
     .await
-    .map_err(|err| {
-        log::error!("Database error: {}", err);
-        internal_error("Database error")
+    .map_err(|err| match err {
+        diesel::result::Error::NotFound => not_found("Not found"),
+        err => {
+            log::error!("Database error: {}", err);
+            internal_error("Database error")
+        }
     })?;
 
     cache_clear_posts(&env).await;

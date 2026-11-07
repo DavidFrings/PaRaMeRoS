@@ -49,15 +49,17 @@ pub async fn new_post(
     let content = take("content").ok_or_else(|| bad_request("Content missing!"))?;
     let heading_en = non_empty(take("heading_en"));
     let content_en = non_empty(take("content_en"));
-    let media_creator = take("media_creator");
+    let creator = take("media_creator").filter(|c| !c.trim().is_empty());
     let post_uuid = Uuid::new_v4();
 
-    let (db_media_type, db_media_name) = match (take("media_type"), form.file) {
+    // A creator without media is ignored; media without a creator violates the DB CHECK.
+    let (db_media_type, db_media_name, media_creator) = match (take("media_type"), form.file) {
         (Some(media_type), Some(data)) => {
+            let creator = creator.ok_or_else(|| bad_request("Media creator missing!"))?;
             let (t, n) = store_upload(env.upload_dir.clone(), post_uuid, &media_type, data).await?;
-            (Some(t), Some(n))
+            (Some(t), Some(n), Some(creator))
         }
-        _ => (None, None),
+        _ => (None, None, None),
     };
 
     let new_post = NewPost {

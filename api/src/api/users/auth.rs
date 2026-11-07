@@ -42,24 +42,22 @@ pub async fn auth(
     let mut conn = db(&env).await?;
 
     // Verify username
-    let usr = users
+    let usr = match users
         .filter(username.eq(&data.username))
         .limit(1)
         .get_result::<User>(&mut conn)
         .await
-        .map_err(|err| {
-            if !matches!(err, diesel::result::Error::NotFound) {
-                error!("Database error: {}", err);
-            }
+    {
+        Ok(usr) => usr,
+        Err(diesel::result::Error::NotFound) => {
             // Equalise timing with the real-user path to prevent username enumeration
             let _ = verify(&data.password, DUMMY_HASH);
-            unauthorized("Invalid username or password")
-        });
-    let usr = match usr {
-        Ok(usr) => usr,
-        Err(err) => {
             hit_limit(&env, &limit_key, LOGIN_MAX_FAILURES, LOGIN_WINDOW_SECS).await;
-            return Err(err);
+            return Err(unauthorized("Invalid username or password"));
+        }
+        Err(err) => {
+            error!("Database error: {}", err);
+            return Err(internal_error("Database error"));
         }
     };
 

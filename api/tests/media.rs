@@ -462,3 +462,84 @@ async fn backfill_creates_missing_variants() {
         (800, 400)
     );
 }
+
+#[actix_web::test]
+async fn replace_media_without_creator_returns_400_and_writes_nothing() {
+    let (app, env) = common::test_app().await;
+    let auth = common::login(&app).await;
+    let (id, old) = create_ok(
+        &app,
+        &auth,
+        "img",
+        ("a.jpg", &encoded(400, 300, ImageFormat::Jpeg)),
+    )
+    .await;
+    let count = || std::fs::read_dir(&env.upload_dir).unwrap().count();
+    let before = count();
+
+    for fields in [
+        vec![("media_type", "img")],
+        vec![("media_type", "img"), ("media_creator", "   ")],
+    ] {
+        let body = multipart(
+            &fields,
+            Some(("b.png", &encoded(400, 300, ImageFormat::Png))),
+        );
+        let res = send(
+            &app,
+            TestRequest::put().uri(&format!("/post/{id}/media")),
+            &auth,
+            body,
+        )
+        .await;
+        assert_eq!(res.status(), 400);
+    }
+
+    assert_eq!(count(), before);
+    for f in variants(&env.upload_dir, &old) {
+        assert!(f.exists(), "{}", f.display());
+    }
+    assert_eq!(get_post(&app, &id).await["media_name"], old.as_str());
+}
+
+#[actix_web::test]
+async fn new_post_media_without_creator_returns_400() {
+    let (app, env) = common::test_app().await;
+    let auth = common::login(&app).await;
+    let body = multipart(
+        &[
+            ("name", "team"),
+            ("heading", "H"),
+            ("content", "C"),
+            ("media_type", "img"),
+        ],
+        Some(("a.png", &encoded(400, 300, ImageFormat::Png))),
+    );
+    let res = send(&app, TestRequest::post().uri("/post"), &auth, body).await;
+    assert_eq!(res.status(), 400);
+    assert_eq!(std::fs::read_dir(&env.upload_dir).unwrap().count(), 0);
+}
+
+#[actix_web::test]
+async fn new_post_creator_without_media_is_ignored() {
+    let (app, _env) = common::test_app().await;
+    let auth = common::login(&app).await;
+    let body = multipart(
+        &[
+            ("name", "team"),
+            ("heading", "H"),
+            ("content", "C"),
+            ("media_creator", "me"),
+        ],
+        None,
+    );
+    let res = send(&app, TestRequest::post().uri("/post"), &auth, body).await;
+    assert_eq!(res.status(), 200);
+    let id = read_body_json::<Value, _>(res).await["id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let post = get_post(&app, &id).await;
+    assert!(post["media_creator"].is_null());
+    assert!(post["media_name"].is_null());
+}
