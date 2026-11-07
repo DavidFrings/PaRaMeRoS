@@ -56,15 +56,25 @@ const isActive = (to: string) => {
         >
       </nav>
       <div class="flex items-center gap-1">
-        <button
-          type="button"
-          :aria-label="t('nav.language', { name: locale === 'de' ? 'English' : 'Deutsch' })"
-          class="h-11 rounded-[8px] px-2 font-mono text-[12px] transition-colors hover:bg-(--raised) lg:h-9"
-          @click="switchTo(locale === 'de' ? 'en' : 'de')"
-        >
-          <span :class="locale === 'de' ? 'text-(--text-2)' : 'text-(--muted)'">DE</span> ·
-          <span :class="locale === 'en' ? 'text-(--text-2)' : 'text-(--muted)'">EN</span>
-        </button>
+        <div role="group" :aria-label="t('nav.languageGroup')" class="flex items-center">
+          <template v-for="(l, i) in ['de', 'en'] as const" :key="l">
+            <span v-if="i" aria-hidden="true" class="font-mono text-[12px] text-(--muted)">·</span>
+            <button
+              type="button"
+              :lang="l"
+              :aria-current="locale === l ? 'true' : undefined"
+              class="h-11 min-w-11 rounded-[8px] px-2 font-mono text-[12px] transition-colors lg:h-9 lg:min-w-0"
+              :class="
+                locale === l
+                  ? 'font-medium text-(--text-2) underline underline-offset-4'
+                  : 'text-(--muted) hover:bg-(--raised)'
+              "
+              @click="locale !== l && switchTo(l)"
+            >
+              {{ l.toUpperCase() }}
+            </button>
+          </template>
+        </div>
         <button
           ref="menuButton"
           type="button"

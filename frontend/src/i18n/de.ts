@@ -8,7 +8,7 @@ export default {
     menuClose: 'Menü schließen',
     main: 'Hauptnavigation',
     skip: 'Zum Inhalt springen',
-    language: 'Sprache: {name}',
+    languageGroup: 'Sprache',
     imprint: 'Impressum',
     privacy: 'Datenschutz',
     sitemap: 'Sitemap',

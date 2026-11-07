@@ -10,7 +10,7 @@ const en: typeof de = {
     menuClose: 'Close menu',
     main: 'Main navigation',
     skip: 'Skip to content',
-    language: 'Language: {name}',
+    languageGroup: 'Language',
     imprint: 'Legal notice',
     privacy: 'Privacy policy',
     sitemap: 'Sitemap',
