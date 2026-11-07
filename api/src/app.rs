@@ -6,6 +6,7 @@ use crate::api::post::{
     posts::posts,
     update_post::update_post,
 };
+use crate::api::sitemap::sitemap;
 use crate::api::tournament::{delete::delete_tournament, get::get_tournament, put::put_tournament};
 use crate::api::users::{auth::auth, register::register, verify::auth_verify};
 use actix_cors::Cors;
@@ -28,7 +29,8 @@ pub fn configure(cfg: &mut ServiceConfig) {
         .service(delete_media)
         .service(get_tournament)
         .service(put_tournament)
-        .service(delete_tournament);
+        .service(delete_tournament)
+        .service(sitemap);
 }
 
 pub fn cors(origins: &[String]) -> Cors {

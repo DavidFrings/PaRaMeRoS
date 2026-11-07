@@ -26,6 +26,19 @@ pub async fn test_app() -> (
     >,
     Env,
 ) {
+    test_app_with_site(site_url()).await
+}
+
+pub async fn test_app_with_site(
+    site: &str,
+) -> (
+    impl Service<
+        actix_http::Request,
+        Response = ServiceResponse<impl MessageBody>,
+        Error = actix_web::Error,
+    >,
+    Env,
+) {
     let db_url = std::env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL not set");
     run_migrations(&db_url).await.expect("migrations failed");
 
@@ -76,7 +89,7 @@ pub async fn test_app() -> (
             .expect("upload dir")
             .keep(),
         redis,
-        site_url: site_url().into(),
+        site_url: site.into(),
     };
 
     let app = init_service(
