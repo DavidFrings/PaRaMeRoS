@@ -5,6 +5,6 @@ interface Window {
     NAME?: string;
     DESC?: string;
     KEYWORDS?: string;
-    API?: string;
+    API: string;
   }
 }

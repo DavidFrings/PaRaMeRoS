@@ -1,0 +1,61 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import axios from 'axios'
+import { tokenCookieExpiry } from '../auth'
+import { AuthExpiredError, deletePost, getTournament, updatePost } from '../client'
+
+vi.mock('axios')
+const request = vi.mocked(axios.request)
+
+const b64url = (o: object) =>
+  btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+const jwt = (payload: object) => `${b64url({ alg: 'HS256' })}.${b64url(payload)}.sig`
+
+beforeEach(() => {
+  request.mockReset()
+  window.__ENV__ = { API: 'http://api.test' }
+  document.cookie = 'auth_token=Bearer%20abc; path=/'
+})
+
+describe('tokenCookieExpiry', () => {
+  it('cookie_expiry_matches_token_exp', () => {
+    const exp = Math.floor(Date.now() / 1000) + 180
+    for (const t of [jwt({ exp }), `Bearer ${jwt({ exp })}`]) {
+      expect(Math.abs(tokenCookieExpiry(t).getTime() - exp * 1000)).toBeLessThanOrEqual(1000)
+    }
+  })
+
+  it('throws without numeric exp', () => {
+    expect(() => tokenCookieExpiry(jwt({ sub: 'x' }))).toThrow()
+    expect(() => tokenCookieExpiry('garbage')).toThrow()
+  })
+})
+
+describe('authed calls', () => {
+  it('401_throws_AuthExpiredError', async () => {
+    request.mockRejectedValue({ response: { status: 401 } })
+    await expect(deletePost('u')).rejects.toBeInstanceOf(AuthExpiredError)
+    await expect(updatePost('u', { name: 'team' })).rejects.toBeInstanceOf(AuthExpiredError)
+  })
+
+  it('other errors propagate unchanged', async () => {
+    const err = { response: { status: 500 } }
+    request.mockRejectedValue(err)
+    await expect(deletePost('u')).rejects.toBe(err)
+  })
+
+  it('sends cookie value verbatim as Authorization', async () => {
+    request.mockResolvedValue({ status: 202, data: '' })
+    await deletePost('u')
+    expect(request.mock.calls[0][0]).toMatchObject({
+      baseURL: 'http://api.test',
+      url: '/post/u',
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer abc' },
+    })
+  })
+
+  it('getTournament returns null on 204', async () => {
+    request.mockResolvedValue({ status: 204, data: '' })
+    expect(await getTournament()).toBeNull()
+  })
+})

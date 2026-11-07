@@ -1,0 +1,47 @@
+import { ref } from 'vue'
+import { useCookies } from 'vue3-cookies'
+import { TOKEN_COOKIE, readToken, request } from './client'
+
+/** Expiry of the JWT's `exp` claim, so the cookie dies with the token. */
+export function tokenCookieExpiry(token: string): Date {
+  const payload = token.replace(/^Bearer\s+/i, '').split('.')[1]
+  try {
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const { exp } = JSON.parse(atob(b64.padEnd(Math.ceil(b64.length / 4) * 4, '=')))
+    if (typeof exp === 'number' && Number.isFinite(exp)) return new Date(exp * 1000)
+  } catch {
+    // fall through
+  }
+  throw new Error('Token has no valid exp claim')
+}
+
+export async function login(username: string, password: string): Promise<void> {
+  const res = await request({ url: '/auth', method: 'POST', data: { username, password } })
+  const token = res.headers['authorization'] as string | undefined
+  if (!token) throw new Error('Login response has no Authorization header')
+  useCookies().cookies.set(TOKEN_COOKIE, token, tokenCookieExpiry(token), '/', '', true, 'Strict')
+  loggedIn.value = true
+}
+
+export function logout(): void {
+  useCookies().cookies.remove(TOKEN_COOKIE, '/')
+  loggedIn.value = false
+}
+
+const loggedIn = ref(!!readToken())
+
+export function useAuth() {
+  async function check() {
+    if (!readToken()) {
+      loggedIn.value = false
+      return
+    }
+    try {
+      await request({ url: '/auth/verify', method: 'GET' }, true)
+      loggedIn.value = true
+    } catch {
+      loggedIn.value = false
+    }
+  }
+  return { loggedIn, check }
+}
