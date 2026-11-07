@@ -286,6 +286,26 @@ test.describe('session', () => {
   })
 })
 
+test.describe('footer', () => {
+  test.use({ locale: 'de-DE' })
+  for (const [w, h] of [
+    [1280, 800],
+    [375, 760],
+    [375, 844],
+  ])
+    test(`footer_sits_at_bottom_on_short_pages ${w}x${h}`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h })
+      await page.goto('/Login')
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      const bottom = await page
+        .locator('footer')
+        .evaluate((el) => el.getBoundingClientRect().bottom)
+      // At 375x760 the Login page is 772 px tall, so the footer ends the document there.
+      const doc = await page.evaluate(() => document.documentElement.scrollHeight)
+      expect(Math.abs(bottom - Math.max(h, doc))).toBeLessThanOrEqual(1)
+    })
+})
+
 test.describe('phone', () => {
   test('no_horizontal_scroll_on_phone', async ({ page }, info) => {
     test.skip(info.project.name !== 'phone')

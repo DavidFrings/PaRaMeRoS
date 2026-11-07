@@ -19,10 +19,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <SkipLink />
-  <SiteHeader />
-  <main id="main" tabindex="-1" class="outline-none">
-    <RouterView />
-  </main>
-  <SiteFooter />
+  <div class="flex min-h-dvh flex-col">
+    <SkipLink />
+    <SiteHeader />
+    <main id="main" tabindex="-1" class="flex-1 outline-none">
+      <RouterView />
+    </main>
+    <SiteFooter />
+  </div>
 </template>
