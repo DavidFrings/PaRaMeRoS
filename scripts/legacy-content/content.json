@@ -1,0 +1,51 @@
+{
+  "coaches": {
+    "heading": "Unsere Coaches",
+    "image": "coaches.webp",
+    "content": "Unser Coach, **Herr v. Essen**, ist die treibende Kraft hinter dem Erfolg von **PaRaMeRoS** und seit Beginn dabei. Seit der Gründung 2017 begleitet er das Team als erfahrener Mentor. Mit seiner Expertise vermittelt er **technisches Wissen** und stärkt zugleich **Teamgeist** und **Leidenschaft**. Ebenso wichtig ist die Unterstützung unserer Co-Coachin, **Frau Knauke**, die eng mit ihm zusammenarbeitet."
+  },
+  "team": [
+    {
+      "season": "2024/25",
+      "heading": "2024 / 25",
+      "image": "2024-25.webp",
+      "content": "Auch dieses Jahr nahmen wir wieder an der First-Lego-League teil. Unser Team „PaRaMeRoS“ bestand aus Paula Affolter, Alex Brandhof, Raphael Cischek, Leo Graner, Benedikt Huber und Christian Stecher. Am Samstag, den 25.01.2025, traf sich das Team und bereitete den Tisch vor. Nach der Eröffnung starteten wir Übungsrunden mit unserem Roboter, bevor die Testrunde begann. Schnell wurde klar, dass Optimierungen nötig waren."
+    },
+    {
+      "season": "2023/24",
+      "heading": "2023 / 24",
+      "image": "2023-24.webp",
+      "content": "In der Saison 2023/24 entwickelten Maximilian Gründinger, David Frings, Carl, Alex, Anna, Maria, Livia, Nathan, Noah & Sebastian nicht nur diese Website, sondern auch innovative Lösungen für die Herausforderungen der FIRST Lego League 2023/24. Maximilian programmierte dabei eigenständig eine KI, die einen Pathfinder für den Roboter implementiert und den Dijkstra-Algorithmus verwendet.\n\n[Zum Algorithmus](https://github.com/AIIrondev/PaRaMeRoS-Algorithmus/wiki)"
+    },
+    {
+      "season": "2022/23",
+      "heading": "2022 / 23",
+      "image": "2022-23.webp",
+      "content": "In der Saison 2022/23 zeigten sich Maximilian, David, Carl, Alex, Anna, Maria, Livia, Noah & Sebastian als das PaRaMeRoS Team. Gemeinsam setzen sie die Tradition der Exzellenz fort und nahmen die Herausforderungen der FIRST Lego League 2022/23 an. Unsere Hingabe und Leidenschaft für Technologie & Teamarbeit die das Team in dieser Zeit entdeckte ebneten den Weg für neue Erfolge."
+    },
+    {
+      "season": "2021/22",
+      "heading": "2021 / 22",
+      "image": "2021-22.webp",
+      "content": "In der Saison 2021/22 erzielten Lena, Romina, Simeon & Tobias herausragende Erfolge. Sie gewannen den **Hauptpreis in Roboter-Design** und den **3. Platz in Robot-Game & Grundwerte**. Diese Auszeichnungen sind Meilensteine und Anerkennung für jeden Teilnehmer. Nach dem regionalen Wettbewerb und dem Feiern unserer Erfolge erlebten wir jedoch auch Fehler... und lernten daraus."
+    },
+    {
+      "season": "2020/21",
+      "heading": "2020 / 21",
+      "image": "2020-21.webp",
+      "content": "Trotz globaler Herausforderungen im Jahr 2020/21 ließen sich das PaRaMeRoS Team nicht entmutigen. Lena, Romina, Simeon & Tobias meisterten Herausforderungen und sammelten wertvolle Erfahrungen, auch wenn keine spezifischen Preise gewonnen wurden."
+    },
+    {
+      "season": "2019/20",
+      "heading": "2019 / 20",
+      "image": "2019-20.webp",
+      "content": "Nachdem wir 2018/19 wegen eines Schneesturms nicht teilnehmen konnten, konzentrierten sich Marcel, Kyan Amin, Konstantin, Markus, Moritz, Leonardo, Constantin, Phillip & Raphael in der Saison 2019/20 auf kontinuierliche Verbesserung und den Austausch von Erfahrungen. Ihr Teamgeist wurde gestärkt, und sie erkannten den Wert von Fähigkeiten wie Teamarbeit und Kommunikation."
+    },
+    {
+      "season": "2017/18",
+      "heading": "2017 / 18",
+      "image": "2017-18.webp",
+      "content": "In der Saison 2017/18 wagten Benedikt, Jonas, Robert, Jakob, Clemens, Kilian, Dominic, Carl & Sebastian als Teilnehmer vom PaRaMeRoS Team den ersten Schritt in die Welt der FIRST Lego League. Ihre Begeisterung für Robotik entfaltete sich, und gemeinsam legten sie den Grundstein für kommende Jahre."
+    }
+  ]
+}
