@@ -90,6 +90,34 @@ describe('PostEditor', () => {
     expect(w.get('[role=alert]').text()).toContain('Sitzung abgelaufen. Bitte erneut anmelden')
   })
 
+  it('editor_preview_shows_chosen_media', async () => {
+    const create = vi.fn(() => 'blob:fake')
+    const revoke = vi.fn()
+    Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke })
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    const input = w.get('input[type=file]').element as HTMLInputElement
+    chooseFile(input, new File(['x'], 'a.jpg', { type: 'image/jpeg' }))
+    await flushPromises()
+    expect(w.get('#pe-preview + article img').attributes('src')).toMatch(/^blob:/)
+    chooseFile(input, new File(['x'], 'v.mp4', { type: 'video/mp4' }))
+    await flushPromises()
+    expect(revoke).toHaveBeenCalledWith('blob:fake')
+    expect(w.get('#pe-preview + article video').attributes('src')).toMatch(/^blob:/)
+    Object.defineProperty(input, 'files', { value: [], configurable: true })
+    input.dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(w.find('#pe-preview + article img, #pe-preview + article video').exists()).toBe(false)
+    expect(revoke).toHaveBeenCalledTimes(2)
+  })
+
+  it('editor_preview_shows_existing_media_unless_removed', async () => {
+    const p = post({ media_type: 'img', media_name: 'a.webp', media_creator: 'Anna' })
+    const { w } = await mountAt(PostEditor, { section: 'coaches', post: p })
+    expect(w.find('#pe-preview + article img').exists()).toBe(true)
+    await w.get('input[type=checkbox]').setValue(true)
+    expect(w.find('#pe-preview + article img').exists()).toBe(false)
+  })
+
   it('editor_rejects_oversized_image_before_upload', async () => {
     const { w } = await mountAt(PostEditor, { section: 'logbuch' })
     await w.get('#pe-heading-de').setValue('H')

@@ -23,6 +23,6 @@ case "$api" in
   *[!A-Za-z0-9.:/-]*) [ -n "$api" ] && echo "entrypoint: VITE_API has unsafe characters, CSP connect-src falls back to 'self'" >&2 ;;
   *) origin="$(printf '%s' "$api" | sed -nE 's#^(https?://[A-Za-z0-9.-]+(:[0-9]{1,5})?)(/.*)?$#\1#p')" ;;
 esac
-echo "add_header Content-Security-Policy \"default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' $origin; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';\" always;" > /tmp/csp.conf
+echo "add_header Content-Security-Policy \"default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' $origin; media-src 'self' blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';\" always;" > /tmp/csp.conf
 
 exec nginx -c /etc/nginx/nginx.conf -e /dev/stderr -g "daemon off;"

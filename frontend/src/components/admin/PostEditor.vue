@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   AuthExpiredError,
@@ -11,6 +11,7 @@ import {
   type Section,
 } from '@/api/client'
 import MarkdownContent from '@/components/MarkdownContent.vue'
+import PostMedia from '@/components/PostMedia.vue'
 import { refreshLogbuch } from '@/composables/useLogbuch'
 import type { Post } from '@/lib/post'
 import { seasonOf } from '@/lib/season'
@@ -47,6 +48,17 @@ const relogged = ref(false)
 const busy = ref(false)
 // The API changes the credit only together with new media.
 const creatorLocked = computed(() => !!props.post && !file.value)
+
+// Object URL of the chosen file for the preview; revoked on change and unmount.
+const previewUrl = ref<string | null>(null)
+watch(file, (x) => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = x ? URL.createObjectURL(x) : null
+})
+onBeforeUnmount(() => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+})
+const isVideo = computed(() => !!file.value?.type.startsWith('video/'))
 
 const tabs = [
   { key: 'de', label: 'admin.editor.tabDe' },
@@ -295,6 +307,25 @@ const hint = 'text-[13px] text-(--muted)'
       </h2>
       <article class="grid gap-3 rounded-[16px] border border-(--line) bg-(--card) p-5" :lang="tab">
         <p class="text-[24px] leading-[1.15] font-medium md:text-[32px]">{{ preview.heading }}</p>
+        <figure v-if="file && previewUrl">
+          <video
+            v-if="isVideo"
+            controls
+            preload="metadata"
+            :src="previewUrl"
+            class="w-full rounded-[12px]"
+          />
+          <img v-else :src="previewUrl" alt="" class="w-full rounded-[12px]" />
+          <figcaption v-if="creator.trim()" class="mt-2 font-mono text-[12px] text-(--muted)">
+            {{ t(isVideo ? 'logbuch.videoBy' : 'logbuch.photoBy', { creator: creator.trim() }) }}
+          </figcaption>
+        </figure>
+        <PostMedia
+          v-else-if="post?.media_name && !removeMedia"
+          :post="post"
+          size="small"
+          :alt="preview.heading"
+        />
         <MarkdownContent :source="preview.content" />
       </article>
     </section>
