@@ -56,7 +56,7 @@ pub async fn delete_post(
     }
 
     cache_clear_posts(&env).await;
-    info!("Deleted post {} on {}", post.heading, post.name);
+    info!("Deleted post");
 
     Ok(HttpResponse::Accepted().finish())
 }

@@ -5,7 +5,7 @@ use std::{io::ErrorKind, path::Path};
 /// Missing files are ignored; other IO errors are logged so the DB delete can still proceed.
 pub fn remove_media_files(upload_dir: &Path, media_name: &str) {
     if media_name.is_empty() || media_name.contains(['/', '\\']) || media_name.contains("..") {
-        warn!("Refusing to delete suspicious media name: {media_name:?}");
+        warn!("Refusing to delete a suspicious media name");
         return;
     }
     let names = match media_name.strip_suffix(".webp") {
@@ -21,9 +21,9 @@ pub fn remove_media_files(upload_dir: &Path, media_name: &str) {
     for name in names {
         let path = upload_dir.join(&name);
         match std::fs::remove_file(&path) {
-            Ok(()) => info!("Deleted media: {}", path.display()),
+            Ok(()) => info!("Deleted media file"),
             Err(err) if err.kind() == ErrorKind::NotFound => {}
-            Err(err) => warn!("Failed to delete {}: {}", path.display(), err),
+            Err(err) => warn!("Failed to delete media file: {err}"),
         }
     }
 }

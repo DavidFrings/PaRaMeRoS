@@ -93,7 +93,7 @@ pub async fn new_post(
     );
 
     cache_clear_posts(&env).await;
-    info!("Created new post {} on {}", new_post.heading, new_post.name);
+    info!("Created new post");
 
     Ok(HttpResponse::Ok().json(NewPostResponse { id: new_post.uuid }))
 }
