@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { Menu, X } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { useLocale } from '@/composables/useLocale'
+import LiveBadge from '@/components/LiveBadge.vue'
 import Logo from '@/assets/imgs/logo.webp'
 
 const route = useRoute()
@@ -52,8 +53,9 @@ const isActive = (to: string) => {
           :aria-current="isActive(l.to) ? 'page' : undefined"
           class="transition-colors hover:text-(--text)"
           :class="isActive(l.to) ? 'text-(--text)' : 'text-(--text-2)'"
-          >{{ t(l.label) }}</RouterLink
-        >
+          ><span class="inline-flex items-center gap-2"
+            >{{ t(l.label) }}<LiveBadge v-if="l.to === '/logbuch'" /></span
+        ></RouterLink>
       </nav>
       <div class="flex items-center gap-1">
         <div role="group" :aria-label="t('nav.languageGroup')" class="flex items-center">
@@ -102,8 +104,9 @@ const isActive = (to: string) => {
         :aria-current="isActive(l.to) ? 'page' : undefined"
         class="flex h-12 items-center px-4 text-[15px]"
         :class="isActive(l.to) ? 'text-(--text)' : 'text-(--text-2)'"
-        >{{ t(l.label) }}</RouterLink
-      >
+        ><span class="inline-flex items-center gap-2"
+          >{{ t(l.label) }}<LiveBadge v-if="l.to === '/logbuch'" /></span
+      ></RouterLink>
     </nav>
   </header>
 </template>

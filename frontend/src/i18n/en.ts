@@ -19,7 +19,14 @@ const en: typeof de = {
     school: 'Pater-Rupert-Mayer-Realschule',
   },
   home: {},
-  logbuch: { title: 'Logbook' },
+  logbuch: {
+    title: 'Logbook',
+    empty: 'No entries yet',
+    live: 'Live',
+    season: 'Season',
+    photoBy: 'Photo: {creator}',
+    videoBy: 'Video: {creator}',
+  },
   team: {},
   about: {},
   admin: {},
@@ -30,7 +37,11 @@ const en: typeof de = {
     home: 'Back to home',
   },
   time: {},
-  countdown: {},
+  countdown: {
+    days: '{name} in 1 day | {name} in {n} days',
+    clock: '{name} in {hms}',
+    running: 'Happening now',
+  },
 }
 
 export default en

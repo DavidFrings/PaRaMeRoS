@@ -17,7 +17,14 @@ export default {
     school: 'Pater-Rupert-Mayer-Realschule',
   },
   home: {},
-  logbuch: { title: 'Logbuch' },
+  logbuch: {
+    title: 'Logbuch',
+    empty: 'Noch keine Einträge',
+    live: 'Live',
+    season: 'Saison',
+    photoBy: 'Foto: {creator}',
+    videoBy: 'Video: {creator}',
+  },
   team: {},
   about: {},
   admin: {},
@@ -28,5 +35,9 @@ export default {
     home: 'Zur Startseite',
   },
   time: {},
-  countdown: {},
+  countdown: {
+    days: '{name} in 1 Tag | {name} in {n} Tagen',
+    clock: '{name} in {hms}',
+    running: 'Läuft gerade',
+  },
 }
