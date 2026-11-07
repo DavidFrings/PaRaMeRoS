@@ -1,8 +1,10 @@
 pub mod api;
 pub mod app;
+pub mod client_ip;
 pub mod db;
 pub mod media;
 pub mod migrate;
+pub mod redis_store;
 pub mod utils;
 
 use crate::db::{connection, connection::DbPool};
@@ -44,7 +46,7 @@ impl Env {
                 .unwrap_or_else(default_cors_origins),
             upload_dir: get_env_var_optional("UPLOAD_DIR")
                 .map_or_else(|| PathBuf::from("/api/uploads"), PathBuf::from),
-            redis: None,
+            redis: connect_redis().await,
             site_url: get_env_var_optional("SITE_URL")
                 .unwrap_or_else(|| "http://localhost:3000".to_string()),
         }
@@ -67,4 +69,21 @@ fn default_cors_origins() -> Vec<String> {
         "https://PaRaMeRoS.net".to_string(),
         "https://PaRaMeRoS.DavidFrings.dev".to_string(),
     ]
+}
+
+/// Connect to `REDIS_URL` with a 2 s timeout; `None` (rate limiting/caching off) on failure.
+async fn connect_redis() -> Option<redis::aio::ConnectionManager> {
+    let url = get_env_var_optional("REDIS_URL")?;
+    let connect = async { redis::aio::ConnectionManager::new(redis::Client::open(url)?).await };
+    match actix_web::rt::time::timeout(std::time::Duration::from_secs(2), connect).await {
+        Ok(Ok(manager)) => Some(manager),
+        Ok(Err(err)) => {
+            log::warn!("Redis unavailable, continuing without it: {err}");
+            None
+        }
+        Err(_) => {
+            log::warn!("Redis connection timed out, continuing without it");
+            None
+        }
+    }
 }

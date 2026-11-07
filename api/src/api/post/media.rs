@@ -6,6 +6,7 @@ use crate::db::{
     },
 };
 use crate::media::{files::remove_media_files, read_form, store_upload};
+use crate::redis_store::cache_clear_posts;
 use crate::utils::{HttpError, bad_request, db, verify};
 use crate::{Env, query};
 use actix_multipart::Multipart;
@@ -70,6 +71,8 @@ pub async fn replace_media(
         remove_media_files(&env.upload_dir, &old_name);
     }
 
+    cache_clear_posts(&env).await;
+
     Ok(HttpResponse::Ok().json(MediaResponse {
         media_name: new_name,
     }))
@@ -100,6 +103,8 @@ pub async fn delete_media(
     if let Some(old_name) = old.media_name {
         remove_media_files(&env.upload_dir, &old_name);
     }
+
+    cache_clear_posts(&env).await;
 
     Ok(HttpResponse::NoContent().finish())
 }

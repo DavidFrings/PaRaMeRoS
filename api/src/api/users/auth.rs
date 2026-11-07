@@ -1,11 +1,13 @@
 use crate::Env;
+use crate::client_ip::client_ip;
 use crate::db::{
     models::{Claims, LoginRequest, User},
     schema::users::{dsl::users, username},
 };
-use crate::utils::{HttpError, db, internal_error, unauthorized};
+use crate::redis_store::{check_limit, hit_limit, reset_limit};
+use crate::utils::{HttpError, db, internal_error, too_many_requests, unauthorized};
 use actix_web::{
-    HttpResponse,
+    HttpRequest, HttpResponse,
     http::header::{ACCESS_CONTROL_EXPOSE_HEADERS, AUTHORIZATION},
     post,
     web::{Data, Json},
@@ -20,12 +22,22 @@ use log::{error, info};
 // bcrypt hash at DEFAULT_COST (12) so unknown users cost as much as real ones
 const DUMMY_HASH: &str = "$2b$12$iEGsObAItIyS3tRrXZXu3uH5g7cIFZl.bcy4DmIj5C0le..4D3wRm";
 
+const LOGIN_MAX_FAILURES: u32 = 5;
+const LOGIN_WINDOW_SECS: u64 = 900;
+
 #[post("/auth")]
 pub async fn auth(
+    req: HttpRequest,
     login_data: Json<LoginRequest>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
     let data = login_data.into_inner();
+
+    // Only failed attempts count; checked before the expensive bcrypt work.
+    let limit_key = format!("rl:login:{}", client_ip(&req));
+    if let Some(retry) = check_limit(&env, &limit_key, LOGIN_MAX_FAILURES).await {
+        return Err(too_many_requests(retry));
+    }
 
     let mut conn = db(&env).await?;
 
@@ -42,7 +54,14 @@ pub async fn auth(
             // Equalise timing with the real-user path to prevent username enumeration
             let _ = verify(&data.password, DUMMY_HASH);
             unauthorized("Invalid username or password")
-        })?;
+        });
+    let usr = match usr {
+        Ok(usr) => usr,
+        Err(err) => {
+            hit_limit(&env, &limit_key, LOGIN_MAX_FAILURES, LOGIN_WINDOW_SECS).await;
+            return Err(err);
+        }
+    };
 
     // Verify password
     let password_matches = verify(&data.password, &usr.password).map_err(|err| {
@@ -51,9 +70,11 @@ pub async fn auth(
     })?;
 
     if !password_matches {
+        hit_limit(&env, &limit_key, LOGIN_MAX_FAILURES, LOGIN_WINDOW_SECS).await;
         return Err(unauthorized("Invalid username or password"));
     }
 
+    reset_limit(&env, &limit_key).await;
     info!("User logged in");
 
     // JWT token

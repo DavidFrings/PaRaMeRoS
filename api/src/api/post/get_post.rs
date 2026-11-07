@@ -2,7 +2,8 @@ use crate::db::{
     models::{Post, PostResponse},
     schema::posts::{dsl::posts, uuid as uuid_schema},
 };
-use crate::utils::{HttpError, bad_request, db};
+use crate::redis_store::{cache_get, cache_set};
+use crate::utils::{HttpError, bad_request, db, internal_error};
 use crate::{Env, query};
 use actix_web::{
     HttpResponse, get,
@@ -18,6 +19,13 @@ pub async fn post(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, Ht
     let req_uuid = Uuid::parse_str(&req_path)
         .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
 
+    let key = format!("cache:post:{req_uuid}");
+    if let Some(body) = cache_get(&env, &key).await {
+        return Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body));
+    }
+
     let mut conn = db(&env).await?;
 
     let post = query!(
@@ -30,5 +38,11 @@ pub async fn post(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, Ht
 
     let json = PostResponse::from(post);
 
-    Ok(HttpResponse::Ok().json(json))
+    let body = serde_json::to_string(&json)
+        .map_err(|err| internal_error(format!("Serialization failed: {err}")))?;
+    cache_set(&env, &key, &body, 300).await;
+
+    Ok(HttpResponse::Ok()
+        .content_type("application/json")
+        .body(body))
 }

@@ -16,6 +16,7 @@ use crate::db::{
         uuid as uuid_schema,
     },
 };
+use crate::redis_store::cache_clear_posts;
 use crate::utils::{HttpError, bad_request, db, verify};
 use crate::{Env, query};
 
@@ -83,5 +84,6 @@ pub async fn update_post(
         update!(updated_at, Utc::now().naive_utc(), &req_uuid, &mut conn);
     }
 
+    cache_clear_posts(&env).await;
     Ok(HttpResponse::Accepted().finish())
 }

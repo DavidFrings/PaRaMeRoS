@@ -48,11 +48,18 @@ pub async fn test_app() -> (
     }
 
     let redis = match std::env::var("TEST_REDIS_URL") {
-        Ok(url) => Some(
-            redis::aio::ConnectionManager::new(redis::Client::open(url).expect("redis url"))
+        Ok(url) => {
+            let mut manager =
+                redis::aio::ConnectionManager::new(redis::Client::open(url).expect("redis url"))
+                    .await
+                    .expect("redis connect");
+            // Keep rate-limit and cache keys from leaking between tests.
+            redis::cmd("FLUSHDB")
+                .query_async::<()>(&mut manager)
                 .await
-                .expect("redis connect"),
-        ),
+                .expect("flushdb");
+            Some(manager)
+        }
         Err(_) => None,
     };
 

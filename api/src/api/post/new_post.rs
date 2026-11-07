@@ -4,6 +4,7 @@ use crate::db::{
     schema::posts::dsl::posts,
 };
 use crate::media::{read_form, store_upload};
+use crate::redis_store::cache_clear_posts;
 use crate::utils::{HttpError, bad_request, db, verify};
 use crate::{Env, query};
 use actix_multipart::Multipart;
@@ -83,6 +84,7 @@ pub async fn new_post(
             .get_result(&mut conn)
     );
 
+    cache_clear_posts(&env).await;
     info!("Created new post {} on {}", new_post.heading, new_post.name);
 
     Ok(HttpResponse::Ok().json(NewPostResponse { id: new_post.uuid }))

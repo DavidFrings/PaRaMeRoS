@@ -3,6 +3,7 @@ use crate::db::{
     schema::posts::{dsl::posts, uuid as uuid_schema},
 };
 use crate::media::files::remove_media_files;
+use crate::redis_store::cache_clear_posts;
 use crate::utils::{HttpError, bad_request, db, verify};
 use crate::{Env, query};
 use actix_web::{
@@ -42,6 +43,7 @@ pub async fn delete_post(
 
     query!(diesel::delete(posts.filter(uuid_schema.eq(&req_uuid))).execute(&mut conn));
 
+    cache_clear_posts(&env).await;
     info!("Deleted post {} on {}", post.heading, post.name);
 
     Ok(HttpResponse::Accepted().finish())

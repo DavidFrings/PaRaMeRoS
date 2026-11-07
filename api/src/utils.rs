@@ -5,7 +5,10 @@ use crate::db::{
 };
 use actix_web::{
     HttpRequest, HttpResponse, ResponseError,
-    http::{StatusCode, header::AUTHORIZATION},
+    http::{
+        StatusCode,
+        header::{AUTHORIZATION, RETRY_AFTER},
+    },
     web::Data,
 };
 use derive_more::Display;
@@ -34,6 +37,7 @@ macro_rules! query {
 pub struct HttpError {
     message: String,
     status: StatusCode,
+    retry_after: Option<u64>,
 }
 
 impl HttpError {
@@ -41,6 +45,7 @@ impl HttpError {
         Self {
             message: msg.into(),
             status,
+            retry_after: None,
         }
     }
 }
@@ -51,7 +56,11 @@ impl ResponseError for HttpError {
     }
 
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status).body(self.message.clone())
+        let mut res = HttpResponse::build(self.status);
+        if let Some(secs) = self.retry_after {
+            res.insert_header((RETRY_AFTER, secs.to_string()));
+        }
+        res.body(self.message.clone())
     }
 }
 
@@ -81,6 +90,13 @@ pub fn unauthorized(msg: impl Into<String>) -> HttpError {
 
 pub fn forbidden(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::FORBIDDEN)
+}
+
+pub fn too_many_requests(retry_after_secs: u64) -> HttpError {
+    HttpError {
+        retry_after: Some(retry_after_secs),
+        ..HttpError::new("Too many requests", StatusCode::TOO_MANY_REQUESTS)
+    }
 }
 
 pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError> {

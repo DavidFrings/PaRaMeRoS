@@ -1,11 +1,13 @@
+use crate::client_ip::client_ip;
 use crate::db::{
     models::{NewUser, RegisterRequest, User},
     schema::users::dsl::users,
 };
-use crate::utils::{HttpError, db, forbidden, internal_error};
+use crate::redis_store::hit_limit;
+use crate::utils::{HttpError, db, forbidden, internal_error, too_many_requests};
 use crate::{Env, query};
 use actix_web::{
-    HttpResponse, post,
+    HttpRequest, HttpResponse, post,
     web::{Data, Json},
 };
 use bcrypt::{DEFAULT_COST, hash};
@@ -14,9 +16,21 @@ use diesel_async::RunQueryDsl;
 
 #[post("/register")]
 pub async fn register(
+    http_req: HttpRequest,
     request: Json<RegisterRequest>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
+    if let Some(retry) = hit_limit(
+        &env,
+        &format!("rl:register:{}", client_ip(&http_req)),
+        3,
+        3600,
+    )
+    .await
+    {
+        return Err(too_many_requests(retry));
+    }
+
     let req = request.into_inner();
 
     if req.admin_pass != env.admin_pass {
