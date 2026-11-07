@@ -1,61 +1,38 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import { onMounted, ref } from 'vue'
-import axios from 'axios'
-
-const api = window.__ENV__.API
-
-const heading = ref('')
-const content = ref('')
-const name = ref('')
-const media = ref('')
-const media_type = ref('')
-const created_at = ref('')
-const updated_at = ref('')
-const mode = ref(false) // eslint-disable-line @typescript-eslint/no-unused-vars
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getPost } from '@/api/client'
+import NotFound from '@/components/NotFound.vue'
+import PostEntry from '@/components/PostEntry.vue'
+import { useLocale } from '@/composables/useLocale'
+import type { Post } from '@/lib/post'
 
 const route = useRoute()
-const id = route.params.id
+const router = useRouter()
+const { localePath } = useLocale()
+const post = ref<Post | null>(null)
+const failed = ref(false)
 
-onMounted(async () => {
-  try {
-    const { data: res } = await axios.get(`${api}/post/${id}`)
-    name.value = res.name
-    heading.value = res.heading
-    content.value = res.content
-    media.value = res.media_name
-    media_type.value = res.media_type
-    created_at.value = res.created_at
-    updated_at.value = res.updated_at
-  } catch (err) {
-    console.error(err)
-  }
-})
-
-const media_prefix = window.location.origin + '/uploads/'
+watch(
+  () => route.params.id,
+  async (id) => {
+    post.value = null
+    failed.value = false
+    try {
+      post.value = await getPost(String(id))
+    } catch {
+      // Unknown id and network error both show the 404 content.
+      failed.value = true
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <main id="post">
-    <h1>{{ heading }}</h1>
-    <p>{{ content }}</p>
-    <div>
-      <img v-if="media_type == 'img'" :src="media_prefix + media" alt="" />
-      <video
-        v-if="media_type == 'vid'"
-        controls
-        loop
-        controlslist="nodownload disablepictureinpicture"
-        autoplay
-      >
-        <source :src="media_prefix + media" type="video/mp4" />
-      </video>
-    </div>
-    <small>Autor: {{ name }}</small>
-    <small>Erstellt am: {{ created_at }}</small>
-    <small>Aktualisiert am: {{ updated_at }}</small>
-  </main>
+  <NotFound v-if="failed" />
+  <section v-else-if="post" class="mx-auto max-w-[760px] px-5 pt-6 pb-8 md:px-8 lg:pt-12">
+    <PostEntry :post="post" as="h1" :link="false" @deleted="router.replace(localePath('/'))" />
+  </section>
 </template>
-
-<style scoped></style>

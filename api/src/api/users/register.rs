@@ -1,26 +1,56 @@
+use crate::client_ip::{client_ip, rate_limit_key_ip};
 use crate::db::{
     models::{NewUser, RegisterRequest, User},
     schema::users::dsl::users,
 };
-use crate::utils::{HttpError, db, forbidden, internal_error};
+use crate::redis_store::hit_limit;
+use crate::utils::{
+    HttpError, PERMISSIONS, bad_request, db, forbidden, internal_error, too_many_requests,
+};
 use crate::{Env, query};
 use actix_web::{
-    HttpResponse, post,
+    HttpRequest, HttpResponse, post,
     web::{Data, Json},
 };
 use bcrypt::{DEFAULT_COST, hash};
 use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
+use subtle::ConstantTimeEq;
+
+const REGISTER_MAX_ATTEMPTS: u32 = 3;
+const REGISTER_WINDOW_SECS: u64 = 3600;
 
 #[post("/register")]
 pub async fn register(
+    http_req: HttpRequest,
     request: Json<RegisterRequest>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
+    if let Some(retry) = hit_limit(
+        &env,
+        &format!("rl:register:{}", rate_limit_key_ip(client_ip(&http_req))),
+        REGISTER_MAX_ATTEMPTS,
+        REGISTER_WINDOW_SECS,
+    )
+    .await
+    {
+        return Err(too_many_requests(retry));
+    }
+
     let req = request.into_inner();
 
-    if req.admin_pass != env.admin_pass {
+    if !bool::from(req.admin_pass.as_bytes().ct_eq(env.admin_pass.as_bytes())) {
         return Err(forbidden("You are not allowed to create a new user!"));
+    }
+
+    let mut permissions: Vec<Option<String>> = Vec::new();
+    for p in req.permissions {
+        if !PERMISSIONS.contains(&p.as_str()) {
+            return Err(bad_request(format!("Unknown permission: {p}")));
+        }
+        if !permissions.iter().flatten().any(|q| *q == p) {
+            permissions.push(Some(p));
+        }
     }
 
     let hashed = hash(&req.password, DEFAULT_COST)
@@ -30,6 +60,7 @@ pub async fn register(
         username: req.username,
         password: hashed,
         admin: req.admin,
+        permissions,
     };
 
     let mut conn = db(&env).await?;

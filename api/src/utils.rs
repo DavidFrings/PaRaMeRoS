@@ -5,7 +5,10 @@ use crate::db::{
 };
 use actix_web::{
     HttpRequest, HttpResponse, ResponseError,
-    http::{StatusCode, header::AUTHORIZATION},
+    http::{
+        StatusCode,
+        header::{AUTHORIZATION, RETRY_AFTER},
+    },
     web::Data,
 };
 use derive_more::Display;
@@ -14,14 +17,18 @@ use diesel_async::{
     AsyncPgConnection, RunQueryDsl, pooled_connection::AsyncDieselConnectionManager,
 };
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-use log::warn;
+use log::{error, warn};
 
 #[macro_export]
 macro_rules! query {
     ($query:expr) => {
-        $query
-            .await
-            .map_err(|err| internal_error(format!("Failed to find req in the db: {}", err)))?
+        $query.await.map_err(|err| match err {
+            diesel::result::Error::NotFound => $crate::utils::not_found("Not found"),
+            err => {
+                log::error!("Database error: {}", err);
+                $crate::utils::internal_error("Database error")
+            }
+        })?
     };
 }
 
@@ -30,6 +37,7 @@ macro_rules! query {
 pub struct HttpError {
     message: String,
     status: StatusCode,
+    retry_after: Option<u64>,
 }
 
 impl HttpError {
@@ -37,6 +45,7 @@ impl HttpError {
         Self {
             message: msg.into(),
             status,
+            retry_after: None,
         }
     }
 }
@@ -47,7 +56,24 @@ impl ResponseError for HttpError {
     }
 
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status).body(self.message.clone())
+        let mut res = HttpResponse::build(self.status);
+        if let Some(secs) = self.retry_after {
+            res.insert_header((RETRY_AFTER, secs.to_string()));
+        }
+        res.body(self.message.clone())
+    }
+}
+
+/// Diesel errors inside transactions: NotFound is a 404, anything else a logged 500.
+impl From<diesel::result::Error> for HttpError {
+    fn from(err: diesel::result::Error) -> Self {
+        match err {
+            diesel::result::Error::NotFound => not_found("Not found"),
+            err => {
+                error!("Database error: {}", err);
+                internal_error("Database error")
+            }
+        }
     }
 }
 
@@ -63,6 +89,14 @@ pub fn internal_error(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::INTERNAL_SERVER_ERROR)
 }
 
+pub fn not_found(msg: impl Into<String>) -> HttpError {
+    HttpError::new(msg, StatusCode::NOT_FOUND)
+}
+
+pub fn payload_too_large(msg: impl Into<String>) -> HttpError {
+    HttpError::new(msg, StatusCode::PAYLOAD_TOO_LARGE)
+}
+
 pub fn unauthorized(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::UNAUTHORIZED)
 }
@@ -71,20 +105,49 @@ pub fn forbidden(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::FORBIDDEN)
 }
 
-pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError> {
+pub fn too_many_requests(retry_after_secs: u64) -> HttpError {
+    HttpError {
+        retry_after: Some(retry_after_secs),
+        ..HttpError::new("Too many requests", StatusCode::TOO_MANY_REQUESTS)
+    }
+}
+
+/// Every permission value; section names equal post `name` values.
+pub const PERMISSIONS: [&str; 5] = ["logbuch", "team", "coaches", "forest-project", "tournament"];
+
+/// Admins hold every permission; everyone else only what `permissions` lists.
+pub fn require(user: &User, perm: &str) -> Result<(), HttpError> {
+    if user.admin || user.permissions.iter().flatten().any(|p| p == perm) {
+        Ok(())
+    } else {
+        Err(forbidden("Missing permission"))
+    }
+}
+
+/// `verify` plus a permission check: 401 without a valid token, 403 without `perm`.
+pub async fn authorize(req: &HttpRequest, env: &Data<Env>, perm: &str) -> Result<i32, HttpError> {
+    let user = verify(req, env).await?;
+    require(&user, perm)?;
+    Ok(user.id)
+}
+
+/// Validate the `Authorization: Bearer <JWT>` header and load its user.
+pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<User, HttpError> {
     let auth_header = req
         .headers()
         .get(AUTHORIZATION)
         .and_then(|header| header.to_str().ok())
         .ok_or_else(|| bad_request("Missing Authorization header!"))?;
 
-    let token = auth_header.replace("Bearer ", "");
+    let token = auth_header
+        .strip_prefix("Bearer ")
+        .ok_or_else(|| unauthorized("Invalid token"))?;
 
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = true;
 
     let req_id: i32 = decode::<Claims>(
-        &token,
+        token,
         &DecodingKey::from_secret(env.jwt_secret.as_bytes()),
         &validation,
     )
@@ -102,23 +165,26 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
 
     let mut conn = db(env).await?;
 
-    query!(
-        users
-            .filter(id.eq(&req_id))
-            .limit(1)
-            .get_result::<User>(&mut conn)
-    );
-
-    Ok(req_id)
+    users
+        .filter(id.eq(&req_id))
+        .limit(1)
+        .get_result::<User>(&mut conn)
+        .await
+        .map_err(|err| match err {
+            diesel::result::Error::NotFound => unauthorized("Invalid token"),
+            err => {
+                error!("Database error: {}", err);
+                internal_error("Database error")
+            }
+        })
 }
 
 pub async fn db(
     env: &Data<Env>,
 ) -> Result<bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
-    let conn = env
-        .pool
-        .get()
-        .await
-        .map_err(|err| internal_error(format!("Database connection error: {}", err)))?;
+    let conn = env.pool.get().await.map_err(|err| {
+        error!("Database connection error: {}", err);
+        internal_error("Database error")
+    })?;
     Ok(conn)
 }

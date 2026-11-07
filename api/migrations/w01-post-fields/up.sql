@@ -1,0 +1,1 @@
+ALTER TABLE posts ADD COLUMN heading_en VARCHAR, ADD COLUMN content_en VARCHAR, ADD COLUMN season VARCHAR;

@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque/opsz.css';
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/500.css';
+
+@theme {
+  --font-sans: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: light dark;
+  --bg: #f7f4ee;
+  --card: #fdfbf7;
+  --raised: #efe9df;
+  --text: #1f1b16;
+  --text-2: #5e554a;
+  --muted: #6f665a;
+  --line: rgb(31 27 22 / 0.09);
+  /* Form control boundary, >= 3:1 against --card and --bg (WCAG 1.4.11). */
+  --field-border: #8f8578;
+  --green: #22774a;
+  --green-tag: #22774a;
+  --orange: #f17a2e;
+  --on-orange: #1a120b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161513;
+    --card: #1c1a18;
+    --raised: #262421;
+    --text: #efe9de;
+    --text-2: #aaa398;
+    --muted: #8a847a;
+    --line: rgb(239 233 222 / 0.08);
+    --field-border: #6f6a62;
+    --green: #4cbb7f;
+    --green-tag: #2a8052;
+  }
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body {
+    @apply bg-(--bg) font-sans text-(--text) antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+  }
+}
+
+@utility no-bar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Admin and login controls; 44 px targets below 1024 px. */
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-(--line) bg-(--card) px-4 text-[15px] font-medium text-(--text) transition-colors hover:bg-(--raised) disabled:opacity-60 lg:min-h-10;
+}
+
+@utility btn-primary {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-(--orange) px-4 text-[15px] font-medium text-(--on-orange) transition-opacity hover:opacity-90 disabled:opacity-60 lg:min-h-10;
+}
+
+@utility field {
+  @apply min-h-11 w-full rounded-[10px] border border-(--field-border) bg-(--card) px-3 py-2 text-[16px] text-(--text) placeholder:text-(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

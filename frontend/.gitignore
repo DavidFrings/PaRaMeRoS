@@ -31,4 +31,6 @@ coverage
 
 .env
 .npmrc
-config.js
+/config.js
+test-results/
+playwright-report/

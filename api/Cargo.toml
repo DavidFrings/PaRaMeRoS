@@ -1,17 +1,21 @@
 [package]
 name = "parameros-api"
 authors = ["David Frings <dev@davidfrings.dev> (https://DavidFrings.dev)"]
-version = "2.1.0"
+version = "3.0.0"
 description = "This is the API / backend from the Official PaRaMeRoS Website"
 categories = ["web-programming", "api-bindings"]
 homepage = "https://PaRaMeRoS.net"
 license = "MPL-2.0"
 repository = "https://github.com/DavidFrings/PaRaMeRoS"
-rust-version = "1.87"
+rust-version = "1.92"
 edition = "2024"
 
+[lib]
+name = "parameros_api"
+
 [dependencies]
-actix-web = "^4.11"
+# no http2: h2 0.3 (RUSTSEC-2026-0258) has no 0.3 fix; nginx proxies HTTP/1.1
+actix-web = { version = "^4.11", default-features = false, features = ["macros", "compress-brotli", "compress-gzip", "compress-zstd", "cookies", "unicode", "compat", "ws"] }
 actix-multipart = "^0.7"
 uuid = { version = "^1.18", features = ["serde", "v4"] }
 serde = { version = "^1", features = ["derive"] }
@@ -22,12 +26,22 @@ chrono = { version = "^0.4", features = ["serde"] }
 futures = "^0.3"
 dotenvy = "^0.15"
 #diesel = { version = "^2.2", features = ["postgres", "r2d2"] }
-diesel = { version = "^2.2", features = ["chrono", "uuid"] }
-diesel-async = { version = "^0.6", features = ["postgres", "tokio", "bb8"] }
+diesel = { version = "^2.3", features = ["chrono", "uuid"] }
+diesel-async = { version = "^0.7", features = ["postgres", "tokio", "bb8", "async-connection-wrapper"] }
+diesel_migrations = "^2.3"
+anyhow = "^1"
+redis = { version = "^0.32", features = ["tokio-comp", "connection-manager"] }
 bb8 = "^0.9"
 #tokio-postgres = "^0.7"
 bcrypt = "^0.17"
 jsonwebtoken = "^9.3"
 image = { version = "^0.25", features = ["jpeg", "png", "webp"] }
 webp = "^0.3"
+jpegxl-rs = { version = "^0.16", default-features = false, features = ["vendored"] }
 actix-cors = "^0.7"
+serde_json = "^1"
+subtle = "^2"
+
+[dev-dependencies]
+actix-http = "^3"
+tempfile = "^3"

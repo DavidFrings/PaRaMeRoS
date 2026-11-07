@@ -1,5 +1,5 @@
-use crate::db::schema::{posts, users};
-use chrono::NaiveDateTime;
+use crate::db::schema::{posts, tournament, users};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -22,6 +22,8 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub admin: bool,
+    // TEXT[] elements are nullable in Postgres; a NULL grants nothing.
+    pub permissions: Vec<Option<String>>,
 }
 
 #[derive(Insertable, Deserialize, Debug)]
@@ -30,6 +32,8 @@ pub struct NewUser {
     pub username: String,
     pub password: String,
     pub admin: bool,
+    // TEXT[] elements are nullable in Postgres; a NULL grants nothing.
+    pub permissions: Vec<Option<String>>,
 }
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, Debug)]
@@ -46,6 +50,9 @@ pub struct Post {
     pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 #[derive(Insertable, Deserialize, Debug)]
@@ -60,6 +67,9 @@ pub struct NewPost {
     pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 //*****************************//
@@ -72,6 +82,9 @@ pub struct RegisterRequest {
     pub password: String,
     pub admin: bool,
     pub admin_pass: String,
+    /// Sections (and `tournament`) a non-admin may write; checked against `PERMISSIONS`.
+    #[serde(default)]
+    pub permissions: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -85,16 +98,25 @@ pub struct UpdatePostRequest {
     pub name: Option<String>,
     pub heading: Option<String>,
     pub content: Option<String>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
 pub struct AuthVerifyResponse {
     pub admin: bool,
+    pub permissions: Vec<String>,
 }
 
 #[derive(Serialize, Debug)]
 pub struct NewPostResponse {
     pub id: Uuid,
+}
+
+#[derive(Serialize, Debug)]
+pub struct MediaResponse {
+    pub media_name: String,
 }
 
 #[derive(Serialize, Debug)]
@@ -108,6 +130,9 @@ pub struct PostResponse {
     pub media_creator: Option<String>,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
+    pub heading_en: Option<String>,
+    pub content_en: Option<String>,
+    pub season: Option<String>,
 }
 
 impl From<Post> for PostResponse {
@@ -122,6 +147,21 @@ impl From<Post> for PostResponse {
             media_creator: post.media_creator,
             created_at: post.created_at,
             updated_at: post.updated_at,
+            heading_en: post.heading_en,
+            content_en: post.content_en,
+            season: post.season,
         }
     }
+}
+
+#[derive(Queryable, Selectable, Insertable, AsChangeset, Serialize, Debug)]
+#[diesel(table_name = tournament)]
+#[diesel(treat_none_as_null = true)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Tournament {
+    pub name: String,
+    pub place: Option<String>,
+    pub starts_at: DateTime<Utc>,
+    pub ends_at: Option<DateTime<Utc>>,
+    pub updated_at: DateTime<Utc>,
 }

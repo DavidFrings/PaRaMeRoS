@@ -6,6 +6,7 @@
     "cypress.config.*",
     "nightwatch.conf.*",
     "playwright.config.*",
+    "e2e/**/*",
     "eslint.config.*"
   ],
   "compilerOptions": {
@@ -14,6 +15,7 @@
 
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "lib": ["ES2023", "DOM"],
     "types": ["node"]
   }
 }

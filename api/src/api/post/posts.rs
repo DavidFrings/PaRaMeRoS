@@ -1,7 +1,9 @@
+use super::section::normalize_section;
 use crate::db::{
     models::{Post, PostResponse},
-    schema::posts::{dsl::posts as posts_dsl, name},
+    schema::posts::{created_at, dsl::posts as posts_dsl, name},
 };
+use crate::redis_store::{CACHE_TTL_SECS, cache_get, cache_set};
 use crate::utils::{HttpError, db, internal_error};
 use crate::{Env, query};
 use actix_web::{
@@ -13,17 +15,32 @@ use diesel_async::RunQueryDsl;
 
 #[get("/posts/{name}")]
 pub async fn posts(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, HttpError> {
-    let req_path = path.into_inner();
+    let section = normalize_section(&path.into_inner())?;
+
+    let key = format!("cache:posts:{section}");
+    if let Some(body) = cache_get(&env, &key).await {
+        return Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(body));
+    }
 
     let mut conn = db(&env).await?;
 
     let posts = query!(
         posts_dsl
-            .filter(name.eq(&req_path))
-            .get_results::<Post>(&mut conn)
+            .filter(name.eq(section))
+            .order(created_at.desc())
+            .select(Post::as_select())
+            .get_results(&mut conn)
     );
 
     let json: Vec<PostResponse> = posts.into_iter().map(PostResponse::from).collect();
 
-    Ok(HttpResponse::Ok().json(json))
+    let body = serde_json::to_string(&json)
+        .map_err(|err| internal_error(format!("Serialization failed: {err}")))?;
+    cache_set(&env, &key, &body, CACHE_TTL_SECS).await;
+
+    Ok(HttpResponse::Ok()
+        .content_type("application/json")
+        .body(body))
 }

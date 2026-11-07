@@ -1,17 +1,18 @@
+use crate::Env;
 use crate::db::{
     models::Post,
     schema::posts::{dsl::posts, uuid as uuid_schema},
 };
-use crate::utils::{HttpError, bad_request, db, internal_error, verify};
-use crate::{Env, UPLOAD_DIR, query};
+use crate::media::files::remove_media_files;
+use crate::redis_store::cache_clear_posts;
+use crate::utils::{HttpError, bad_request, db, require, verify};
 use actix_web::{
     HttpRequest, HttpResponse, delete,
     web::{Data, Path},
 };
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
 use log::info;
-use std::fs;
 use uuid::Uuid;
 
 #[delete("/post/{post_id}")]
@@ -20,7 +21,7 @@ pub async fn delete_post(
     path: Path<String>,
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
-    verify(&req, &env).await?;
+    let user = verify(&req, &env).await?;
 
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
@@ -28,24 +29,34 @@ pub async fn delete_post(
 
     let mut conn = db(&env).await?;
 
-    let post = query!(
-        posts
-            .filter(uuid_schema.eq(&req_uuid))
-            .limit(1)
-            .get_result::<Post>(&mut conn)
-    );
+    let uuid = &req_uuid;
+    let user = &user;
+    let post = conn
+        .transaction::<_, HttpError, _>(|conn| {
+            async move {
+                // Locked row: the section checked is the one deleted. 404 comes before 403.
+                let post = posts
+                    .filter(uuid_schema.eq(uuid))
+                    .select(Post::as_select())
+                    .for_update()
+                    .first(conn)
+                    .await?;
+                require(user, &post.name)?;
+                diesel::delete(posts.filter(uuid_schema.eq(uuid)))
+                    .execute(conn)
+                    .await?;
+                Ok(post)
+            }
+            .scope_boxed()
+        })
+        .await?;
 
     if let Some(media_name) = post.media_name {
-        let file_path = format!("{}/{}", UPLOAD_DIR, media_name);
-
-        fs::remove_file(&file_path)
-            .map_err(|err| internal_error(format!("Failed to delete image: {}", err)))?;
-        info!("Deleted image: {}", file_path);
+        remove_media_files(&env.upload_dir, &media_name);
     }
 
-    query!(diesel::delete(posts.filter(uuid_schema.eq(&req_uuid))).execute(&mut conn));
-
-    info!("Deleted post {} on {}", post.heading, post.name);
+    cache_clear_posts(&env).await;
+    info!("Deleted post");
 
     Ok(HttpResponse::Accepted().finish())
 }

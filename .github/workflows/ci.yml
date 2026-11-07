@@ -53,6 +53,44 @@ jobs:
       - name: Check
         run: cargo check --locked --all-targets --all-features
 
+  api-test:
+    name: "API / Test"
+    needs: api-format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      TEST_REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Test
+        run: cargo test --locked -- --test-threads=1
+
   api-security-audit:
     name: "API / Security Audit"
     runs-on: ubuntu-latest
@@ -140,6 +178,34 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Check
         run: pnpm run type-check
+
+  frontend-test:
+    name: "Frontend / Test"
+    environment: Build
+    needs: frontend-format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use pnpm ${{ vars.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ vars.PNPM_VERSION }}
+          run_install: false
+      - name: Use Node.js ${{ vars.NODE_VERSION }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm test
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: E2E tests
+        run: pnpm test:e2e
 
   frontend-security-audit:
     name: "Frontend / Security Audit"

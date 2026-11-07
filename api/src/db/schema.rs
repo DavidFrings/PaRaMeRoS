@@ -12,6 +12,21 @@ diesel::table! {
         media_creator -> Nullable<Varchar>,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
+        heading_en -> Nullable<Varchar>,
+        content_en -> Nullable<Varchar>,
+        season -> Nullable<Varchar>,
+        content_html_backup -> Nullable<Varchar>,
+    }
+}
+
+diesel::table! {
+    tournament (id) {
+        id -> Int4,
+        name -> Varchar,
+        place -> Nullable<Varchar>,
+        starts_at -> Timestamptz,
+        ends_at -> Nullable<Timestamptz>,
+        updated_at -> Timestamptz,
     }
 }
 
@@ -21,7 +36,8 @@ diesel::table! {
         username -> Varchar,
         password -> Varchar,
         admin -> Bool,
+        permissions -> Array<Nullable<Text>>,
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(posts, users,);
+diesel::allow_tables_to_appear_in_same_query!(posts, tournament, users,);
