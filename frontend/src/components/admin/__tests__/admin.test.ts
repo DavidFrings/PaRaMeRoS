@@ -117,6 +117,21 @@ describe('PostEditor', () => {
     await flushPromises()
     expect(credit().readOnly).toBe(false)
   })
+
+  it('editor_credit_resets_when_file_cleared', async () => {
+    const p = post({ media_type: 'img', media_name: 'a.webp', media_creator: 'Anna' })
+    const { w } = await mountAt(PostEditor, { section: 'coaches', post: p })
+    const input = w.get('input[type=file]').element as HTMLInputElement
+    chooseFile(input, new File(['x'], 'b.jpg', { type: 'image/jpeg' }))
+    await flushPromises()
+    await w.get('#pe-creator').setValue('Bernd')
+    Object.defineProperty(input, 'files', { value: [], configurable: true })
+    input.dispatchEvent(new Event('change'))
+    await flushPromises()
+    const credit = w.get('#pe-creator').element as HTMLInputElement
+    expect(credit.readOnly).toBe(true)
+    expect(credit.value).toBe('Anna')
+  })
 })
 
 describe('TournamentForm', () => {

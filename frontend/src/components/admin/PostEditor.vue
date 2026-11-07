@@ -76,6 +76,8 @@ function onFile(e: Event) {
   file.value = (e.target as HTMLInputElement).files?.[0] ?? null
   error.value = file.value && fileError(file.value)
   if (file.value) removeMedia.value = false
+  // Without a new file the stored credit stays; drop any unsaved edit.
+  else if (props.post) creator.value = props.post.media_creator ?? ''
 }
 
 function validate() {
