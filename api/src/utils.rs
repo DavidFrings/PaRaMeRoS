@@ -64,6 +64,19 @@ impl ResponseError for HttpError {
     }
 }
 
+/// Diesel errors inside transactions: NotFound is a 404, anything else a logged 500.
+impl From<diesel::result::Error> for HttpError {
+    fn from(err: diesel::result::Error) -> Self {
+        match err {
+            diesel::result::Error::NotFound => not_found("Not found"),
+            err => {
+                error!("Database error: {}", err);
+                internal_error("Database error")
+            }
+        }
+    }
+}
+
 pub fn bad_request(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::BAD_REQUEST)
 }
@@ -104,7 +117,7 @@ pub const PERMISSIONS: [&str; 5] = ["logbuch", "team", "coaches", "forest-projec
 
 /// Admins hold every permission; everyone else only what `permissions` lists.
 pub fn require(user: &User, perm: &str) -> Result<(), HttpError> {
-    if user.admin || user.permissions.iter().any(|p| p == perm) {
+    if user.admin || user.permissions.iter().flatten().any(|p| p == perm) {
         Ok(())
     } else {
         Err(forbidden("Missing permission"))

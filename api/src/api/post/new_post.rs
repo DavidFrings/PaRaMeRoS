@@ -5,7 +5,7 @@ use crate::db::{
 };
 use crate::media::{read_form, store_upload};
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, require, verify};
+use crate::utils::{HttpError, bad_request, db, forbidden, require, verify};
 use crate::{Env, query};
 use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, post, web::Data};
@@ -22,6 +22,11 @@ pub async fn new_post(
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
     let user = verify(&req, &env).await?;
+    // Refuse before reading a possibly large upload; the exact section is checked below.
+    let sections = ["logbuch", "team", "coaches", "forest-project"];
+    if !sections.iter().any(|s| require(&user, s).is_ok()) {
+        return Err(forbidden("Missing permission"));
+    }
 
     let mut form = read_form(
         &mut payload,

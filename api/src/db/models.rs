@@ -22,7 +22,8 @@ pub struct User {
     pub username: String,
     pub password: String,
     pub admin: bool,
-    pub permissions: Vec<String>,
+    // TEXT[] elements are nullable in Postgres; a NULL grants nothing.
+    pub permissions: Vec<Option<String>>,
 }
 
 #[derive(Insertable, Deserialize, Debug)]
@@ -31,7 +32,8 @@ pub struct NewUser {
     pub username: String,
     pub password: String,
     pub admin: bool,
-    pub permissions: Vec<String>,
+    // TEXT[] elements are nullable in Postgres; a NULL grants nothing.
+    pub permissions: Vec<Option<String>>,
 }
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, Debug)]

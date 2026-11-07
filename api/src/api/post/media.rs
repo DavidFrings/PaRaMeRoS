@@ -16,7 +16,9 @@ use actix_web::{
 };
 use chrono::Utc;
 use diesel::prelude::*;
-use diesel_async::RunQueryDsl;
+use diesel_async::{
+    AsyncConnection, AsyncPgConnection, RunQueryDsl, scoped_futures::ScopedFutureExt,
+};
 use uuid::Uuid;
 
 async fn find_post(env: &Data<Env>, id: &Uuid) -> Result<Post, HttpError> {
@@ -27,6 +29,16 @@ async fn find_post(env: &Data<Env>, id: &Uuid) -> Result<Post, HttpError> {
             .select(Post::as_select())
             .first(&mut conn)
     ))
+}
+
+/// The post row, locked until the transaction ends, so the section checked is the one written.
+async fn locked_post(conn: &mut AsyncPgConnection, id: &Uuid) -> Result<Post, HttpError> {
+    Ok(posts
+        .filter(uuid_schema.eq(id))
+        .select(Post::as_select())
+        .for_update()
+        .first(conn)
+        .await?)
 }
 
 fn parse_uuid(path: Path<String>) -> Result<Uuid, HttpError> {
@@ -43,8 +55,8 @@ pub async fn replace_media(
 ) -> Result<HttpResponse, HttpError> {
     let user = verify(&req, &env).await?;
     let id = parse_uuid(path)?;
-    let old = find_post(&env, &id).await?;
-    require(&user, &old.name)?;
+    // Re-checked under the row lock below; this check keeps forbidden uploads off disk.
+    require(&user, &find_post(&env, &id).await?.name)?;
 
     let mut form = read_form(&mut payload, &["media_type", "media_creator"]).await?;
     let kind = form
@@ -63,18 +75,30 @@ pub async fn replace_media(
     let (new_type, new_name) = store_upload(env.upload_dir.clone(), id, &kind, data).await?;
 
     let mut conn = db(&env).await?;
-    query!(
-        diesel::update(posts.filter(uuid_schema.eq(&id)))
-            .set((
-                media_type.eq(&new_type),
-                media_name.eq(&new_name),
-                media_creator.eq(creator),
-                updated_at.eq(Utc::now().naive_utc()),
-            ))
-            .execute(&mut conn)
-    );
+    // Owned copy: the transaction's borrows live as long as the pooled connection.
+    let (user, id, new_type, stored) = (&user, &id, &new_type, new_name.clone());
+    let res = conn
+        .transaction::<_, HttpError, _>(|conn| {
+            async move {
+                let old = locked_post(conn, id).await?;
+                require(user, &old.name)?;
+                diesel::update(posts.filter(uuid_schema.eq(id)))
+                    .set((
+                        media_type.eq(new_type),
+                        media_name.eq(stored),
+                        media_creator.eq(creator),
+                        updated_at.eq(Utc::now().naive_utc()),
+                    ))
+                    .execute(conn)
+                    .await?;
+                Ok(old.media_name)
+            }
+            .scope_boxed()
+        })
+        .await;
+    let old_name = res.inspect_err(|_| remove_media_files(&env.upload_dir, &new_name))?;
 
-    if let Some(old_name) = old.media_name {
+    if let Some(old_name) = old_name {
         remove_media_files(&env.upload_dir, &old_name);
     }
 
@@ -93,22 +117,30 @@ pub async fn delete_media(
 ) -> Result<HttpResponse, HttpError> {
     let user = verify(&req, &env).await?;
     let id = parse_uuid(path)?;
-    let old = find_post(&env, &id).await?;
-    require(&user, &old.name)?;
 
     let mut conn = db(&env).await?;
-    query!(
-        diesel::update(posts.filter(uuid_schema.eq(&id)))
-            .set((
-                media_type.eq(None::<String>),
-                media_name.eq(None::<String>),
-                media_creator.eq(None::<String>),
-                updated_at.eq(Utc::now().naive_utc()),
-            ))
-            .execute(&mut conn)
-    );
+    let (user, id) = (&user, &id);
+    let old_name = conn
+        .transaction::<_, HttpError, _>(|conn| {
+            async move {
+                let old = locked_post(conn, id).await?;
+                require(user, &old.name)?;
+                diesel::update(posts.filter(uuid_schema.eq(id)))
+                    .set((
+                        media_type.eq(None::<String>),
+                        media_name.eq(None::<String>),
+                        media_creator.eq(None::<String>),
+                        updated_at.eq(Utc::now().naive_utc()),
+                    ))
+                    .execute(conn)
+                    .await?;
+                Ok(old.media_name)
+            }
+            .scope_boxed()
+        })
+        .await?;
 
-    if let Some(old_name) = old.media_name {
+    if let Some(old_name) = old_name {
         remove_media_files(&env.upload_dir, &old_name);
     }
 

@@ -43,13 +43,13 @@ pub async fn register(
         return Err(forbidden("You are not allowed to create a new user!"));
     }
 
-    let mut permissions: Vec<String> = Vec::new();
+    let mut permissions: Vec<Option<String>> = Vec::new();
     for p in req.permissions {
         if !PERMISSIONS.contains(&p.as_str()) {
             return Err(bad_request(format!("Unknown permission: {p}")));
         }
-        if !permissions.contains(&p) {
-            permissions.push(p);
+        if !permissions.iter().flatten().any(|q| *q == p) {
+            permissions.push(Some(p));
         }
     }
 

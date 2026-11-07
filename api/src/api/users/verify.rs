@@ -11,7 +11,7 @@ async fn auth_verify(req: HttpRequest, env: Data<Env>) -> Result<HttpResponse, H
     let permissions = if usr.admin {
         PERMISSIONS.map(String::from).to_vec()
     } else {
-        usr.permissions
+        usr.permissions.into_iter().flatten().collect()
     };
 
     Ok(HttpResponse::Ok().json(AuthVerifyResponse {

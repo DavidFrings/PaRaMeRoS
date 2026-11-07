@@ -8,6 +8,7 @@ use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt
 use uuid::Uuid;
 
 use super::section::{normalize_section, validate_season};
+use crate::Env;
 use crate::db::schema::posts::updated_at;
 use crate::db::{
     models::UpdatePostRequest,
@@ -17,8 +18,7 @@ use crate::db::{
     },
 };
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, internal_error, not_found, require, verify};
-use crate::{Env, query};
+use crate::utils::{HttpError, bad_request, db, require, verify};
 
 macro_rules! update {
     ($content:expr, $new_content:expr, $uuid:expr, $conn:expr) => {
@@ -51,29 +51,25 @@ pub async fn update_post(
 
     let mut conn = db(&env).await?;
 
-    // Writing needs the current section, and the new one when the post moves.
-    let current: String = query!(
-        posts
-            .filter(uuid_schema.eq(&req_uuid))
-            .select(name)
-            .first(&mut conn)
-    );
-    require(&user, &current)?;
-    if let Some(new_name) = new_name {
-        require(&user, new_name)?;
-    }
-
     // One transaction: a failing statement must not leave a half-applied update.
     let uuid = &req_uuid;
     let data = &data;
-    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+    let user = &user;
+    conn.transaction::<_, HttpError, _>(|conn| {
         async move {
             let mut was_updated = false;
-            posts
+            // Locked row: the section checked is the one written. 404 comes before 403.
+            let current: String = posts
                 .filter(uuid_schema.eq(uuid))
-                .select(uuid_schema)
-                .first::<Uuid>(conn)
+                .select(name)
+                .for_update()
+                .first(conn)
                 .await?;
+            require(user, &current)?;
+            // Moving a post also writes to the new section.
+            if let Some(new_name) = new_name {
+                require(user, new_name)?;
+            }
             if let Some(new_name) = new_name {
                 update!(name, new_name, uuid, conn);
                 was_updated = true;
@@ -109,14 +105,7 @@ pub async fn update_post(
         }
         .scope_boxed()
     })
-    .await
-    .map_err(|err| match err {
-        diesel::result::Error::NotFound => not_found("Not found"),
-        err => {
-            log::error!("Database error: {}", err);
-            internal_error("Database error")
-        }
-    })?;
+    .await?;
 
     cache_clear_posts(&env).await;
     Ok(HttpResponse::Accepted().finish())

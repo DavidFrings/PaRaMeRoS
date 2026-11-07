@@ -36,7 +36,7 @@ diesel::table! {
         username -> Varchar,
         password -> Varchar,
         admin -> Bool,
-        permissions -> Array<Text>,
+        permissions -> Array<Nullable<Text>>,
     }
 }
 
