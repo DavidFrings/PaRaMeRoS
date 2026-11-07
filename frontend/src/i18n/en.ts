@@ -67,6 +67,8 @@ const en: typeof de = {
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     submit: 'Log in',
+    privacyHint: 'Our {link} applies',
+    privacyLink: 'privacy policy',
     wrong: 'Wrong username or password',
     tooMany: 'Too many attempts. Please try again in {n} min',
     failed: 'Login failed. Please try again later',

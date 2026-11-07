@@ -65,6 +65,8 @@ export default {
     showPassword: 'Passwort anzeigen',
     hidePassword: 'Passwort verbergen',
     submit: 'Anmelden',
+    privacyHint: 'Es gilt unsere {link}',
+    privacyLink: 'Datenschutzerklärung',
     wrong: 'Benutzername oder Passwort falsch',
     tooMany: 'Zu viele Versuche. Bitte in {n} Min. erneut versuchen',
     failed: 'Anmeldung fehlgeschlagen. Bitte später erneut versuchen',

@@ -3,9 +3,11 @@ import { ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Eye, EyeOff } from 'lucide-vue-next'
 import { login } from '@/api/auth'
+import { useLocale } from '@/composables/useLocale'
 
 const emit = defineEmits<{ success: [] }>()
 const { t } = useI18n()
+const { localePath } = useLocale()
 const id = useId()
 const username = ref('')
 const password = ref('')
@@ -80,5 +82,14 @@ async function submit() {
       </div>
     </div>
     <button type="submit" class="btn-primary mt-2" :disabled="busy">{{ t('login.submit') }}</button>
+    <i18n-t keypath="login.privacyHint" tag="p" class="text-[13px] text-(--muted)">
+      <template #link>
+        <RouterLink
+          :to="localePath('/Privacy-Policy')"
+          class="inline-flex min-h-11 items-center text-(--green) underline lg:min-h-0"
+          >{{ t('login.privacyLink') }}</RouterLink
+        >
+      </template>
+    </i18n-t>
   </form>
 </template>
