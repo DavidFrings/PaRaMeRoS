@@ -24,6 +24,7 @@ const L = {
     footerForest: 'Wald-Projekt (9. Klassen PRMRS)',
     countdown: /Testturnier in\s12\sTagen/,
     imprint: 'Impressum',
+    tournament: 'Turnier',
   },
   en: {
     locale: 'en-US',
@@ -46,6 +47,7 @@ const L = {
     footerForest: 'Forest project (Year 9 PRMRS)',
     countdown: /Testturnier in\s12\sdays/,
     imprint: 'Imprint',
+    tournament: 'Tournament',
   },
 } as const
 
@@ -183,6 +185,22 @@ for (const [lang, c] of Object.entries(L)) {
       await expect.poll(() => created.length).toBe(1)
       expect(created[0]).toMatch(/name="name"\r?\n\r?\nlogbuch/)
       expect(created[0]).toMatch(/name="heading"\r?\n\r?\nE2E Eintrag/)
+    })
+
+    test.describe('limited account', () => {
+      test.use({ editor: true })
+      test('admin_shows_only_permitted_areas', async ({ page }) => {
+        await adminLogin(page)
+        await page.goto(`${c.prefix}/admin`)
+        await expectPage(page, c.admin, c.notFound)
+        await expect(page.getByRole('heading', { level: 2, name: c.tournament })).toBeVisible()
+        await expect(
+          page.locator('[data-section="logbuch"]').getByRole('button', { name: c.newPost }),
+        ).toBeVisible()
+        for (const s of ['team', 'coaches', 'forest-project'])
+          await expect(page.locator(`[data-section="${s}"]`)).toHaveCount(0)
+        await expect(page.getByRole('heading', { name: c.forest })).toHaveCount(0)
+      })
     })
 
     test('no_third_party_requests', async ({ page, baseURL }) => {

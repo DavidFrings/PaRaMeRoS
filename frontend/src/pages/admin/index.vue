@@ -18,7 +18,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { localePath } = useLocale()
-const { loggedIn, check } = useAuth()
+const { loggedIn, check, can } = useAuth()
 const title = useTemplateRef<HTMLElement>('title')
 
 const ready = ref(false)
@@ -27,8 +27,10 @@ const loadFailed = ref(false)
 const notFound = ref(false)
 const editing = ref<{ section: Section; post: Post | null } | null>(null)
 
+// Only the areas this account may write; the API enforces the same rule.
+const sections = computed(() => SECTIONS.filter((s) => can(s)))
 const groups = computed(() =>
-  SECTIONS.map((section) => ({ section, posts: lists.value[section] ?? [] })),
+  sections.value.map((section) => ({ section, posts: lists.value[section] ?? [] })),
 )
 
 // Old logbuch posts carry the legacy name "progress-logs".
@@ -39,8 +41,9 @@ const newest = (a: Post, b: Post) =>
 
 async function load() {
   loadFailed.value = false
+  const shown = sections.value
   const all = await Promise.all(
-    SECTIONS.map((s) =>
+    shown.map((s) =>
       getPosts(s).catch((e) => {
         console.error('admin posts fetch failed', describeError(e))
         loadFailed.value = true
@@ -48,7 +51,7 @@ async function load() {
       }),
     ),
   )
-  lists.value = Object.fromEntries(SECTIONS.map((s, i) => [s, [...all[i]].sort(newest)]))
+  lists.value = Object.fromEntries(shown.map((s, i) => [s, [...all[i]].sort(newest)]))
 }
 
 async function openFromQuery(id: unknown) {
@@ -134,9 +137,12 @@ watch(
       </div>
       <p v-if="notFound" role="alert" class="mt-4 text-[15px]">{{ t('admin.editor.notFound') }}</p>
       <p v-if="loadFailed" role="alert" class="mt-4 text-[15px]">{{ t('admin.loadFailed') }}</p>
-      <div class="mt-10 grid gap-12">
-        <TournamentForm />
-        <PostList :groups="groups" @new="newPost" @deleted="load" />
+      <p v-if="!groups.length && !can('tournament')" class="mt-4 text-[15px]">
+        {{ t('admin.noPermission') }}
+      </p>
+      <div v-else class="mt-10 grid gap-12">
+        <TournamentForm v-if="can('tournament')" />
+        <PostList v-if="groups.length" :groups="groups" @new="newPost" @deleted="load" />
       </div>
     </template>
   </div>

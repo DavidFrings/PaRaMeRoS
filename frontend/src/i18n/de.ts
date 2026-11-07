@@ -91,6 +91,8 @@ export default {
     close: 'Schließen',
     deleteFailed: 'Löschen fehlgeschlagen',
     sessionExpired: 'Sitzung abgelaufen. Bitte erneut anmelden',
+    forbidden: 'Dafür fehlt die Berechtigung',
+    noPermission: 'Keine Berechtigung',
     relogin: 'Anmelden',
     reloggedIn: 'Wieder angemeldet. Bitte erneut speichern',
     editor: {

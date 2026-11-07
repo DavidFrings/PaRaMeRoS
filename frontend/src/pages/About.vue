@@ -53,6 +53,7 @@ const link = 'inline-flex min-h-11 items-center gap-1 text-[15px] font-medium te
       <PostAdminActions
         :uuid="coaches.uuid"
         :title="coachesText.heading"
+        :section="coaches.name"
         @deleted="coaches = null"
       />
     </div>

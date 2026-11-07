@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   AuthExpiredError,
+  ForbiddenError,
   describeError,
   deleteTournament,
   getTournament,
@@ -48,6 +49,7 @@ async function run(action: () => Promise<void>, done: string) {
     void refreshTournament()
   } catch (e) {
     if (e instanceof AuthExpiredError) expired.value = true
+    else if (e instanceof ForbiddenError) error.value = 'admin.forbidden'
     else {
       console.error('tournament save failed', describeError(e))
       error.value = 'admin.tournament.failed'

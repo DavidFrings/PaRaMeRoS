@@ -19,14 +19,22 @@ vi.mock('@/api/client', async (orig) => ({
   putTournament: vi.fn(),
   deleteTournament: vi.fn(),
 }))
+const ALL = ['logbuch', 'team', 'coaches', 'forest-project', 'tournament']
+const perms = vi.hoisted(() => ({ value: [] as string[] }))
 vi.mock('@/api/auth', () => ({
   login: vi.fn(),
   logout: vi.fn(),
-  useAuth: () => ({ loggedIn: ref(true), check: vi.fn().mockResolvedValue(undefined) }),
+  useAuth: () => ({
+    loggedIn: ref(true),
+    permissions: perms,
+    check: vi.fn().mockResolvedValue(undefined),
+    can: (p: string) => perms.value.includes(p === 'progress-logs' ? 'logbuch' : p),
+  }),
 }))
 
 import {
   AuthExpiredError,
+  ForbiddenError,
   createPost,
   deletePost,
   getPost,
@@ -70,6 +78,7 @@ function chooseFile(input: HTMLInputElement, file: File) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  perms.value = [...ALL]
   vi.mocked(getPosts).mockResolvedValue([])
   vi.mocked(getTournament).mockResolvedValue(null)
   document.body.innerHTML = ''
@@ -88,6 +97,20 @@ describe('PostEditor', () => {
     expect((w.get('#pe-heading-de').element as HTMLInputElement).value).toBe('Neue Überschrift')
     expect((w.get('#pe-content-de').element as HTMLTextAreaElement).value).toBe('Langer **Text**')
     expect(w.get('[role=alert]').text()).toContain('Sitzung abgelaufen. Bitte erneut anmelden')
+  })
+
+  it('editor_keeps_text_on_403', async () => {
+    vi.mocked(createPost).mockRejectedValue(new ForbiddenError())
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    await w.get('#pe-heading-de').setValue('Neue Überschrift')
+    await w.get('#pe-content-de').setValue('Langer **Text**')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+
+    expect((w.get('#pe-heading-de').element as HTMLInputElement).value).toBe('Neue Überschrift')
+    expect((w.get('#pe-content-de').element as HTMLTextAreaElement).value).toBe('Langer **Text**')
+    expect(w.get('[role=alert]').text()).toBe('Dafür fehlt die Berechtigung')
+    expect(w.text()).not.toContain('Sitzung abgelaufen')
   })
 
   it('editor_preview_shows_chosen_media', async () => {
@@ -182,6 +205,68 @@ describe('TournamentForm', () => {
   })
 })
 
+describe('permissions', () => {
+  it('tournament_form_shows_403_message', async () => {
+    vi.mocked(putTournament).mockRejectedValue(new ForbiddenError())
+    const { w } = await mountAt(TournamentForm)
+    await w.get('#tf-name').setValue('R')
+    await w.get('#tf-start').setValue('2027-03-28T10:00')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(w.get('[role=alert]').text()).toBe('Dafür fehlt die Berechtigung')
+    expect((w.get('#tf-name').element as HTMLInputElement).value).toBe('R')
+  })
+
+  it('post_actions_follow_section_permission', async () => {
+    perms.value = ['logbuch']
+    const team = await mountAt(PostAdminActions, { uuid: 'u1', title: 'T', section: 'team' })
+    expect(team.w.find('a, button').exists()).toBe(false)
+    const legacy = await mountAt(PostAdminActions, {
+      uuid: 'u2',
+      title: 'T',
+      section: 'progress-logs',
+    })
+    expect(legacy.w.text()).toContain('Bearbeiten')
+    expect(legacy.w.text()).toContain('Löschen')
+  })
+
+  it('delete_403_shows_message', async () => {
+    vi.mocked(deletePost).mockRejectedValue(new ForbiddenError())
+    const { w } = await mountAt(PostAdminActions, { uuid: 'u1', title: 'T', section: 'logbuch' })
+    await w.get('button').trigger('click')
+    await w.get('[role=group] .btn-primary').trigger('click')
+    await flushPromises()
+    expect(w.get('[role=alert]').text()).toBe('Dafür fehlt die Berechtigung')
+  })
+
+  it('admin_shows_only_permitted_areas', async () => {
+    perms.value = ['logbuch', 'tournament']
+    const { w } = await mountAt(AdminPage)
+    expect(w.find('#tf-title').exists()).toBe(true)
+    expect(w.get('[data-section=logbuch]').text()).toContain('Neuer Beitrag')
+    for (const s of ['team', 'coaches', 'forest-project'])
+      expect(w.find(`[data-section="${s}"]`).exists()).toBe(false)
+    expect(getPosts).toHaveBeenCalledWith('logbuch')
+    expect(getPosts).not.toHaveBeenCalledWith('forest-project')
+    expect(w.text()).not.toContain('Keine Berechtigung')
+  })
+
+  it('admin_without_tournament_hides_form', async () => {
+    perms.value = ['team']
+    const { w } = await mountAt(AdminPage)
+    expect(w.find('#tf-title').exists()).toBe(false)
+    expect(w.find('[data-section=team]').exists()).toBe(true)
+  })
+
+  it('admin_without_permissions_shows_note', async () => {
+    perms.value = []
+    const { w } = await mountAt(AdminPage)
+    expect(w.text()).toContain('Keine Berechtigung')
+    expect(w.find('#tf-title').exists()).toBe(false)
+    expect(w.find('[data-section]').exists()).toBe(false)
+  })
+})
+
 describe('shared data refresh', () => {
   it('editor_save_refreshes_logbuch', async () => {
     vi.mocked(createPost).mockResolvedValue('n1')
@@ -195,7 +280,7 @@ describe('shared data refresh', () => {
 
   it('post_delete_refreshes_logbuch', async () => {
     vi.mocked(deletePost).mockResolvedValue()
-    const { w } = await mountAt(PostAdminActions, { uuid: 'u1', title: 'T' })
+    const { w } = await mountAt(PostAdminActions, { uuid: 'u1', title: 'T', section: 'logbuch' })
     await w.get('button').trigger('click')
     await w.get('[role=group] .btn-primary').trigger('click')
     await flushPromises()

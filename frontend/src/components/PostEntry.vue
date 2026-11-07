@@ -36,6 +36,11 @@ const text = computed(() => localizedPost(props.post, locale.value))
     <MarkdownContent :source="text.content" />
     <PostMedia :post="post" size="full" :alt="text.heading" />
     <div><SeasonTag :label="seasonFromPost(post)" /></div>
-    <PostAdminActions :uuid="post.uuid" :title="text.heading" @deleted="$emit('deleted')" />
+    <PostAdminActions
+      :uuid="post.uuid"
+      :title="text.heading"
+      :section="post.name"
+      @deleted="$emit('deleted')"
+    />
   </article>
 </template>

@@ -12,6 +12,14 @@ export class AuthExpiredError extends Error {
   }
 }
 
+/** 403: the account lacks the permission for this section or the tournament. */
+export class ForbiddenError extends Error {
+  constructor() {
+    super('Berechtigung fehlt')
+    this.name = 'ForbiddenError'
+  }
+}
+
 export const readToken = (): string | null => useCookies().cookies.get(TOKEN_COOKIE) || null
 
 /** Safe to log: an AxiosError itself carries the Authorization header in `config`. */
@@ -32,9 +40,9 @@ export async function request<T = unknown>(config: AxiosRequestConfig, authed = 
   try {
     return await axios.request<T>({ ...config, baseURL: window.__ENV__.API, headers })
   } catch (e) {
-    if (authed && (e as { response?: { status?: number } })?.response?.status === 401) {
-      throw new AuthExpiredError()
-    }
+    const status = (e as { response?: { status?: number } })?.response?.status
+    if (authed && status === 401) throw new AuthExpiredError()
+    if (authed && status === 403) throw new ForbiddenError()
     throw e
   }
 }

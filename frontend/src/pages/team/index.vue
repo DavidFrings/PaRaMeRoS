@@ -58,6 +58,7 @@ watch(() => route.hash, scrollToHash)
         <PostAdminActions
           :uuid="x.post.uuid"
           :title="x.heading"
+          :section="x.post.name"
           class="mt-4"
           @deleted="loaded = loaded.filter((p) => p.uuid !== x.post.uuid)"
         />

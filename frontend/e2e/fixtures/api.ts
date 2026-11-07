@@ -62,14 +62,16 @@ export const fixtures = (live: boolean) => ({
   ],
 })
 
-type Opts = { live: boolean; tournament: boolean; consent: boolean }
+// `editor` is a limited account with only the Logbuch and the tournament; otherwise admin.
+type Opts = { live: boolean; tournament: boolean; consent: boolean; editor: boolean }
 
 export const test = base.extend<Opts & { created: string[] }>({
   live: [false, { option: true }],
   tournament: [true, { option: true }],
   consent: [true, { option: true }],
+  editor: [false, { option: true }],
   created: async ({}, use) => use([]),
-  page: async ({ page, context, live, tournament, consent, created }, use) => {
+  page: async ({ page, context, live, tournament, consent, editor, created }, use) => {
     if (consent)
       await context.addCookies([
         {
@@ -132,10 +134,19 @@ export const test = base.extend<Opts & { created: string[] }>({
       // Like the API's verify(): no header is a 400, not a 401.
       if (method !== 'GET' && !(method === 'POST' && pathname === '/auth'))
         if (!req.headers()['authorization'])
-          return route.fulfill({ status: 400, body: 'Missing Authorization header!', headers: cors })
+          return route.fulfill({
+            status: 400,
+            body: 'Missing Authorization header!',
+            headers: cors,
+          })
       if (method === 'GET' && pathname === '/auth/verify')
         return req.headers()['authorization']
-          ? json(route, { admin: true })
+          ? json(route, {
+              admin: !editor,
+              permissions: editor
+                ? ['logbuch', 'tournament']
+                : ['logbuch', 'team', 'coaches', 'forest-project', 'tournament'],
+            })
           : route.fulfill({ status: 400, body: 'Missing Authorization header!', headers: cors })
       if (method === 'POST' && pathname === '/post') {
         created.push(req.postData() ?? '')

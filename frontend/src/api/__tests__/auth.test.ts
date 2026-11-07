@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import axios from 'axios'
 import { tokenCookieExpiry } from '../auth'
-import { AuthExpiredError, deletePost, getTournament, updatePost } from '../client'
+import {
+  AuthExpiredError,
+  ForbiddenError,
+  deletePost,
+  getTournament,
+  putTournament,
+  updatePost,
+} from '../client'
 
 vi.mock('axios')
 const request = vi.mocked(axios.request)
@@ -43,6 +50,14 @@ describe('authed calls', () => {
     expect(request).not.toHaveBeenCalled()
   })
 
+  it('403_throws_ForbiddenError', async () => {
+    request.mockRejectedValue({ response: { status: 403 } })
+    await expect(deletePost('u')).rejects.toBeInstanceOf(ForbiddenError)
+    await expect(
+      putTournament({ name: 'x', place: null, starts_at: 'y', ends_at: null }),
+    ).rejects.toBeInstanceOf(ForbiddenError)
+  })
+
   it('other errors propagate unchanged', async () => {
     const err = { response: { status: 500 } }
     request.mockRejectedValue(err)
@@ -82,5 +97,43 @@ describe('review lows', () => {
     request.mockRejectedValue({ response: { status: 401 } })
     await useAuth().check()
     expect(document.cookie).not.toContain('auth_token')
+  })
+})
+
+describe('permissions', () => {
+  it('can_follows_verified_permissions', async () => {
+    const { useAuth } = await import('../auth')
+    request.mockResolvedValue({ status: 200, data: { admin: false, permissions: ['logbuch'] } })
+    const auth = useAuth()
+    await auth.check()
+    expect(auth.permissions.value).toEqual(['logbuch'])
+    expect(auth.can('logbuch')).toBe(true)
+    // Old logbuch posts carry the legacy name.
+    expect(auth.can('progress-logs')).toBe(true)
+    expect(auth.can('team')).toBe(false)
+    expect(auth.can('tournament')).toBe(false)
+  })
+
+  it('can_is_false_when_logged_out', async () => {
+    const { useAuth, logout } = await import('../auth')
+    request.mockResolvedValue({ status: 200, data: { admin: true, permissions: ['logbuch'] } })
+    const auth = useAuth()
+    await auth.check()
+    expect(auth.can('logbuch')).toBe(true)
+    logout()
+    expect(auth.permissions.value).toEqual([])
+    expect(auth.can('logbuch')).toBe(false)
+  })
+
+  it('login_loads_permissions', async () => {
+    const { useAuth, login } = await import('../auth')
+    const token = `Bearer ${jwt({ exp: Math.floor(Date.now() / 1000) + 60 })}`
+    request.mockImplementation(async (c) =>
+      c.url === '/auth'
+        ? { status: 200, data: '', headers: { authorization: token } }
+        : { status: 200, data: { admin: false, permissions: ['team'] } },
+    )
+    await login('a', 'b')
+    expect(useAuth().can('team')).toBe(true)
   })
 })

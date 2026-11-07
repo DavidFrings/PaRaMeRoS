@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   AuthExpiredError,
+  ForbiddenError,
   createPost,
   deleteMedia,
   describeError,
@@ -143,6 +144,7 @@ async function submit() {
     emit('saved')
   } catch (e) {
     if (e instanceof AuthExpiredError) expired.value = true
+    else if (e instanceof ForbiddenError) error.value = 'admin.forbidden'
     else {
       console.error('saving post failed', describeError(e))
       error.value = 'admin.editor.failed'

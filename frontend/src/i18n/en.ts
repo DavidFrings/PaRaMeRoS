@@ -93,6 +93,8 @@ const en: typeof de = {
     close: 'Close',
     deleteFailed: 'Delete failed',
     sessionExpired: 'Session expired. Please log in again',
+    forbidden: 'You do not have permission for this',
+    noPermission: 'No permission',
     relogin: 'Log in',
     reloggedIn: 'Logged in again. Please save again',
     editor: {

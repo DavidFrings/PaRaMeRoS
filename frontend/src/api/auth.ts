@@ -15,34 +15,49 @@ export function tokenCookieExpiry(token: string): Date {
   throw new Error('Token has no valid exp claim')
 }
 
+const loggedIn = ref(!!readToken())
+// From /auth/verify; the API lists every permission for admins.
+const permissions = ref<string[]>([])
+
+async function check() {
+  if (!readToken()) {
+    loggedIn.value = false
+    permissions.value = []
+    return
+  }
+  try {
+    const res = await request<{ permissions?: string[] }>(
+      { url: '/auth/verify', method: 'GET' },
+      true,
+    )
+    permissions.value = res.data.permissions ?? []
+    loggedIn.value = true
+  } catch (e) {
+    if (e instanceof AuthExpiredError) useCookies().cookies.remove(TOKEN_COOKIE, '/')
+    loggedIn.value = false
+    permissions.value = []
+  }
+}
+
+// Old logbuch posts carry the legacy name "progress-logs".
+const can = (perm: string) =>
+  loggedIn.value && permissions.value.includes(perm === 'progress-logs' ? 'logbuch' : perm)
+
 export async function login(username: string, password: string): Promise<void> {
   const res = await request({ url: '/auth', method: 'POST', data: { username, password } })
   const token = res.headers['authorization'] as string | undefined
   if (!token) throw new Error('Login response has no Authorization header')
   useCookies().cookies.set(TOKEN_COOKIE, token, tokenCookieExpiry(token), '/', '', true, 'Strict')
   loggedIn.value = true
+  await check()
 }
 
 export function logout(): void {
   useCookies().cookies.remove(TOKEN_COOKIE, '/')
   loggedIn.value = false
+  permissions.value = []
 }
 
-const loggedIn = ref(!!readToken())
-
 export function useAuth() {
-  async function check() {
-    if (!readToken()) {
-      loggedIn.value = false
-      return
-    }
-    try {
-      await request({ url: '/auth/verify', method: 'GET' }, true)
-      loggedIn.value = true
-    } catch (e) {
-      if (e instanceof AuthExpiredError) useCookies().cookies.remove(TOKEN_COOKIE, '/')
-      loggedIn.value = false
-    }
-  }
-  return { loggedIn, check }
+  return { loggedIn, permissions, check, can }
 }

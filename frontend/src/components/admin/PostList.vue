@@ -43,7 +43,12 @@ const { t } = useI18n()
             <p class="text-[16px] font-medium">{{ p.heading }}</p>
             <PostTime :created="p.created_at" :updated="p.updated_at" />
           </div>
-          <PostAdminActions :uuid="p.uuid" :title="p.heading" @deleted="emit('deleted')" />
+          <PostAdminActions
+            :uuid="p.uuid"
+            :title="p.heading"
+            :section="p.name"
+            @deleted="emit('deleted')"
+          />
         </li>
       </ul>
     </section>
