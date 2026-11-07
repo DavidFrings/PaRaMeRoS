@@ -16,6 +16,10 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: cgr.dev/chainguard/redis:latest
+    restart: unless-stopped
+
   api:
     image: ghcr.io/davidfrings/parameros-api:latest
     environment:
@@ -26,14 +30,18 @@ services:
       - JWT_EXPIRE=${JWT_EXPIRE}
       - ADMIN_PASS=${ADMIN_PASS}
       - CORS_ORIGINS=${CORS_ORIGINS}
+      - SITE_URL=${SITE_URL}
+      - REDIS_URL=redis://redis:6379
       - RUST_LOG=info
     ports:
-      - "${API_PORT}:8080"
+      - "127.0.0.1:${API_PORT}:8080"
     volumes:
       - uploads:/api/uploads
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     security_opt:
       - no-new-privileges:true
     # Not working because of Chainguard image limitations (no shell)

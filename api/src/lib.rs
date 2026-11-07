@@ -47,8 +47,7 @@ impl Env {
             upload_dir: get_env_var_optional("UPLOAD_DIR")
                 .map_or_else(|| PathBuf::from("/api/uploads"), PathBuf::from),
             redis: connect_redis().await,
-            site_url: get_env_var_optional("SITE_URL")
-                .unwrap_or_else(|| "http://localhost:3000".to_string()),
+            site_url: get_env_var("SITE_URL"),
         }
     }
 }

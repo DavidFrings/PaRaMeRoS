@@ -12,3 +12,9 @@
 | delete post    | Delete a post by id           | DELETE | /post/{uuid}  | Token         | -                                                                              | 202: Accepted                                                                                 |
 | replace media  | Replace a post's media       | PUT    | /post/{uuid}/media | Token    | Multipart: { media_type ("img"/"vid"), Option(media_creator), media } (image ≤ 15 MiB JPEG/PNG/WebP ≤ 40 MP, video ≤ 100 MiB MP4/WebM) | 200: { "media_name" } |
 | delete media   | Remove a post's media        | DELETE | /post/{uuid}/media | Token    | -                                                                              | 204: No Content |
+| tournament     | Get the tournament           | GET    | /tournament   | No            | -                                                                              | 200: { name, place, starts_at, ends_at } or 204: No Content (none set)                        |
+| set tournament | Create/replace the tournament | PUT   | /tournament   | Token         | { "name", Option(place), "starts_at", Option(ends_at) }                         | 200: stored tournament                                                                        |
+| delete tournament | Delete the tournament     | DELETE | /tournament   | Token         | -                                                                              | 204: No Content                                                                               |
+| sitemap        | Sitemap with hreflang        | GET    | /sitemap.xml  | No            | -                                                                              | 200: XML                                                                                      |
+
+`/posts/progress-logs` is an alias of `/posts/logbuch`.
