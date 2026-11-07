@@ -18,7 +18,26 @@ const en: typeof de = {
     forest: 'Forest project (Year 9 PRMRS)',
     school: 'Pater-Rupert-Mayer-Realschule',
   },
-  home: {},
+  home: {
+    heroTitle: 'The PRMRS robotics team',
+    heroText:
+      'Students of the Pater-Rupert-Mayer-Realschule, competing in the FIRST LEGO League since 2017',
+    meetTeam: 'Meet the team',
+    toLogbuch: 'Go to the logbook',
+    teamCaption: 'Team {season}',
+    teamAlt: 'Team of the {season} season',
+    newInLogbuch: 'New in the logbook',
+    allEntries: 'All entries',
+    whoTitle: 'Who we are',
+    whoText:
+      'We are PaRaMeRoS, the FIRST LEGO League team of the Pater-Rupert-Mayer-Realschule. As dedicated students we love robotics and technology, and bring creativity, team spirit and passion to it.',
+    moreAbout: 'More about us',
+    seasonsTitle: 'Our seasons',
+    seasonsCount: '{n} team since {oldest} | {n} teams since {oldest}',
+    logbuchTitle: 'Logbook',
+    logbuchText:
+      'What we build, test and learn this season: entries straight from the workshop and the competition.',
+  },
   logbuch: {
     title: 'Logbook',
     empty: 'No entries yet',

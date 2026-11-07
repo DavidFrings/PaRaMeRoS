@@ -16,7 +16,26 @@ export default {
     forest: 'Wald-Projekt (9. Klassen PRMRS)',
     school: 'Pater-Rupert-Mayer-Realschule',
   },
-  home: {},
+  home: {
+    heroTitle: 'Das Robotik-Team der PRMRS',
+    heroText:
+      'Schülerinnen und Schüler der Pater-Rupert-Mayer-Realschule, seit 2017 in der FIRST LEGO League',
+    meetTeam: 'Team kennenlernen',
+    toLogbuch: 'Zum Logbuch',
+    teamCaption: 'Team {season}',
+    teamAlt: 'Team der Saison {season}',
+    newInLogbuch: 'Neu im Logbuch',
+    allEntries: 'Alle Einträge',
+    whoTitle: 'Wer wir sind',
+    whoText:
+      'Wir sind PaRaMeRoS, das FIRST LEGO League Team der Pater-Rupert-Mayer-Realschule. Als engagierte Schülerinnen und Schüler begeistern wir uns für Robotik und Technologie, mit Kreativität, Teamgeist und Leidenschaft.',
+    moreAbout: 'Mehr über uns',
+    seasonsTitle: 'Unsere Jahrgänge',
+    seasonsCount: '{n} Team seit {oldest} | {n} Teams seit {oldest}',
+    logbuchTitle: 'Logbuch',
+    logbuchText:
+      'Was wir in dieser Saison bauen, testen und lernen: Einträge direkt aus der Werkstatt und vom Wettbewerb.',
+  },
   logbuch: {
     title: 'Logbuch',
     empty: 'Noch keine Einträge',

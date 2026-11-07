@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { seasonFromPost, seasonOf } from '../season'
+import { seasonAnchor, seasonFromPost, seasonOf } from '../season'
 
 describe('seasonOf', () => {
   it('switches at midnight Berlin on 1 August', () => {
@@ -19,5 +19,12 @@ describe('seasonFromPost', () => {
   it('falls back to created_at (UTC naive)', () => {
     expect(seasonFromPost({ season: null, created_at: '2026-02-14T09:42:00' })).toBe('25/26')
     expect(seasonFromPost({ created_at: '2026-07-31T22:00:00' })).toBe('26/27')
+  })
+})
+
+describe('seasonAnchor', () => {
+  it('builds a stable id in the 20xx century', () => {
+    expect(seasonAnchor('24/25')).toBe('season-2024-25')
+    expect(seasonAnchor('17/18')).toBe('season-2017-18')
   })
 })

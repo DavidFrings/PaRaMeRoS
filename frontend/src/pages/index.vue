@@ -1,232 +1,192 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import ArrowDown from '@/components/icons/ArrowDownIcon.vue'
-import Section from '@/components/SectionComponent.vue'
-import AboutImg from '@/assets/imgs/room.webp'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { ArrowRight } from 'lucide-vue-next'
+import { getPosts } from '@/api/client'
+import LiveBadge from '@/components/LiveBadge.vue'
+import LogbuchList from '@/components/LogbuchList.vue'
+import SeasonTag from '@/components/SeasonTag.vue'
+import TournamentCountdown from '@/components/TournamentCountdown.vue'
+import { useLocale } from '@/composables/useLocale'
+import { useLogbuch } from '@/composables/useLogbuch'
+import { mediaSources } from '@/lib/media'
+import type { Post } from '@/lib/post'
+import { seasonAnchor, seasonFromPost, seasonOf } from '@/lib/season'
 import ErfolgeImg from '@/assets/imgs/erfolge.webp'
-import ForestProjectImg from '@/assets/imgs/forest-project.webp'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import * as CookieConsent from 'vanilla-cookieconsent'
 
-const skipAnimations = ref(false)
-let animationTimer: number | undefined
-let consentInterval: number | undefined
-onMounted(() => {
-  const route = useRoute()
-  skipAnimations.value = route.query.skipAnimation === 'true'
+const { t } = useI18n()
+const { localePath } = useLocale()
+const { posts: logbuch } = useLogbuch()
 
-  if (!skipAnimations.value) {
-    window.scrollTo(0, 0)
-    document.body.classList.add('no-scroll')
+const currentSeason = seasonOf(new Date()).label
+const teamPosts = ref<Post[]>([])
 
-    animationTimer = window.setTimeout(() => {
-      document.body.classList.remove('no-scroll')
-    }, 4010)
-  }
-
-  if (!CookieConsent.validConsent()) {
-    document.getElementById('index')?.classList.add('no-animations')
-    CookieConsent.show?.()
-    console.log('Waiting for cookie consent...')
-    consentInterval = window.setInterval(() => {
-      if (CookieConsent.validConsent()) {
-        clearInterval(consentInterval)
-        document.getElementById('index')?.classList.remove('no-animations')
-        console.log('Received cookie consent')
-      }
-    }, 500)
-  }
+onMounted(async () => {
+  // A failed fetch renders like "no team posts".
+  teamPosts.value = await getPosts('team').catch(() => [])
 })
 
-onBeforeUnmount(() => {
-  if (animationTimer) clearTimeout(animationTimer)
-  if (consentInterval) clearInterval(consentInterval)
-  document.body.classList.remove('no-scroll')
+// Labels like "24/25" sort correctly as strings within one century.
+const teams = computed(() =>
+  teamPosts.value
+    .map((post) => ({ post, season: seasonFromPost(post) }))
+    .sort((a, b) => b.season.localeCompare(a.season)),
+)
+// PostMedia always captions with the photo credit; home shows the season instead.
+const img = (p: Post, size: 'full' | 'small') =>
+  p.media_type === 'img' && p.media_name ? mediaSources(p.media_name, size) : null
+
+const hero = computed(() => {
+  const x = teams.value.find((x) => img(x.post, 'full'))
+  return x && { season: x.season, src: img(x.post, 'full')! }
 })
+
+const logbuchImg = computed(() => {
+  const s = logbuch.value[0] && img(logbuch.value[0], 'small')
+  return s ? `/${s.webp}` : ErfolgeImg
+})
+
+const link = 'inline-flex min-h-11 items-center gap-1 text-[15px] font-medium text-(--green)'
 </script>
 
 <template>
-  <main id="index" :class="{ 'skip-animations': skipAnimations }">
-    <div class="nav-block"></div>
-    <div class="landing">
-      <h1>PaRaMeRoS</h1>
-      <h3>
-        <span>Technik </span>
-        <span>Teamgeist </span>
-        <span>Innovation</span>
-      </h3>
-      <div id="more">
-        <p>Mehr</p>
-        <ArrowDown />
+  <section
+    class="mx-auto grid max-w-[1200px] items-center gap-6 px-4 pt-2 md:px-8 lg:gap-16 lg:pt-12"
+    :class="{ 'lg:grid-cols-[5fr_7fr]': hero }"
+  >
+    <div class="order-2 lg:order-1">
+      <SeasonTag :label="currentSeason" prefix />
+      <TournamentCountdown class="mt-3" />
+      <h1
+        class="mt-4 text-[36px] leading-[1.06] font-medium tracking-[-0.02em] md:text-[56px] md:tracking-[-0.03em]"
+      >
+        {{ t('home.heroTitle') }}
+      </h1>
+      <p
+        class="mt-4 max-w-[36rem] text-[16px] leading-[24px] text-(--text-2) md:text-[19px] md:leading-[29px]"
+      >
+        {{ t('home.heroText') }}
+      </p>
+      <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 md:mt-8">
+        <RouterLink
+          :to="localePath('/team')"
+          class="inline-flex h-12 items-center rounded-[10px] bg-(--orange) px-5 text-[15px] font-medium whitespace-nowrap text-(--on-orange) transition-[filter] hover:brightness-95"
+          >{{ t('home.meetTeam') }}</RouterLink
+        >
+        <RouterLink
+          :to="localePath('/logbuch')"
+          class="inline-flex min-h-11 items-center text-[15px] font-medium whitespace-nowrap text-(--green) underline decoration-current/30 underline-offset-4"
+          >{{ t('home.toLogbuch') }}</RouterLink
+        >
       </div>
     </div>
-    <div class="content">
-      <Section
-        heading="About Us"
-        btn-text="Mehr erfahren"
-        btn-link="/about"
-        media_type="img"
-        :media="AboutImg"
-        media_creator="Privat"
-        content="Wir sind <b>PaRaMeRoS</b>, das First Lego League Team der <b>Pater Rupert Mayer Realschule</b>. Als engagierte Schüler begeistern wir uns für Robotik und Technologie – mit Kreativität, Teamgeist und Leidenschaft."
-      />
-      <Section
-        selector="reverse"
-        heading="Entwicklungsverlauf"
-        btn-text="Mehr erfahren"
-        btn-link="/progress-logs"
-        media_type="img"
-        :media="ErfolgeImg"
-        media_creator="Privat"
-        content="Erleben Sie den <b>Fortschritt unseres Teams</b> von den ersten Robotik-Ideen bis zu unseren größten Erfolgen. Hier zeigen wir <b>wichtige Meilensteine, aktuelle Projekte und unsere stetige Weiterentwicklung.</b>"
-      />
-      <Section
-        heading="PRMRS - Projekt der 9. Klassen"
-        btn-text="Mehr erfahren"
-        btn-link="/prmrs/forest-project"
-        media_type="img"
-        :media="ForestProjectImg"
-        media_creator="Privat"
-        content="Coming soon..."
-      />
+    <figure v-if="hero" class="order-1 lg:order-2">
+      <picture>
+        <source type="image/jxl" :srcset="'/' + hero.src.jxl" />
+        <img
+          :src="'/' + hero.src.webp"
+          :alt="t('home.teamAlt', { season: hero.season })"
+          fetchpriority="high"
+          class="aspect-[4/3] w-full rounded-[16px] object-cover lg:rounded-[20px]"
+        />
+      </picture>
+      <figcaption class="mt-2 font-mono text-[12px] text-(--muted)">
+        {{ t('home.teamCaption', { season: hero.season }) }}
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="mx-auto max-w-[1200px] px-4 pt-10 md:px-8 lg:pt-20">
+    <div class="flex items-center justify-between gap-4 px-1">
+      <h2 class="flex items-center gap-3 text-[13px] text-(--muted)">
+        {{ t('home.newInLogbuch') }} <LiveBadge />
+      </h2>
+      <RouterLink :to="localePath('/logbuch')" :class="link"
+        >{{ t('home.allEntries') }} <ArrowRight :size="16" :stroke-width="1.5" aria-hidden="true"
+      /></RouterLink>
     </div>
-  </main>
+    <div class="mt-2 rounded-[14px] border border-(--line) bg-(--card) p-5 md:p-6">
+      <LogbuchList :limit="3" class="lg:grid-cols-3 lg:gap-8" />
+    </div>
+  </section>
+
+  <section
+    class="mx-auto grid max-w-[1200px] gap-3 px-5 pt-14 md:px-8 lg:grid-cols-[5fr_7fr] lg:gap-16 lg:pt-24"
+  >
+    <h2 class="text-[24px] leading-[1.15] font-medium md:text-[32px]">
+      {{ t('home.whoTitle') }}
+    </h2>
+    <div>
+      <p class="text-[16px] leading-[25px] text-(--text-2) md:text-[18px] md:leading-[28px]">
+        {{ t('home.whoText') }}
+      </p>
+      <RouterLink :to="localePath('/About')" :class="[link, 'mt-2']"
+        >{{ t('home.moreAbout') }} <ArrowRight :size="16" :stroke-width="1.5" aria-hidden="true"
+      /></RouterLink>
+    </div>
+  </section>
+
+  <section v-if="teams.length" class="pt-14 lg:pt-24">
+    <div
+      class="mx-auto flex max-w-[1200px] flex-col gap-1 px-5 md:flex-row md:items-baseline md:justify-between md:px-8"
+    >
+      <h2 class="text-[24px] leading-[1.15] font-medium md:text-[32px]">
+        {{ t('home.seasonsTitle') }}
+      </h2>
+      <span class="font-mono text-[12px] text-(--muted)">{{
+        t(
+          'home.seasonsCount',
+          { n: teams.length, oldest: teams[teams.length - 1]!.season },
+          teams.length,
+        )
+      }}</span>
+    </div>
+    <ul
+      class="no-bar mx-auto mt-5 flex max-w-[1200px] snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 md:scroll-px-8 md:gap-4 md:px-8"
+    >
+      <li v-for="x in teams" :key="x.post.uuid" class="w-[240px] shrink-0 snap-start md:w-[300px]">
+        <RouterLink
+          :to="localePath('/team') + '#' + seasonAnchor(x.season)"
+          class="block rounded-[12px]"
+        >
+          <picture v-if="img(x.post, 'small')">
+            <source type="image/jxl" :srcset="'/' + img(x.post, 'small')!.jxl" />
+            <img
+              :src="'/' + img(x.post, 'small')!.webp"
+              :alt="t('home.teamAlt', { season: x.season })"
+              loading="lazy"
+              decoding="async"
+              class="aspect-[4/3] w-full rounded-[12px] object-cover"
+            />
+          </picture>
+          <div v-else class="aspect-[4/3] rounded-[12px] bg-(--raised)" />
+          <span class="mt-2 block font-mono text-[12px] text-(--text-2)">{{ x.season }}</span>
+        </RouterLink>
+      </li>
+    </ul>
+  </section>
+
+  <section class="mx-auto max-w-[1200px] px-4 pt-14 md:px-8 lg:pt-24">
+    <article
+      class="overflow-hidden rounded-[16px] border border-(--line) bg-(--card) md:grid md:grid-cols-2"
+    >
+      <img
+        :src="logbuchImg"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        class="aspect-[16/10] w-full object-cover md:aspect-auto md:h-full"
+      />
+      <div class="p-5 md:flex md:flex-col md:justify-center md:p-8">
+        <h2 class="text-[20px] leading-[1.2] font-medium md:text-[24px]">
+          {{ t('home.logbuchTitle') }}
+        </h2>
+        <p class="mt-2 text-[15px] leading-[22px] text-(--text-2)">{{ t('home.logbuchText') }}</p>
+        <RouterLink :to="localePath('/logbuch')" :class="[link, 'mt-2']"
+          >{{ t('home.toLogbuch') }} <ArrowRight :size="16" :stroke-width="1.5" aria-hidden="true"
+        /></RouterLink>
+      </div>
+    </article>
+  </section>
 </template>
-
-<style scoped>
-.landing {
-  padding-top: calc(50vh - 15rem);
-  min-height: 50vh;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  text-wrap-mode: nowrap;
-  user-select: none;
-}
-
-.landing h1 {
-  font-size: 7rem;
-  color: transparent;
-  background: linear-gradient(
-    160deg,
-    var(--primary) 40%,
-    hsl(79deg 69.87% 56.03%) 75%,
-    var(--secondary) 95%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  opacity: 0;
-  transform: translateY(var(--margin-m));
-  animation: fadeInUp 0.6s forwards;
-  animation-delay: 0.2s;
-}
-
-.landing h3 {
-  color: var(--text-muted);
-}
-
-.landing h3 span {
-  opacity: 0;
-  transform: translateY(var(--margin-m));
-  animation: fadeInUp 0.6s forwards;
-}
-
-.landing h3 span:nth-child(1) {
-  animation-delay: 1s;
-}
-.landing h3 span:nth-child(2) {
-  animation-delay: 1.5s;
-}
-.landing h3 span:nth-child(3) {
-  animation-delay: 2s;
-}
-
-.landing #more {
-  margin-top: 8rem;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  user-select: none;
-}
-
-.landing #more p {
-  font-weight: 500;
-  color: var(--text-muted);
-  opacity: 0;
-  transform: translateY(var(--margin-m));
-  animation: fadeInUp 0.6s forwards;
-  animation-delay: 2.7s;
-}
-
-.landing #more svg {
-  color: var(--text-muted);
-  height: 1.4rem;
-  opacity: 0;
-  transform: translateY(var(--margin-m));
-  animation: fadeInUp 0.6s forwards;
-  animation-delay: 3s;
-}
-
-section {
-  margin-top: 10rem;
-}
-
-.content {
-  opacity: 0;
-  transform: translateY(var(--margin-m));
-  animation: fadeInUp 0.6s forwards;
-  animation-delay: 4s;
-}
-
-.nav-block {
-  position: fixed;
-  top: 0;
-  height: 6rem;
-  width: 100%;
-  background: var(--bg-dark);
-  left: 0;
-  z-index: 3;
-  opacity: 1;
-  animation: fadeOut 0.6s forwards;
-  animation-delay: 4s;
-}
-
-@keyframes fadeInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOut {
-  to {
-    opacity: 0;
-    z-index: 0;
-  }
-}
-
-.skip-animations .landing h1,
-.skip-animations .landing h3 span,
-.skip-animations .landing #more p,
-.skip-animations .landing #more svg,
-.skip-animations .content,
-.no-animations .landing h1,
-.no-animations .landing h3 span,
-.no-animations .landing #more p,
-.no-animations .landing #more svg,
-.no-animations .content {
-  opacity: 1;
-  transform: translateY(0);
-  animation: none;
-}
-
-.skip-animations .nav-block,
-.no-animations .nav-block {
-  opacity: 0;
-  z-index: 0;
-  animation: none;
-}
-</style>

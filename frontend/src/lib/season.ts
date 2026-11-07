@@ -14,3 +14,6 @@ export function seasonFromPost(p: { season?: string | null; created_at: string }
   if (m) return `${m[1].slice(2)}/${m[2]}`
   return seasonOf(new Date(`${p.created_at}Z`)).label
 }
+
+// shortcut: assumes the 20xx century (no pre-2000 seasons exist).
+export const seasonAnchor = (label: string) => `season-20${label.replace('/', '-')}`
