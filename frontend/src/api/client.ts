@@ -14,6 +14,12 @@ export class AuthExpiredError extends Error {
 
 export const readToken = (): string | null => useCookies().cookies.get(TOKEN_COOKIE) || null
 
+/** Safe to log: an AxiosError itself carries the Authorization header in `config`. */
+export const describeError = (e: unknown): string => {
+  const status = (e as { response?: { status?: number } })?.response?.status
+  return `${status ?? ''} ${e instanceof Error ? e.message : String(e)}`.trim()
+}
+
 // API base is read per call so tests and late config.js can set it.
 export async function request<T = unknown>(config: AxiosRequestConfig, authed = false) {
   const headers = { ...config.headers } as Record<string, string>

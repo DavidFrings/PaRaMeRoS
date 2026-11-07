@@ -5,6 +5,7 @@ import {
   AuthExpiredError,
   createPost,
   deleteMedia,
+  describeError,
   replaceMedia,
   updatePost,
   type Section,
@@ -129,7 +130,7 @@ async function submit() {
   } catch (e) {
     if (e instanceof AuthExpiredError) expired.value = true
     else {
-      console.error('saving post failed', e)
+      console.error('saving post failed', describeError(e))
       error.value = 'admin.editor.failed'
     }
   } finally {

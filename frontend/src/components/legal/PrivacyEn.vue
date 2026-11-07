@@ -341,9 +341,12 @@ const { localePath } = useLocale()
         related services (e.g. storage space and/or computing capacity);
         <b>Service provider:</b> STRATO AG, Pascalstraße 10, 10587 Berlin, Germany;
         <span><b>Legal bases:</b> Legitimate interests (Art. 6 (1) sentence 1 lit. f) GDPR); </span
-        ><b>Website: </b> <a href="https://www.strato.de" target="_blank">https://www.strato.de</a>;
+        ><b>Website: </b>
+        <a href="https://www.strato.de" target="_blank" rel="noopener noreferrer"
+          >https://www.strato.de</a
+        >;
         <b>Privacy policy: </b>
-        <a href="https://www.strato.de/datenschutz/" target="_blank"
+        <a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer"
           >https://www.strato.de/datenschutz/</a
         >. <b>Data processing agreement:</b> Provided by the service provider.
       </li>
@@ -398,7 +401,9 @@ const { localePath } = useLocale()
       requirements, including via the privacy settings of their browser.
     </p>
     <b>Cookie settings / option to object:</b>
-    <p><a href="https://parameros.net/cookies" target="_blank">Cookies</a></p>
+    <p>
+      <a href="https://parameros.net/cookies" target="_blank" rel="noopener noreferrer">Cookies</a>
+    </p>
     <ul>
       <li>
         <b>Types of data processed:</b> Meta, communication and procedural data (e.g. IP addresses,

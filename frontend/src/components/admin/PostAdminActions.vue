@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AuthExpiredError, deletePost } from '@/api/client'
+import { AuthExpiredError, deletePost, describeError } from '@/api/client'
 import { useAuth } from '@/api/auth'
 import { useLocale } from '@/composables/useLocale'
 import AuthExpiredNotice from './AuthExpiredNotice.vue'
@@ -22,7 +22,7 @@ async function remove() {
   } catch (e) {
     if (e instanceof AuthExpiredError) error.value = 'expired'
     else {
-      console.error('deleting post failed', e)
+      console.error('deleting post failed', describeError(e))
       error.value = 'failed'
     }
   }

@@ -12,7 +12,7 @@ export default defineConfig({
   clearScreen: false,
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   build: {
@@ -29,14 +29,15 @@ export default defineConfig({
     //VueDevTools(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: { globIgnores: ['**/config.js'] }, // config.js is runtime config, never precache it
       manifest: {
-        name: "PaRaMeRoS",
-        short_name: "PaRaMeRoS",
-        start_url: "/",
+        name: 'PaRaMeRoS',
+        short_name: 'PaRaMeRoS',
+        start_url: '/',
         theme_color: '#161513',
         background_color: '#161513',
-        prefer_related_applications: true
-      }
-    })
-  ]
+        prefer_related_applications: true,
+      },
+    }),
+  ],
 })

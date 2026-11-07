@@ -369,9 +369,12 @@ const { localePath } = useLocale()
         Deutschland;
         <span
           ><b>Rechtsgrundlagen:</b> Berechtigte Interessen (Art. 6 Abs. 1 S. 1 lit. f) DSGVO); </span
-        ><b>Website: </b> <a href="https://www.strato.de" target="_blank">https://www.strato.de</a>;
+        ><b>Website: </b>
+        <a href="https://www.strato.de" target="_blank" rel="noopener noreferrer"
+          >https://www.strato.de</a
+        >;
         <b>Datenschutzerklärung: </b>
-        <a href="https://www.strato.de/datenschutz/" target="_blank"
+        <a href="https://www.strato.de/datenschutz/" target="_blank" rel="noopener noreferrer"
           >https://www.strato.de/datenschutz/</a
         >. <b>Auftragsverarbeitungsvertrag:</b> Wird vom Dienstanbieter bereitgestellt.
       </li>
@@ -435,7 +438,9 @@ const { localePath } = useLocale()
       Privatsphäre-Einstellungen ihres Browsers, erklären.
     </p>
     <b>Cookie-Einstellungen/-Widerspruchsmöglichkeit:</b>
-    <p><a href="https://parameros.net/cookies" target="_blank">Cookies</a></p>
+    <p>
+      <a href="https://parameros.net/cookies" target="_blank" rel="noopener noreferrer">Cookies</a>
+    </p>
     <ul>
       <li>
         <b>Verarbeitete Datenarten:</b> Meta-, Kommunikations- und Verfahrensdaten (z. B.

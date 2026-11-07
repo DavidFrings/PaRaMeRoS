@@ -3,7 +3,7 @@
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { getPost, getPosts, type Section } from '@/api/client'
+import { describeError, getPost, getPosts, type Section } from '@/api/client'
 import { logout, useAuth } from '@/api/auth'
 import PostEditor from '@/components/admin/PostEditor.vue'
 import PostList from '@/components/admin/PostList.vue'
@@ -42,7 +42,7 @@ async function load() {
   const all = await Promise.all(
     SECTIONS.map((s) =>
       getPosts(s).catch((e) => {
-        console.error('admin posts fetch failed', e)
+        console.error('admin posts fetch failed', describeError(e))
         loadFailed.value = true
         return [] as Post[]
       }),

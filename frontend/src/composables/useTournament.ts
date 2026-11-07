@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue'
-import { getTournament } from '@/api/client'
+import { describeError, getTournament } from '@/api/client'
 import { countdownState, type Tournament } from '@/lib/countdown'
 import { useNow } from './useNow'
 
@@ -18,7 +18,7 @@ export function useTournament() {
     started = true
     getTournament()
       .then((t) => (tournament.value = t))
-      .catch((e) => console.error('tournament fetch failed', e))
+      .catch((e) => console.error('tournament fetch failed', describeError(e)))
   }
   const state = computed(() => countdownState(tournament.value, now.value))
   return { tournament, state }

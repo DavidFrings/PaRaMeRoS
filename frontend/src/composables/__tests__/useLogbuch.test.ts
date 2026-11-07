@@ -3,7 +3,7 @@ import { defineComponent } from 'vue'
 import { mount, flushPromises } from '@vue/test-utils'
 import type { Post } from '@/lib/post'
 
-vi.mock('@/api/client', () => ({ getPosts: vi.fn() }))
+vi.mock('@/api/client', () => ({ getPosts: vi.fn(), describeError: String }))
 import { getPosts } from '@/api/client'
 import { useLogbuch, __resetLogbuchForTests } from '../useLogbuch'
 

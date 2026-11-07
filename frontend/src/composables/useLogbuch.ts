@@ -1,5 +1,5 @@
 import { computed, onScopeDispose, ref } from 'vue'
-import { getPosts } from '@/api/client'
+import { describeError, getPosts } from '@/api/client'
 import { isLive, parseApiTime } from '@/lib/time'
 import type { Post } from '@/lib/post'
 import { useNow } from './useNow'
@@ -20,7 +20,7 @@ async function refresh() {
     )
   } catch (e) {
     // Keep the old posts; the next poll or visibility change retries.
-    console.error('logbuch refresh failed', e)
+    console.error('logbuch refresh failed', describeError(e))
   }
 }
 

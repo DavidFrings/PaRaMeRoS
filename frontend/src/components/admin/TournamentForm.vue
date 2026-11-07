@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AuthExpiredError, deleteTournament, getTournament, putTournament } from '@/api/client'
+import {
+  AuthExpiredError,
+  describeError,
+  deleteTournament,
+  getTournament,
+  putTournament,
+} from '@/api/client'
 import { berlinToRfc3339, rfc3339ToBerlinLocal } from '@/lib/time'
 import AuthExpiredNotice from './AuthExpiredNotice.vue'
 import ConfirmButton from './ConfirmButton.vue'
@@ -26,7 +32,7 @@ onMounted(async () => {
       end: x.ends_at ? rfc3339ToBerlinLocal(x.ends_at) : '',
     })
   } catch (e) {
-    console.error('tournament fetch failed', e)
+    console.error('tournament fetch failed', describeError(e))
   }
 })
 
@@ -41,7 +47,7 @@ async function run(action: () => Promise<void>, done: string) {
   } catch (e) {
     if (e instanceof AuthExpiredError) expired.value = true
     else {
-      console.error('tournament save failed', e)
+      console.error('tournament save failed', describeError(e))
       error.value = 'admin.tournament.failed'
     }
   } finally {

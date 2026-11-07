@@ -59,3 +59,22 @@ describe('authed calls', () => {
     expect(await getTournament()).toBeNull()
   })
 })
+
+describe('review lows', () => {
+  it('describeError_has_no_bearer_token', async () => {
+    const { describeError } = await import('../client')
+    const e = Object.assign(new Error('Request failed'), {
+      response: { status: 500 },
+      config: { headers: { Authorization: 'Bearer secret.jwt.value' } },
+    })
+    expect(describeError(e)).not.toContain('Bearer')
+    expect(describeError(e)).toContain('500')
+  })
+
+  it('check_removes_cookie_on_401', async () => {
+    const { useAuth } = await import('../auth')
+    request.mockRejectedValue({ response: { status: 401 } })
+    await useAuth().check()
+    expect(document.cookie).not.toContain('auth_token')
+  })
+})

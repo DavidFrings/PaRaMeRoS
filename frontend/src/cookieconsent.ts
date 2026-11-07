@@ -42,8 +42,8 @@ export const consentOptions: CookieConsentConfig = {
           acceptNecessaryBtn: 'Notwendige akzeptieren',
           showPreferencesBtn: 'Mehr Informationen',
           footer: `
-            <a href="/imprint" target="_blank">Impressum</a>
-            <a href="/privacy-policy" target="_blank">Datenschutzerklärung</a>
+            <a href="/imprint" target="_blank" rel="noopener noreferrer">Impressum</a>
+            <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung</a>
           `,
         },
         preferencesModal: {

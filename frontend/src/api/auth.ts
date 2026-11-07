@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useCookies } from 'vue3-cookies'
-import { TOKEN_COOKIE, readToken, request } from './client'
+import { AuthExpiredError, TOKEN_COOKIE, readToken, request } from './client'
 
 /** Expiry of the JWT's `exp` claim, so the cookie dies with the token. */
 export function tokenCookieExpiry(token: string): Date {
@@ -39,7 +39,8 @@ export function useAuth() {
     try {
       await request({ url: '/auth/verify', method: 'GET' }, true)
       loggedIn.value = true
-    } catch {
+    } catch (e) {
+      if (e instanceof AuthExpiredError) useCookies().cookies.remove(TOKEN_COOKIE, '/')
       loggedIn.value = false
     }
   }
