@@ -11,6 +11,17 @@ beforeEach(() => {
 })
 
 describe('router', () => {
+  it('scroll_resets_on_navigation', () => {
+    const sb = make().options.scrollBehavior!
+    const to = make().resolve('/team')
+    const from = make().resolve('/')
+    expect(sb(to, from, null)).toEqual({ top: 0 })
+    expect(sb(to, from, { left: 0, top: 300 })).toEqual({ left: 0, top: 300 })
+    expect(sb(make().resolve('/team#season-2024-25'), from, null)).toEqual({
+      el: '#season-2024-25',
+    })
+  })
+
   it('en_twin_routes_exist', () => {
     const r = make().resolve('/en/team')
     expect(r.meta.locale).toBe('en')

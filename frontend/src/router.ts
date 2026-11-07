@@ -38,7 +38,12 @@ function buildRoutes(): RouteRecordRaw[] {
 }
 
 export function createAppRouter(history: RouterHistory) {
-  const router = createRouter({ history, routes: buildRoutes() })
+  const router = createRouter({
+    history,
+    routes: buildRoutes(),
+    // Team scrolls to its hash itself once its async sections load.
+    scrollBehavior: (to, _from, saved) => saved ?? (to.hash ? { el: to.hash } : { top: 0 }),
+  })
 
   router.beforeEach((to, from) => {
     if (from !== START_LOCATION || to.path !== '/') return
