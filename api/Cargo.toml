@@ -39,6 +39,7 @@ webp = "^0.3"
 jpegxl-rs = { version = "^0.16", default-features = false, features = ["vendored"] }
 actix-cors = "^0.7"
 serde_json = "^1"
+subtle = "^2"
 
 [dev-dependencies]
 actix-http = "^3"

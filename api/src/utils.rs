@@ -151,10 +151,9 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<i32, HttpError
 pub async fn db(
     env: &Data<Env>,
 ) -> Result<bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
-    let conn = env
-        .pool
-        .get()
-        .await
-        .map_err(|err| internal_error(format!("Database connection error: {}", err)))?;
+    let conn = env.pool.get().await.map_err(|err| {
+        error!("Database connection error: {}", err);
+        internal_error("Database error")
+    })?;
     Ok(conn)
 }

@@ -28,11 +28,20 @@ impl Env {
     pub async fn init() -> Self {
         let pool = connection::establish(get_env_var("DATABASE_URL")).await;
 
+        let jwt_secret = get_env_var("JWT_SECRET");
+        let admin_pass = get_env_var("ADMIN_PASS");
+        if jwt_secret.len() < 32 {
+            log::warn!("JWT_SECRET is shorter than 32 bytes; use a long random secret");
+        }
+        if admin_pass.len() < 12 {
+            log::warn!("ADMIN_PASS is shorter than 12 characters; use a long random password");
+        }
+
         Self {
             pool,
-            jwt_secret: get_env_var("JWT_SECRET"),
+            jwt_secret,
             jwt_expire: get_env_var("JWT_EXPIRE").parse().unwrap_or(1),
-            admin_pass: get_env_var("ADMIN_PASS"),
+            admin_pass,
             cors_origins: get_env_var_optional("CORS_ORIGINS")
                 .map(|value| {
                     value

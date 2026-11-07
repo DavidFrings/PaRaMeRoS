@@ -1,4 +1,4 @@
-use super::image::write_variants;
+use super::image::{MAX_PIXELS, write_variants};
 use actix_web::rt::task::spawn_blocking;
 use log::{error, info, warn};
 use std::path::{Path, PathBuf};
@@ -43,6 +43,18 @@ fn run(upload_dir: &Path) -> (usize, usize, usize) {
         if complete {
             skipped += 1;
             continue;
+        }
+
+        // Header-only check: a huge legacy file must not OOM the API on every boot.
+        match image::ImageReader::open(entry.path())
+            .and_then(|r| r.into_dimensions().map_err(std::io::Error::other))
+        {
+            Ok((w, h)) if u64::from(w) * u64::from(h) > MAX_PIXELS => {
+                warn!("Media backfill: {base}.webp skipped, {w}x{h} exceeds MAX_PIXELS");
+                skipped += 1;
+                continue;
+            }
+            _ => {}
         }
 
         match image::open(entry.path())

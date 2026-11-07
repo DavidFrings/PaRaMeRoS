@@ -13,6 +13,7 @@ use actix_web::{
 use bcrypt::{DEFAULT_COST, hash};
 use diesel::SelectableHelper;
 use diesel_async::RunQueryDsl;
+use subtle::ConstantTimeEq;
 
 const REGISTER_MAX_ATTEMPTS: u32 = 3;
 const REGISTER_WINDOW_SECS: u64 = 3600;
@@ -36,7 +37,7 @@ pub async fn register(
 
     let req = request.into_inner();
 
-    if req.admin_pass != env.admin_pass {
+    if !bool::from(req.admin_pass.as_bytes().ct_eq(env.admin_pass.as_bytes())) {
         return Err(forbidden("You are not allowed to create a new user!"));
     }
 
