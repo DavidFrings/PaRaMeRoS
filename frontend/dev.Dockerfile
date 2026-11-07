@@ -25,7 +25,7 @@ FROM cgr.dev/chainguard/nginx:latest-dev
 USER nginx
 WORKDIR /usr/share/nginx/html
 COPY --from=builder /app/dist ./
-COPY ./nginx.conf ./mime.types /etc/nginx/
+COPY ./nginx.conf ./mime.types ./security_headers.conf /etc/nginx/
 COPY --chown=nginx:nginx  ./entrypoint.sh ./entrypoint.sh
 COPY --chown=nginx:nginx  ./blank ./config.js
 RUN chmod u+x ./entrypoint.sh
