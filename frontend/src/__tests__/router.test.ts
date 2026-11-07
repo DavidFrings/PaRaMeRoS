@@ -1,0 +1,54 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createMemoryHistory } from 'vue-router'
+import { createAppRouter } from '@/router'
+
+const make = () => createAppRouter(createMemoryHistory())
+const lang = (v: string) => vi.spyOn(navigator, 'language', 'get').mockReturnValue(v)
+
+beforeEach(() => {
+  localStorage.clear()
+  vi.restoreAllMocks()
+})
+
+describe('router', () => {
+  it('en_twin_routes_exist', () => {
+    const r = make().resolve('/en/team')
+    expect(r.meta.locale).toBe('en')
+    expect(r.matched.length).toBeGreaterThan(0)
+    expect(make().resolve('/en/nope/x').meta.locale).toBe('en')
+    expect(make().resolve('/en/').meta.locale).toBe('en')
+  })
+
+  it('progress_logs_redirects', async () => {
+    const r = make()
+    await r.push('/progress-logs')
+    expect(r.currentRoute.value.path).toBe('/logbuch')
+    await r.push('/en/progress-logs')
+    expect(r.currentRoute.value.path).toBe('/en/logbuch')
+  })
+
+  it('first_visit_root_redirects_only_for_non_german', async () => {
+    lang('en-US')
+    const en = make()
+    await en.push('/')
+    expect(en.currentRoute.value.path).toBe('/en/')
+
+    lang('de-DE')
+    const de = make()
+    await de.push('/')
+    expect(de.currentRoute.value.path).toBe('/')
+
+    lang('en-US')
+    localStorage.setItem('pm-lang', 'de')
+    const stored = make()
+    await stored.push('/')
+    expect(stored.currentRoute.value.path).toBe('/')
+  })
+
+  it('deep_link_never_redirects_by_language', async () => {
+    lang('en-US')
+    const r = make()
+    await r.push('/team')
+    expect(r.currentRoute.value.path).toBe('/team')
+  })
+})

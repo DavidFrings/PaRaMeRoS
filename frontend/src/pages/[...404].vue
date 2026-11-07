@@ -1,21 +1,20 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useLocale } from '@/composables/useLocale'
 
-const route = useRoute()
+const { t } = useI18n()
+const { localePath } = useLocale()
 </script>
 
 <template>
-  <main id="404">
-    <h1>Not Found</h1>
-    <p>{{ route.fullPath }} does not exist.</p>
-  </main>
+  <section class="mx-auto max-w-[1200px] px-5 py-24 md:px-8">
+    <h1 class="text-[28px] font-semibold">{{ t('notFound.title') }}</h1>
+    <p class="mt-3 text-(--text-2)">{{ t('notFound.text') }}</p>
+    <RouterLink
+      :to="localePath('/')"
+      class="mt-6 inline-flex min-h-11 items-center text-(--orange)"
+      >{{ t('notFound.home') }}</RouterLink
+    >
+  </section>
 </template>
-
-<style scoped>
-main {
-  justify-items: center;
-  height: 90vh;
-  padding-top: 15rem;
-}
-</style>

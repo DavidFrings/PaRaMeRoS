@@ -4,8 +4,9 @@ import '@/assets/css/cookieconsent.css'
 
 import { createApp } from 'vue'
 import AppMain from './App.vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import { routes } from 'vue-router/auto-routes'
+import { createWebHistory } from 'vue-router'
+import { createAppRouter } from './router'
+import { i18n } from '@/i18n'
 import { createHead } from '@unhead/vue/client'
 import * as CookieConsent from 'vanilla-cookieconsent'
 import { consentOptions } from '@/cookieconsent'
@@ -16,10 +17,7 @@ const keywords = window.__ENV__.KEYWORDS
 
 const app = createApp(AppMain)
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-})
+const router = createAppRouter(createWebHistory())
 
 const head = createHead({
   init: [
@@ -37,6 +35,7 @@ const head = createHead({
 })
 
 app.use(head)
+app.use(i18n)
 app.use(router)
 app.mount('#app')
 CookieConsent.run(consentOptions)
