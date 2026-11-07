@@ -324,6 +324,44 @@ test.describe('footer', () => {
     })
 })
 
+test.describe('layout width', () => {
+  test.use({ locale: 'de-DE' })
+  for (const [w, h] of [
+    [1280, 800],
+    [375, 760],
+  ])
+    test(`header_and_footer_span_page_width ${w}x${h}`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h })
+      await page.goto('/Login')
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      const box = (sel: string) =>
+        page
+          .locator(sel)
+          .first()
+          .evaluate((el) => {
+            const r = el.getBoundingClientRect()
+            return { left: r.left, right: r.right, width: r.width }
+          })
+      const want = Math.min(1200, w)
+      for (const sel of ['header', 'footer'])
+        expect(Math.abs((await box(sel)).width - want), sel).toBeLessThanOrEqual(1)
+      const header = await box('header')
+      const logo = await box('header a')
+      const lang = await box('header [role=group]')
+      const menu = await box('header button[aria-controls=mobile-nav]')
+      const end = w >= 1024 ? lang : menu
+      expect(logo.left - header.left).toBeLessThan(40)
+      expect(header.right - end.right).toBeLessThan(40)
+      if (w >= 768) {
+        const f = await box('footer p')
+        const links = await box('footer div')
+        const footer = await box('footer')
+        expect(f.left - footer.left).toBeLessThan(40)
+        expect(footer.right - links.right).toBeLessThan(40)
+      }
+    })
+})
+
 test.describe('phone', () => {
   test('no_horizontal_scroll_on_phone', async ({ page }, info) => {
     test.skip(info.project.name !== 'phone')

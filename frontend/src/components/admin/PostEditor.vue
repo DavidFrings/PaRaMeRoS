@@ -54,7 +54,7 @@ const creatorLocked = computed(() => !!props.post && !file.value)
 const previewUrl = ref<string | null>(null)
 watch(file, (x) => {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
-  previewUrl.value = x ? URL.createObjectURL(x) : null
+  previewUrl.value = x && !fileError(x) ? URL.createObjectURL(x) : null
 })
 onBeforeUnmount(() => {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)

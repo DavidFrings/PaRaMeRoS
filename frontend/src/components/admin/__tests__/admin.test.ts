@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { createMemoryHistory } from 'vue-router'
@@ -76,8 +76,14 @@ function chooseFile(input: HTMLInputElement, file: File) {
   input.dispatchEvent(new Event('change'))
 }
 
+const urlOrig = { c: URL.createObjectURL, r: URL.revokeObjectURL }
+afterEach(() => {
+  Object.assign(URL, { createObjectURL: urlOrig.c, revokeObjectURL: urlOrig.r })
+})
+
 beforeEach(() => {
   vi.clearAllMocks()
+  Object.assign(URL, { createObjectURL: () => 'blob:default', revokeObjectURL: () => {} })
   perms.value = [...ALL]
   vi.mocked(getPosts).mockResolvedValue([])
   vi.mocked(getTournament).mockResolvedValue(null)
@@ -138,6 +144,19 @@ describe('PostEditor', () => {
     const { w } = await mountAt(PostEditor, { section: 'coaches', post: p })
     expect(w.find('#pe-preview + article img').exists()).toBe(true)
     await w.get('input[type=checkbox]').setValue(true)
+    expect(w.find('#pe-preview + article img').exists()).toBe(false)
+  })
+
+  it('editor_preview_skips_rejected_file', async () => {
+    const create = vi.fn(() => 'blob:fake')
+    Object.assign(URL, { createObjectURL: create, revokeObjectURL: vi.fn() })
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    chooseFile(
+      w.get('input[type=file]').element as HTMLInputElement,
+      new File(['x'], 'a.gif', { type: 'image/gif' }),
+    )
+    await flushPromises()
+    expect(create).not.toHaveBeenCalled()
     expect(w.find('#pe-preview + article img').exists()).toBe(false)
   })
 

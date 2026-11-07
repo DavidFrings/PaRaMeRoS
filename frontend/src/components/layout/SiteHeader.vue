@@ -40,7 +40,7 @@ const isActive = (to: string) => {
 </script>
 
 <template>
-  <header class="mx-auto max-w-[1200px] px-4 md:px-8" @keydown.esc="closeOnEscape">
+  <header class="mx-auto w-full max-w-[1200px] px-4 md:px-8" @keydown.esc="closeOnEscape">
     <div class="flex h-16 items-center justify-between">
       <RouterLink :to="localePath('/')" class="flex min-h-11 items-center gap-3 rounded-[10px]">
         <img :src="Logo" alt="" class="h-9 w-9 rounded-[8px] object-contain" />
