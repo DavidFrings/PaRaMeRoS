@@ -8,11 +8,13 @@ use actix_web::{
     web::Data,
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl, SimpleAsyncConnection};
+use image::{ImageBuffer, ImageFormat, Rgb, RgbImage};
 use parameros_api::{
     Env, app,
     db::{connection, models::NewUser, schema::users},
     migrate::run_migrations,
 };
+use std::io::Cursor;
 
 pub fn site_url() -> &'static str {
     "https://example.test"
@@ -120,4 +122,36 @@ where
         .to_str()
         .unwrap()
         .to_owned()
+}
+
+/// In-memory test image in the given format.
+pub fn encoded(w: u32, h: u32, fmt: ImageFormat) -> Vec<u8> {
+    let img: RgbImage =
+        ImageBuffer::from_fn(w, h, |x, y| Rgb([(x % 256) as u8, (y % 256) as u8, 128]));
+    let mut out = Cursor::new(Vec::new());
+    img.write_to(&mut out, fmt).expect("encode fixture");
+    out.into_inner()
+}
+
+/// Multipart body with boundary `XB`; the file goes in the `media` part.
+pub fn multipart(fields: &[(&str, &str)], file: Option<(&str, &[u8])>) -> Vec<u8> {
+    let mut body = Vec::new();
+    for (k, v) in fields {
+        body.extend(
+            format!("--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n")
+                .as_bytes(),
+        );
+    }
+    if let Some((filename, data)) = file {
+        body.extend(
+            format!(
+                "--XB\r\nContent-Disposition: form-data; name=\"media\"; filename=\"{filename}\"\r\nContent-Type: application/octet-stream\r\n\r\n"
+            )
+            .as_bytes(),
+        );
+        body.extend(data);
+        body.extend(b"\r\n");
+    }
+    body.extend(b"--XB--\r\n");
+    body
 }

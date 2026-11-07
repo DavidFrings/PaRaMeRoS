@@ -335,3 +335,119 @@ async fn migration_w05_down_up_roundtrip_backfills_non_admins() {
     assert_eq!(text(conn, col).await, "0");
     conn.batch_execute(W05_UP).await.unwrap(); // leave schema as migrated
 }
+
+async fn sql(env: &parameros_api::Env, stmt: &str) {
+    let mut conn = env.pool.get().await.unwrap();
+    let conn: &mut AsyncPgConnection = &mut conn;
+    conn.batch_execute(stmt).await.unwrap();
+}
+
+fn upload_files(env: &parameros_api::Env) -> usize {
+    std::fs::read_dir(&env.upload_dir).unwrap().count()
+}
+
+fn multipart_req(uri: &str, method: &str, auth: &str, body: Vec<u8>) -> actix_http::Request {
+    let req = match method {
+        "PUT" => TestRequest::put(),
+        _ => TestRequest::post(),
+    };
+    req.uri(uri)
+        .insert_header((AUTHORIZATION, auth))
+        .insert_header(("Content-Type", "multipart/form-data; boundary=XB"))
+        .set_payload(body)
+        .to_request()
+}
+
+#[actix_web::test]
+async fn null_permission_elements_grant_nothing() {
+    let (app, env) = common::test_app().await;
+    let auth = editor(&app).await;
+    sql(
+        &env,
+        "UPDATE users SET permissions = ARRAY['logbuch', NULL] WHERE username = 'editor'",
+    )
+    .await;
+    assert_eq!(create(&app, &auth, "logbuch").await.status(), 200);
+    assert_eq!(create(&app, &auth, "forest-project").await.status(), 403);
+    assert_eq!(
+        verify_json(&app, &auth).await,
+        json!({"admin": false, "permissions": ["logbuch"]})
+    );
+}
+
+#[actix_web::test]
+async fn user_with_no_permissions_cannot_write() {
+    let (app, _env) = common::test_app().await;
+    let admin = common::login(&app).await;
+    let post = create_id(&app, &admin, "logbuch").await;
+    assert_eq!(register(&app, "nobody", json!([])).await, 201);
+    let auth = login_as(&app, "nobody").await;
+    assert_eq!(create(&app, &auth, "logbuch").await.status(), 403);
+    assert_eq!(
+        call_service(&app, put_tournament(&auth)).await.status(),
+        403
+    );
+    let res = call_service(&app, delete(&auth, &format!("/post/{post}"))).await;
+    assert_eq!(res.status(), 403);
+}
+
+#[actix_web::test]
+async fn revoked_permission_applies_to_existing_token() {
+    let (app, env) = common::test_app().await;
+    let auth = editor(&app).await;
+    assert_eq!(create(&app, &auth, "logbuch").await.status(), 200);
+    sql(
+        &env,
+        "UPDATE users SET permissions = '{}' WHERE username = 'editor'",
+    )
+    .await;
+    assert_eq!(create(&app, &auth, "logbuch").await.status(), 403);
+    sql(&env, "DELETE FROM users WHERE username = 'editor'").await;
+    assert_eq!(create(&app, &auth, "logbuch").await.status(), 401);
+}
+
+#[actix_web::test]
+async fn forbidden_uploads_write_no_file() {
+    let (app, env) = common::test_app().await;
+    let admin = common::login(&app).await;
+    let team = create_id(&app, &admin, "team").await;
+    let auth = editor(&app).await;
+    let img = common::encoded(400, 300, image::ImageFormat::Png);
+
+    let body = common::multipart(
+        &[
+            ("name", "forest-project"),
+            ("heading", "H"),
+            ("content", "C"),
+            ("media_type", "img"),
+            ("media_creator", "me"),
+        ],
+        Some(("p.png", &img)),
+    );
+    let res = call_service(&app, multipart_req("/post", "POST", &auth, body)).await;
+    assert_eq!(res.status(), 403);
+
+    let body = common::multipart(
+        &[("media_type", "img"), ("media_creator", "me")],
+        Some(("p.png", &img)),
+    );
+    let uri = format!("/post/{team}/media");
+    let res = call_service(&app, multipart_req(&uri, "PUT", &auth, body)).await;
+    assert_eq!(res.status(), 403);
+    assert_eq!(upload_files(&env), 0);
+}
+
+#[actix_web::test]
+async fn post_without_any_section_permission_is_rejected_early() {
+    let (app, _env) = common::test_app().await;
+    assert_eq!(register(&app, "cup", json!(["tournament"])).await, 201);
+    let auth = login_as(&app, "cup").await;
+    let img = common::encoded(1600, 1200, image::ImageFormat::Png);
+    let body = common::multipart(
+        &[("media_type", "img"), ("media_creator", "me")],
+        Some(("big.png", &img)),
+    );
+    // No `name` field: only the early check can answer 403 instead of 400.
+    let res = call_service(&app, multipart_req("/post", "POST", &auth, body)).await;
+    assert_eq!(res.status(), 403);
+}

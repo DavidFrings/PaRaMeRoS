@@ -5,9 +5,10 @@ use actix_web::{
     http::header::AUTHORIZATION,
     test::{TestRequest, call_service, read_body_json},
 };
-use image::{ImageBuffer, ImageFormat, Rgb, RgbImage};
+use common::{encoded, multipart};
+use image::ImageFormat;
 use serde_json::Value;
-use std::{io::Cursor, path::Path};
+use std::path::Path;
 
 const MP4: [u8; 12] = [
     0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6F, 0x6D,
@@ -18,14 +19,6 @@ fn padded(head: &[u8], len: usize) -> Vec<u8> {
     let mut v = head.to_vec();
     v.resize(len, 0);
     v
-}
-
-fn encoded(w: u32, h: u32, fmt: ImageFormat) -> Vec<u8> {
-    let img: RgbImage =
-        ImageBuffer::from_fn(w, h, |x, y| Rgb([(x % 256) as u8, (y % 256) as u8, 128]));
-    let mut out = Cursor::new(Vec::new());
-    img.write_to(&mut out, fmt).expect("encode fixture");
-    out.into_inner()
 }
 
 fn crc32(data: &[u8]) -> u32 {
@@ -62,28 +55,6 @@ fn huge_png_header() -> Vec<u8> {
     png_chunk(&mut out, b"IDAT", &[0, 0, 0, 0]);
     png_chunk(&mut out, b"IEND", &[]);
     out
-}
-
-fn multipart(fields: &[(&str, &str)], file: Option<(&str, &[u8])>) -> Vec<u8> {
-    let mut body = Vec::new();
-    for (k, v) in fields {
-        body.extend(
-            format!("--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n")
-                .as_bytes(),
-        );
-    }
-    if let Some((filename, data)) = file {
-        body.extend(
-            format!(
-                "--XB\r\nContent-Disposition: form-data; name=\"media\"; filename=\"{filename}\"\r\nContent-Type: application/octet-stream\r\n\r\n"
-            )
-            .as_bytes(),
-        );
-        body.extend(data);
-        body.extend(b"\r\n");
-    }
-    body.extend(b"--XB--\r\n");
-    body
 }
 
 async fn send<S, B>(app: &S, req: TestRequest, auth: &str, body: Vec<u8>) -> ServiceResponse<B>
