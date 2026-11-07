@@ -26,6 +26,15 @@ describe('router', () => {
     expect(make().resolve('/en/nope').meta.locale).toBe('en')
   })
 
+  it('nested_pages_resolve_in_both_locales', () => {
+    for (const path of ['/team', '/logbuch', '/post/abc', '/prmrs/forest-project']) {
+      const de = make().resolve(path)
+      expect(de.matched.at(-1)?.name).not.toBe('/[...404]')
+      expect(de.meta.locale).toBeUndefined()
+      expect(make().resolve(`/en${path}`).meta.locale).toBe('en')
+    }
+  })
+
   it('progress_logs_redirects', async () => {
     const r = make()
     await r.push('/progress-logs')

@@ -27,9 +27,7 @@ declare module 'vue-router/auto-routes' {
     '/post/[id]': RouteRecordInfo<'/post/[id]', '/post/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     '/Privacy-Policy': RouteRecordInfo<'/Privacy-Policy', '/Privacy-Policy', Record<never, never>, Record<never, never>>,
     '/prmrs/forest-project/': RouteRecordInfo<'/prmrs/forest-project/', '/prmrs/forest-project', Record<never, never>, Record<never, never>>,
-    '/prmrs/forest-project/Create': RouteRecordInfo<'/prmrs/forest-project/Create', '/prmrs/forest-project/Create', Record<never, never>, Record<never, never>>,
     '/team/': RouteRecordInfo<'/team/', '/team', Record<never, never>, Record<never, never>>,
-    '/team/Create': RouteRecordInfo<'/team/Create', '/team/Create', Record<never, never>, Record<never, never>>,
   }
 
   /**
@@ -79,16 +77,8 @@ declare module 'vue-router/auto-routes' {
       routes: '/prmrs/forest-project/'
       views: never
     }
-    'src/pages/prmrs/forest-project/Create.vue': {
-      routes: '/prmrs/forest-project/Create'
-      views: never
-    }
     'src/pages/team/index.vue': {
       routes: '/team/'
-      views: never
-    }
-    'src/pages/team/Create.vue': {
-      routes: '/team/Create'
       views: never
     }
   }

@@ -46,10 +46,28 @@ const en: typeof de = {
     photoBy: 'Photo: {creator}',
     videoBy: 'Video: {creator}',
   },
-  team: {},
-  about: {},
+  team: {
+    title: 'Team',
+    alt: 'Team of the {season} season',
+  },
+  about: {
+    title: 'About us',
+    p1: 'Our team consists of dedicated students who are passionate about robotics and technology. We work hard to expand our knowledge and skills and to prepare as well as possible for the competitions.',
+    p2: 'The Pater-Rupert-Mayer-Realschule has taken part in the FIRST LEGO League with many teams since 2017. Our predecessors have won numerous awards and gathered valuable experience, from which we benefit as well.',
+    p3: 'Our goal is to keep improving and to take on ever more demanding projects. The exchange with former team members helps us especially. Besides technical skills, we learn teamwork, communication and time management.',
+    p4: 'We are proud to be part of the FIRST LEGO League team PaRaMeRoS and to show what we can achieve together.',
+    school: 'To the school website',
+    coachesAlt: 'The coaches of the team',
+    allTeams: 'See all seasons',
+  },
   admin: {},
-  legal: {},
+  legal: {
+    privacy: 'Privacy policy',
+  },
+  forest: {
+    title: 'Forest project',
+    note: 'A school project of the 9th grade classes at Pater-Rupert-Mayer-Realschule. It is not part of the FLL team PaRaMeRoS.',
+  },
   notFound: {
     title: 'Page not found',
     text: 'This page does not exist.',
@@ -57,8 +75,8 @@ const en: typeof de = {
   },
   time: {},
   countdown: {
-    days: '{name} in 1 day | {name} in {n} days',
-    clock: '{name} in {hms}',
+    days: '{name} in\u00A01\u00A0day | {name} in\u00A0{n}\u00A0days',
+    clock: '{name} in\u00A0{hms}',
     running: 'Happening now',
   },
 }

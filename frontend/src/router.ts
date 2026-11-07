@@ -6,12 +6,22 @@ import { LANG_KEY } from '@/composables/useLocale'
 const isCatchAll = (r: RouteRecordRaw) => r.path.includes('(.*)')
 
 // '(.*)' would also match '/en/' and beat the EN home; '(.+)' needs a segment.
+// Child records need their own names too: a duplicate name replaces the DE record.
 const twin = (r: RouteRecordRaw): RouteRecordRaw =>
   ({
     ...r,
     path: r.path === '/' ? '/en' : `/en${r.path.replace('(.*)', '(.+)')}`,
     name: r.name ? `en-${String(r.name)}` : undefined,
     meta: { ...r.meta, locale: 'en' },
+    children: r.children?.map(twinChild),
+  }) as RouteRecordRaw
+
+const twinChild = (r: RouteRecordRaw): RouteRecordRaw =>
+  ({
+    ...r,
+    name: r.name ? `en-${String(r.name)}` : undefined,
+    meta: { ...r.meta, locale: 'en' },
+    children: r.children?.map(twinChild),
   }) as RouteRecordRaw
 
 function buildRoutes(): RouteRecordRaw[] {

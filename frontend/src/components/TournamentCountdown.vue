@@ -19,7 +19,7 @@ const { tournament, state } = useTournament()
     <template v-else>{{
       t('countdown.clock', { name: tournament.name, hms: state.hms })
     }}</template>
-    <span v-if="tournament.place" class="ml-2 text-[13px] text-(--text-2)">{{
+    <span v-if="tournament.place" class="mt-0.5 block font-mono text-[12px] text-(--muted)">{{
       tournament.place
     }}</span>
   </p>

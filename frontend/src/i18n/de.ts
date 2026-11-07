@@ -44,10 +44,28 @@ export default {
     photoBy: 'Foto: {creator}',
     videoBy: 'Video: {creator}',
   },
-  team: {},
-  about: {},
+  team: {
+    title: 'Team',
+    alt: 'Team der Saison {season}',
+  },
+  about: {
+    title: 'Über uns',
+    p1: 'Unser Team besteht aus engagierten Schülerinnen und Schülern, die sich für Robotik und Technologie begeistern. Wir arbeiten intensiv daran, unser Wissen und unsere Fähigkeiten zu erweitern und uns bestmöglich auf die Wettbewerbe vorzubereiten.',
+    p2: 'Die Pater-Rupert-Mayer-Realschule nimmt seit 2017 mit vielen Teams erfolgreich an der FIRST LEGO League teil. Unsere Vorgängerinnen und Vorgänger haben zahlreiche Preise gewonnen und wertvolle Erfahrungen gesammelt, von denen auch wir profitieren.',
+    p3: 'Unser Ziel ist es, uns stetig zu verbessern und immer anspruchsvollere Projekte umzusetzen. Dabei hilft uns besonders der Austausch mit früheren Teammitgliedern. Neben technischen Fähigkeiten lernen wir Teamarbeit, Kommunikation und Zeitmanagement.',
+    p4: 'Wir sind stolz darauf, Teil des FIRST LEGO League Teams PaRaMeRoS zu sein und zu zeigen, was wir gemeinsam erreichen können.',
+    school: 'Zur Schulhomepage',
+    coachesAlt: 'Die Coaches des Teams',
+    allTeams: 'Alle Jahrgänge ansehen',
+  },
   admin: {},
-  legal: {},
+  legal: {
+    privacy: 'Datenschutzerklärung',
+  },
+  forest: {
+    title: 'Wald-Projekt',
+    note: 'Ein Schulprojekt der 9. Klassen der Pater-Rupert-Mayer-Realschule. Es gehört nicht zum FLL-Team PaRaMeRoS.',
+  },
   notFound: {
     title: 'Seite nicht gefunden',
     text: 'Diese Seite gibt es nicht.',
@@ -55,8 +73,9 @@ export default {
   },
   time: {},
   countdown: {
-    days: '{name} in 1 Tag | {name} in {n} Tagen',
-    clock: '{name} in {hms}',
+    // Non-breaking spaces keep "in 11 Tagen" on one line.
+    days: '{name} in\u00A01\u00A0Tag | {name} in\u00A0{n}\u00A0Tagen',
+    clock: '{name} in\u00A0{hms}',
     running: 'Läuft gerade',
   },
 }

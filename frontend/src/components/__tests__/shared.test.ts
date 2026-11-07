@@ -110,6 +110,7 @@ describe('TournamentCountdown', () => {
       updated_at: '2026-01-01T00:00:00',
     })
     const w = await mountAt(TournamentCountdown)
-    expect(w.text()).toContain('Regionalwettbewerb Augsburg in 12 Tagen')
+    // The unit is joined to the count with non-breaking spaces.
+    expect(w.text()).toMatch(/Regionalwettbewerb Augsburg in\s12\sTagen/)
   })
 })
