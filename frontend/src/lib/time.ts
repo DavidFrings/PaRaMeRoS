@@ -22,7 +22,8 @@ export function berlinYMD(d: Date) {
 export const parseApiTime = (naiveUtc: string) => new Date(`${naiveUtc}Z`)
 
 export function formatTimestamp(d: Date, now: Date, locale: Locale) {
-  const diff = now.getTime() - d.getTime()
+  // A future date (clock skew or back-dating) reads as "just now".
+  const diff = Math.max(0, now.getTime() - d.getTime())
   const de = locale === 'de'
   const abs = (month: 'short' | 'long') =>
     `${fmt(locale, { day: 'numeric', month, year: 'numeric' }).format(d)}, ${hm(d, locale)}`
@@ -41,9 +42,15 @@ export function formatTimestamp(d: Date, now: Date, locale: Locale) {
 export const formatEdited = (d: Date, locale: Locale) =>
   `${locale === 'de' ? 'bearbeitet' : 'edited'} ${hm(d, locale)}`
 
-/** Live = newest logbuch post is under 2 h old. */
-export const isLive = (newestLogbuch: { created_at: string } | undefined, now: Date) =>
-  !!newestLogbuch && now.getTime() - parseApiTime(newestLogbuch.created_at).getTime() < 7_200_000
+/** Clock skew the API allows for a post's `created_at` ahead of now. */
+const SKEW_MS = 5 * 60_000
+
+/** Live = newest logbuch post is under 2 h old and not further ahead than the clock skew. */
+export function isLive(newestLogbuch: { created_at: string } | undefined, now: Date) {
+  if (!newestLogbuch) return false
+  const age = now.getTime() - parseApiTime(newestLogbuch.created_at).getTime()
+  return age > -SKEW_MS && age < 7_200_000
+}
 
 const pad = (n: number) => String(n).padStart(2, '0')
 

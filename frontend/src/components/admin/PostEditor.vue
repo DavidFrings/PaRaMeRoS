@@ -47,6 +47,10 @@ let savedDate = props.post
   ? rfc3339ToBerlinLocal(parseApiTime(props.post.created_at).toISOString())
   : ''
 const date = ref(savedDate)
+// A post always has a date: clearing it on edit falls back to the saved one.
+function restoreDate() {
+  if (props.post && !date.value) date.value = savedDate
+}
 const file = ref<File | null>(null)
 const creator = ref(props.post?.media_creator ?? '')
 const removeMedia = ref(false)
@@ -137,6 +141,7 @@ async function submit() {
   if (busy.value) return
   expired.value = false
   relogged.value = false
+  restoreDate()
   error.value = validate()
   if (error.value) return
   busy.value = true
@@ -278,20 +283,7 @@ const hint = 'text-[13px] text-(--muted)'
           type="datetime-local"
           class="field max-w-[260px]"
           aria-describedby="pe-date-hint"
-        />
-        <p id="pe-date-hint" :class="hint">
-          {{ t(post ? 'admin.editor.dateHint' : 'admin.editor.dateHintNew') }}
-        </p>
-      </div>
-
-      <div v-if="canSetCreatedAt" class="grid gap-1">
-        <label for="pe-date" :class="label">{{ t('admin.editor.date') }}</label>
-        <input
-          id="pe-date"
-          v-model="date"
-          type="datetime-local"
-          class="field max-w-[260px]"
-          aria-describedby="pe-date-hint"
+          @blur="restoreDate"
         />
         <p id="pe-date-hint" :class="hint">
           {{ t(post ? 'admin.editor.dateHint' : 'admin.editor.dateHintNew') }}

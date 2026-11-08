@@ -220,6 +220,7 @@ describe('PostEditor created_at', () => {
     }
     role.value = 'super'
     const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    expect(w.findAll('#pe-date')).toHaveLength(1)
     expect(w.get('label[for=pe-date]').text()).toBe('Datum')
     expect(w.get('#pe-date').attributes('type')).toBe('datetime-local')
   })
@@ -243,6 +244,22 @@ describe('PostEditor created_at', () => {
     await w.get('form').trigger('submit')
     await flushPromises()
     expect(vi.mocked(createPost).mock.calls[0][0].created_at).toBeUndefined()
+  })
+
+  it('edit_restores_cleared_date', async () => {
+    vi.mocked(updatePost).mockResolvedValue()
+    const { w } = await mountAt(PostEditor, { section: 'coaches', post: post() })
+    const input = w.get('#pe-date')
+    await input.setValue('')
+    await input.trigger('blur')
+    expect((input.element as HTMLInputElement).value).toBe('2026-03-01T12:00')
+    // Submitting without leaving the field restores it too.
+    await input.setValue('')
+    await w.get('#pe-heading-de').setValue('Neu')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect((input.element as HTMLInputElement).value).toBe('2026-03-01T12:00')
+    expect(updatePost).toHaveBeenLastCalledWith('u1', { heading: 'Neu' })
   })
 
   it('edit_prefills_berlin_date_and_sends_it_only_when_changed', async () => {
