@@ -6,6 +6,9 @@ use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 /// Apply all pending embedded migrations (sync wrapper over the async connection, no libpq).
+///
+/// # Errors
+/// If connecting to the database or a migration fails.
 pub async fn run_migrations(database_url: &str) -> anyhow::Result<()> {
     let conn = AsyncPgConnection::establish(database_url).await?;
     actix_web::rt::task::spawn_blocking(move || {

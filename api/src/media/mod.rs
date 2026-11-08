@@ -27,6 +27,9 @@ pub enum MediaKind {
 }
 
 /// Read a multipart field, failing with 413 as soon as more than `max` bytes arrived.
+///
+/// # Errors
+/// 413 once `max` is exceeded, 500 if reading the field fails.
 pub async fn read_limited(field: &mut Field, max: usize) -> Result<Vec<u8>, HttpError> {
     let mut content = Vec::new();
     while let Some(chunk) = field.next().await {
@@ -40,7 +43,10 @@ pub async fn read_limited(field: &mut Field, max: usize) -> Result<Vec<u8>, Http
     Ok(content)
 }
 
-/// Detect the media kind from magic bytes; only JPEG, PNG, WebP, MP4 and WebM are accepted.
+/// Detect the media kind from magic bytes; only JPEG, PNG, WebP, MP4 and `WebM` are accepted.
+///
+/// # Errors
+/// 400 for any other format.
 pub fn sniff(bytes: &[u8]) -> Result<MediaKind, HttpError> {
     use ::image::ImageFormat::{Jpeg, Png, WebP};
     if matches!(::image::guess_format(bytes), Ok(Jpeg | Png | WebP)) {
@@ -55,12 +61,16 @@ pub fn sniff(bytes: &[u8]) -> Result<MediaKind, HttpError> {
 }
 
 /// Text fields and the (single) file of a multipart form.
+#[derive(Debug)]
 pub struct Form {
     pub text: HashMap<String, String>,
     pub file: Option<Vec<u8>>,
 }
 
 /// Read a multipart form. Fields with a filename are the media file; other names must be in `allowed`.
+///
+/// # Errors
+/// 400 for malformed or unexpected fields, 413 for oversized ones, 500 on read errors.
 pub async fn read_form(payload: &mut Multipart, allowed: &[&str]) -> Result<Form, HttpError> {
     let mut form = Form {
         text: HashMap::new(),
@@ -99,6 +109,9 @@ pub async fn read_form(payload: &mut Multipart, allowed: &[&str]) -> Result<Form
 }
 
 /// Validate and store an uploaded file for `post`. Returns `(media_type, media_name)` for the DB.
+///
+/// # Errors
+/// 400 for invalid media, 413 if too large, 500 if storing fails.
 pub async fn store_upload(
     upload_dir: PathBuf,
     post: Uuid,

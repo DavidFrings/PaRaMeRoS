@@ -126,8 +126,13 @@ where
 
 /// In-memory test image in the given format.
 pub fn encoded(w: u32, h: u32, fmt: ImageFormat) -> Vec<u8> {
-    let img: RgbImage =
-        ImageBuffer::from_fn(w, h, |x, y| Rgb([(x % 256) as u8, (y % 256) as u8, 128]));
+    let img: RgbImage = ImageBuffer::from_fn(w, h, |x, y| {
+        Rgb([
+            u8::try_from(x % 256).unwrap(),
+            u8::try_from(y % 256).unwrap(),
+            128,
+        ])
+    });
     let mut out = Cursor::new(Vec::new());
     img.write_to(&mut out, fmt).expect("encode fixture");
     out.into_inner()

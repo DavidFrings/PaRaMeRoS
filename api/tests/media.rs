@@ -24,7 +24,7 @@ fn padded(head: &[u8], len: usize) -> Vec<u8> {
 fn crc32(data: &[u8]) -> u32 {
     let mut crc = 0xFFFF_FFFFu32;
     for &b in data {
-        crc ^= b as u32;
+        crc ^= u32::from(b);
         for _ in 0..8 {
             crc = if crc & 1 != 0 {
                 (crc >> 1) ^ 0xEDB8_8320
@@ -36,8 +36,8 @@ fn crc32(data: &[u8]) -> u32 {
     !crc
 }
 
-fn png_chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
-    out.extend((data.len() as u32).to_be_bytes());
+fn png_chunk(out: &mut Vec<u8>, kind: [u8; 4], data: &[u8]) {
+    out.extend(u32::try_from(data.len()).unwrap().to_be_bytes());
     let mut body = kind.to_vec();
     body.extend(data);
     out.extend(&body);
@@ -51,9 +51,9 @@ fn huge_png_header() -> Vec<u8> {
     ihdr.extend(8000u32.to_be_bytes());
     ihdr.extend(6000u32.to_be_bytes());
     ihdr.extend([8, 2, 0, 0, 0]);
-    png_chunk(&mut out, b"IHDR", &ihdr);
-    png_chunk(&mut out, b"IDAT", &[0, 0, 0, 0]);
-    png_chunk(&mut out, b"IEND", &[]);
+    png_chunk(&mut out, *b"IHDR", &ihdr);
+    png_chunk(&mut out, *b"IDAT", &[0, 0, 0, 0]);
+    png_chunk(&mut out, *b"IEND", &[]);
     out
 }
 
@@ -106,7 +106,7 @@ where
     read_body_json(res).await
 }
 
-/// Create a post and return (uuid, media_name).
+/// Create a post and return (uuid, `media_name`).
 async fn create_ok<S, B>(
     app: &S,
     auth: &str,
@@ -221,7 +221,8 @@ async fn webm_video_stored_as_webm() {
     let data = padded(&WEBM, 1024);
     let (id, name) = create_ok(&app, &auth, "vid", ("clip.mp4", &data)).await;
     assert!(
-        name.starts_with(&format!("{id}-")) && name.ends_with(".webm"),
+        name.starts_with(&format!("{id}-"))
+            && Path::new(&name).extension() == Some("webm".as_ref()),
         "{name}"
     );
     assert_eq!(std::fs::read(env.upload_dir.join(&name)).unwrap(), data);
@@ -233,7 +234,10 @@ async fn mp4_video_stored_as_mp4() {
     let (app, env) = common::test_app().await;
     let auth = common::login(&app).await;
     let (_, name) = create_ok(&app, &auth, "vid", ("clip.mov", &padded(&MP4, 1024))).await;
-    assert!(name.ends_with(".mp4"), "{name}");
+    assert!(
+        Path::new(&name).extension() == Some("mp4".as_ref()),
+        "{name}"
+    );
     assert!(env.upload_dir.join(&name).exists());
 }
 

@@ -25,7 +25,7 @@ pub async fn delete_post(
 
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
-        .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
+        .map_err(|err| bad_request(format!("Invalid UUID format: {err}")))?;
 
     let mut conn = db(&env).await?;
 

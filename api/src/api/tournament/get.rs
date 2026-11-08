@@ -15,7 +15,7 @@ pub async fn get_tournament(env: Data<Env>) -> Result<HttpResponse, HttpError> {
         .await
         .optional()
         .map_err(|err| {
-            error!("Database error: {}", err);
+            error!("Database error: {err}");
             internal_error("Database error")
         })?;
     Ok(match row {

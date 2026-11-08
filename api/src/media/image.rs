@@ -10,6 +10,9 @@ pub const SMALL_WIDTH: u32 = 800;
 
 /// Validate the dimensions (before decoding), decode and write all four variants.
 /// Returns `"<base>.webp"`.
+///
+/// # Errors
+/// 400 for an invalid or too large image, 500 if writing a variant fails.
 pub fn store_image(upload_dir: &Path, base: &str, bytes: &[u8]) -> Result<String, HttpError> {
     let reader = || {
         ImageReader::new(Cursor::new(bytes))
@@ -37,6 +40,9 @@ pub fn store_image(upload_dir: &Path, base: &str, bytes: &[u8]) -> Result<String
 
 /// Write `<base>.webp`, `<base>.jxl`, `<base>-800.webp` and `<base>-800.jxl`.
 /// With `only_missing`, existing files are kept. Returns the number of files written.
+///
+/// # Errors
+/// A message if encoding or writing a variant fails.
 pub fn write_variants(
     upload_dir: &Path,
     base: &str,

@@ -8,6 +8,7 @@ use actix_web::{
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl, SimpleAsyncConnection};
 use serde_json::{Value, json};
+use std::fmt::Write as _;
 
 const ALL: [&str; 5] = ["logbuch", "team", "coaches", "forest-project", "tournament"];
 
@@ -63,7 +64,11 @@ where
 {
     let mut body = String::new();
     for (k, v) in [("name", section), ("heading", "H"), ("content", "C")] {
-        body += &format!("--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n");
+        // Writing to a String cannot fail.
+        let _ = write!(
+            body,
+            "--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
+        );
     }
     body += "--XB--\r\n";
     let req = TestRequest::post()
@@ -302,15 +307,15 @@ const W05_DOWN: &str = include_str!("../migrations/w05-user-permissions/down.sql
 
 #[actix_web::test]
 async fn migration_w05_down_up_roundtrip_backfills_non_admins() {
-    let (_app, env) = common::test_app().await;
-    let mut conn = env.pool.get().await.unwrap();
-    let conn: &mut AsyncPgConnection = &mut conn;
     async fn text(conn: &mut AsyncPgConnection, sql: &str) -> String {
         diesel::select(diesel::dsl::sql::<diesel::sql_types::Text>(sql))
             .get_result(conn)
             .await
             .unwrap()
     }
+    let (_app, env) = common::test_app().await;
+    let mut conn = env.pool.get().await.unwrap();
+    let conn: &mut AsyncPgConnection = &mut conn;
     let col = "count(*)::text FROM information_schema.columns \
         WHERE table_name='users' AND column_name='permissions'";
 

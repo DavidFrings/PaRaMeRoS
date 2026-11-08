@@ -41,7 +41,7 @@ pub async fn update_post(
     let data = update_data.into_inner();
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
-        .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
+        .map_err(|err| bad_request(format!("Invalid UUID format: {err}")))?;
 
     if let Some(s) = data.season.as_deref().filter(|s| !s.is_empty()) {
         validate_season(s)?;

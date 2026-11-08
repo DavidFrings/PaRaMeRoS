@@ -37,7 +37,7 @@ pub async fn check_limit(env: &Env, key: &str, max: u32) -> Option<u64> {
             return Ok(None);
         }
         let ttl: i64 = c.ttl(key).await?;
-        Ok(Some(ttl.max(1) as u64))
+        Ok(Some(ttl.max(1).unsigned_abs()))
     })
     .await
     .flatten()
@@ -57,7 +57,7 @@ pub async fn hit_limit(env: &Env, key: &str, max: u32, window_secs: u64) -> Opti
             .ttl(key)
             .query_async(&mut c)
             .await?;
-        Ok((count > max).then(|| ttl.max(1) as u64))
+        Ok((count > max).then(|| ttl.max(1).unsigned_abs()))
     })
     .await
     .flatten()

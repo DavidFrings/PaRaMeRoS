@@ -8,6 +8,10 @@ async fn main() -> std::io::Result<()> {
     #[cfg(debug_assertions)]
     {
         dotenvy::dotenv().ok();
+        // Rust 2024 marks set_var unsafe; there is no safe way to set these before startup.
+        #[allow(unsafe_code)]
+        // SAFETY: runs first in main, before the logger, the DB pool or any worker thread
+        // exists, so no other thread can read the environment concurrently.
         unsafe {
             std::env::set_var("RUST_LOG", "debug");
             std::env::set_var("RUST_BACKTRACE", "1");
@@ -26,7 +30,7 @@ async fn main() -> std::io::Result<()> {
 
     let env_data = Env::init().await;
 
-    info!("Starting server on {}:{}", host, port);
+    info!("Starting server on {host}:{port}");
 
     let upload_dir = env_data.upload_dir.clone();
     let server = HttpServer::new(move || {
@@ -36,7 +40,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(env_data.clone()))
             .configure(app::configure)
     })
-    .bind(format!("{}:{}", host, port))?
+    .bind(format!("{host}:{port}"))?
     .run();
 
     actix_web::rt::spawn(backfill(upload_dir));

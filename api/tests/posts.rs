@@ -7,6 +7,7 @@ use actix_web::{
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl, SimpleAsyncConnection};
 use serde_json::{Value, json};
+use std::fmt::Write as _;
 
 async fn create<S, B>(app: &S, auth: &str, fields: &[(&str, &str)]) -> ServiceResponse<B>
 where
@@ -14,7 +15,11 @@ where
 {
     let mut body = String::new();
     for (k, v) in fields {
-        body += &format!("--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n");
+        // Writing to a String cannot fail.
+        let _ = write!(
+            body,
+            "--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
+        );
     }
     body += "--XB--\r\n";
     let req = TestRequest::post()
@@ -143,17 +148,17 @@ const W02_DOWN: &str = include_str!("../migrations/w02-logbuch/down.sql");
 
 #[actix_web::test]
 async fn migrations_w01_w02_down_up_roundtrip() {
-    let (_app, env) = common::test_app().await;
-    let mut conn = env.pool.get().await.unwrap();
-    let conn: &mut AsyncPgConnection = &mut conn;
-    let cols = "count(*) FROM information_schema.columns \
-        WHERE table_name='posts' AND column_name IN ('heading_en','content_en','season')";
     async fn count(conn: &mut AsyncPgConnection, sql: &str) -> i64 {
         diesel::select(diesel::dsl::sql::<diesel::sql_types::BigInt>(sql))
             .get_result(conn)
             .await
             .unwrap()
     }
+    let (_app, env) = common::test_app().await;
+    let mut conn = env.pool.get().await.unwrap();
+    let conn: &mut AsyncPgConnection = &mut conn;
+    let cols = "count(*) FROM information_schema.columns \
+        WHERE table_name='posts' AND column_name IN ('heading_en','content_en','season')";
 
     conn.batch_execute(
         "INSERT INTO posts (uuid,name,heading,content,created_at) \
