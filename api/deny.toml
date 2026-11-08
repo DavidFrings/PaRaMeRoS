@@ -43,6 +43,11 @@ allow = ["GPL-3.0-or-later"]
 crate = "libfuzzer-sys"
 allow = ["NCSA"]
 
+[[licenses.exceptions]]
+# Non-optional dependency of redis >= 1.x (Boost license, permissive, OSI approved)
+crate = "xxhash-rust"
+allow = ["BSL-1.0"]
+
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
