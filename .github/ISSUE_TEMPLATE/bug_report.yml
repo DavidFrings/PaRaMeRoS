@@ -1,0 +1,45 @@
+name: Bug report
+description: Something does not work as expected
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+        Please do **not** report security vulnerabilities here, see the security policy instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: A minimal example is ideal.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "3.0.0 or a commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser and operating system. If you run the API yourself, also `rustc --version`.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or backtrace
+      description: Browser console output, or API logs (run with `RUST_BACKTRACE=1` if it panics).
+      render: shell
