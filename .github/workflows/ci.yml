@@ -58,7 +58,7 @@ jobs:
       # Missing URLs fail the tests here instead of skipping them
       REQUIRE_TEST_DB: "1"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Test
@@ -74,14 +74,14 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Use pnpm ${{ vars.PNPM_VERSION }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -98,14 +98,14 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Use pnpm ${{ vars.PNPM_VERSION }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -122,14 +122,14 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Use pnpm ${{ vars.PNPM_VERSION }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -146,14 +146,14 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Use pnpm ${{ vars.PNPM_VERSION }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -173,14 +173,14 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Use pnpm ${{ vars.PNPM_VERSION }}
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: ${{ vars.PNPM_VERSION }}
           run_install: false
       - name: Use Node.js ${{ vars.NODE_VERSION }}
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ vars.NODE_VERSION }}
       - name: Install dependencies
@@ -195,9 +195,9 @@ jobs:
     environment: Docker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
