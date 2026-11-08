@@ -138,7 +138,9 @@ fn variants(dir: &Path, media_name: &str) -> Vec<std::path::PathBuf> {
 
 #[actix_web::test]
 async fn jpeg_upload_creates_four_variants() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let (id, name) = create_ok(
         &app,
@@ -163,7 +165,9 @@ async fn jpeg_upload_creates_four_variants() {
 
 #[actix_web::test]
 async fn small_image_not_upscaled() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let (_, name) = create_ok(
         &app,
@@ -178,7 +182,9 @@ async fn small_image_not_upscaled() {
 
 #[actix_web::test]
 async fn oversized_image_returns_413() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let data = padded(&[0xFF, 0xD8, 0xFF, 0xE0], 15 * 1024 * 1024 + 1);
     let res = create(&app, &auth, "img", ("big.jpg", &data)).await;
@@ -187,7 +193,9 @@ async fn oversized_image_returns_413() {
 
 #[actix_web::test]
 async fn fake_jpeg_returns_400() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = create(
         &app,
@@ -201,7 +209,9 @@ async fn fake_jpeg_returns_400() {
 
 #[actix_web::test]
 async fn too_many_pixels_returns_400() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = create(&app, &auth, "img", ("huge.png", &huge_png_header())).await;
     assert_eq!(res.status(), 400);
@@ -216,7 +226,9 @@ async fn too_many_pixels_returns_400() {
 
 #[actix_web::test]
 async fn webm_video_stored_as_webm() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let data = padded(&WEBM, 1024);
     let (id, name) = create_ok(&app, &auth, "vid", ("clip.mp4", &data)).await;
@@ -231,7 +243,9 @@ async fn webm_video_stored_as_webm() {
 
 #[actix_web::test]
 async fn mp4_video_stored_as_mp4() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let (_, name) = create_ok(&app, &auth, "vid", ("clip.mov", &padded(&MP4, 1024))).await;
     assert!(
@@ -243,7 +257,9 @@ async fn mp4_video_stored_as_mp4() {
 
 #[actix_web::test]
 async fn oversized_video_returns_413() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let data = padded(&MP4, 100 * 1024 * 1024 + 1);
     let res = create(&app, &auth, "vid", ("big.mp4", &data)).await;
@@ -252,7 +268,9 @@ async fn oversized_video_returns_413() {
 
 #[actix_web::test]
 async fn oversized_text_field_returns_413() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let content = "a".repeat(1024 * 1024 + 1);
     let body = multipart(
@@ -265,7 +283,9 @@ async fn oversized_text_field_returns_413() {
 
 #[actix_web::test]
 async fn media_type_mismatch_returns_400() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = create(&app, &auth, "img", ("a.mp4", &padded(&MP4, 1024))).await;
     assert_eq!(res.status(), 400);
@@ -273,7 +293,9 @@ async fn media_type_mismatch_returns_400() {
 
 #[actix_web::test]
 async fn replace_media_keeps_uuid_and_removes_old_files() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let (id, old) = create_ok(
         &app,
@@ -314,7 +336,9 @@ async fn replace_media_keeps_uuid_and_removes_old_files() {
 
 #[actix_web::test]
 async fn replace_media_requires_auth_and_known_post() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let file = encoded(10, 10, ImageFormat::Png);
     let uri = format!("/post/{}/media", uuid::Uuid::new_v4());
@@ -335,7 +359,9 @@ async fn replace_media_requires_auth_and_known_post() {
 
 #[actix_web::test]
 async fn delete_media_clears_columns() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let (id, name) = create_ok(
         &app,
@@ -364,7 +390,9 @@ async fn delete_media_clears_columns() {
 
 #[actix_web::test]
 async fn delete_post_removes_all_image_variants_and_video() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
 
     let (id, name) = create_ok(
@@ -440,7 +468,9 @@ async fn backfill_creates_missing_variants() {
 
 #[actix_web::test]
 async fn replace_media_without_creator_returns_400_and_writes_nothing() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let (id, old) = create_ok(
         &app,
@@ -479,7 +509,9 @@ async fn replace_media_without_creator_returns_400_and_writes_nothing() {
 
 #[actix_web::test]
 async fn new_post_media_without_creator_returns_400() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let body = multipart(
         &[
@@ -497,7 +529,9 @@ async fn new_post_media_without_creator_returns_400() {
 
 #[actix_web::test]
 async fn new_post_creator_without_media_is_ignored() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let body = multipart(
         &[

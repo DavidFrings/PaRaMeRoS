@@ -6,56 +6,27 @@ on:
   push:
     branches: [main, master]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
 jobs:
   # ── API ─────────────────────────────────────────────────────────────────────
 
-  api-format:
-    name: "API / Format"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Format
-        run: cargo fmt --all -- --check
+  # fmt, clippy, test (without DB: those tests skip), doc and MSRV check.
+  # Required check in the ruleset: "api / result" (see scripts/github-setup.sh).
+  api:
+    uses: DavidFrings/rust-ci/.github/workflows/rust.yml@v1
+    with:
+      working-directory: api
+      msrv: "1.92" # must match rust-version in api/Cargo.toml
 
-  api-lint:
-    name: "API / Lint"
-    needs: api-format
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-  api-type-check:
-    name: "API / Type Check"
-    needs: api-format
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Check
-        run: cargo check --locked --all-targets --all-features
-
+  # Integration tests against real Postgres and Redis (rust-ci provides no services).
   api-test:
     name: "API / Test"
-    needs: api-format
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -90,21 +61,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Test
         run: cargo test --locked -- --test-threads=1
-
-  api-security-audit:
-    name: "API / Security Audit"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: api
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install cargo-audit
-        run: cargo install cargo-audit --locked
-      - name: Audit dependencies
-        run: cargo audit
 
   # ── Frontend ─────────────────────────────────────────────────────────────────
 

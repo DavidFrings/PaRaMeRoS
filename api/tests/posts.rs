@@ -45,7 +45,9 @@ const BASE: [(&str, &str); 3] = [("name", "team"), ("heading", "H"), ("content",
 
 #[actix_web::test]
 async fn create_post_with_english_and_season() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let mut f = BASE.to_vec();
     f.extend([
@@ -64,7 +66,9 @@ async fn create_post_with_english_and_season() {
 
 #[actix_web::test]
 async fn progress_logs_alias_reads_logbuch() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = create(
         &app,
@@ -86,7 +90,9 @@ async fn progress_logs_alias_reads_logbuch() {
 
 #[actix_web::test]
 async fn unknown_section_rejected() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = create(
         &app,
@@ -101,7 +107,9 @@ async fn unknown_section_rejected() {
 
 #[actix_web::test]
 async fn invalid_season_rejected() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     for s in ["2017/19", "17/18"] {
         let mut f = BASE.to_vec();
@@ -112,7 +120,9 @@ async fn invalid_season_rejected() {
 
 #[actix_web::test]
 async fn put_clears_english_with_empty_string() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let mut f = BASE.to_vec();
     f.push(("heading_en", "Team"));
@@ -134,7 +144,9 @@ async fn put_clears_english_with_empty_string() {
 
 #[actix_web::test]
 async fn old_clients_still_work() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = create(&app, &auth, &BASE).await;
     assert_eq!(res.status(), 200);
@@ -154,7 +166,9 @@ async fn migrations_w01_w02_down_up_roundtrip() {
             .await
             .unwrap()
     }
-    let (_app, env) = common::test_app().await;
+    let Some((_app, env)) = common::test_app().await else {
+        return;
+    };
     let mut conn = env.pool.get().await.unwrap();
     let conn: &mut AsyncPgConnection = &mut conn;
     let cols = "count(*) FROM information_schema.columns \
@@ -186,7 +200,9 @@ async fn migrations_w01_w02_down_up_roundtrip() {
 
 #[actix_web::test]
 async fn put_unknown_post_returns_404() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let req = TestRequest::put()
         .uri(&format!("/post/{}", uuid::Uuid::new_v4()))

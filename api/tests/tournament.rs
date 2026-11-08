@@ -21,14 +21,18 @@ fn body() -> Value {
 
 #[actix_web::test]
 async fn tournament_empty_returns_204() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let res = call_service(&app, TestRequest::get().uri("/tournament").to_request()).await;
     assert_eq!(res.status(), 204);
 }
 
 #[actix_web::test]
 async fn put_requires_auth() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     assert_eq!(
         call_service(&app, put(Some("Bearer bad"), body()))
             .await
@@ -39,7 +43,9 @@ async fn put_requires_auth() {
 
 #[actix_web::test]
 async fn put_then_get() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let res = call_service(&app, put(Some(&auth), body())).await;
     assert_eq!(res.status(), 200);
@@ -53,7 +59,9 @@ async fn put_then_get() {
 
 #[actix_web::test]
 async fn tournament_roundtrips_offset_instant() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     call_service(&app, put(Some(&auth), body())).await;
     let res = call_service(&app, TestRequest::get().uri("/tournament").to_request()).await;
@@ -65,7 +73,9 @@ async fn tournament_roundtrips_offset_instant() {
 
 #[actix_web::test]
 async fn end_before_start_rejected() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let mut b = body();
     b["ends_at"] = json!("2027-03-28T10:00:00+02:00");
@@ -77,7 +87,9 @@ async fn end_before_start_rejected() {
 
 #[actix_web::test]
 async fn delete_clears() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     call_service(&app, put(Some(&auth), body())).await;
     let del = || {
@@ -94,7 +106,9 @@ async fn delete_clears() {
 
 #[actix_web::test]
 async fn second_put_clears_place_and_end() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let mut b = body();
     b["place"] = json!("Berlin");
@@ -120,7 +134,9 @@ async fn second_put_clears_place_and_end() {
 
 #[actix_web::test]
 async fn long_name_rejected() {
-    let (app, _) = common::test_app().await;
+    let Some((app, _)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let mut b = body();
     b["name"] = json!("x".repeat(121));

@@ -1,0 +1,32 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**/Cargo.toml"
+      - "api/Cargo.lock"
+      - "api/deny.toml"
+      - ".github/workflows/security.yml"
+  pull_request:
+    paths:
+      - "api/**/Cargo.toml"
+      - "api/Cargo.lock"
+      - "api/deny.toml"
+      - ".github/workflows/security.yml"
+  schedule:
+    # Mondays, so new RustSec advisories show up even without commits
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # cargo-deny: advisories (replaces cargo audit), licenses, bans and sources.
+  # The reusable workflow has no working-directory input; manifest-path points at the API,
+  # and cargo-deny finds api/deny.toml next to it.
+  api-deny:
+    uses: DavidFrings/rust-ci/.github/workflows/rust-security.yml@v1
+    with:
+      manifest-path: ./api/Cargo.toml
