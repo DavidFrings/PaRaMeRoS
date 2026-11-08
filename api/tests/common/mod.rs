@@ -65,8 +65,7 @@ pub async fn test_app_with_site(
             .values(NewUser {
                 username: "admin".into(),
                 password: bcrypt::hash("admin-pass", 4).expect("hash"),
-                admin: true,
-                permissions: vec![],
+                role: "super".into(),
             })
             .execute(conn)
             .await
