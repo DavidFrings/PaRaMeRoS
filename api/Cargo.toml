@@ -45,3 +45,20 @@ subtle = "^2"
 [dev-dependencies]
 actix-http = "^3"
 tempfile = "^3"
+
+# Same lints in the editor and in CI.
+# Locally they are warnings; CI turns them into errors with `-D warnings`.
+[lints.rust]
+# `deny` instead of `forbid` so a justified #[allow(unsafe_code)] stays possible
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+# From the Google Rust Style Guide
+undocumented_unsafe_blocks = "warn"
+# Leftover debug code must not land in main
+dbg_macro = "warn"
+todo = "warn"
