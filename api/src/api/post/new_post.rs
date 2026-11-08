@@ -1,11 +1,11 @@
-use super::section::{normalize_section, validate_season};
+use super::section::{normalize_section, parse_created_at, validate_season};
 use crate::db::{
     models::{NewPost, NewPostResponse, Post},
     schema::posts::dsl::posts,
 };
 use crate::media::{read_form, store_upload};
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, forbidden, require, verify};
+use crate::utils::{HttpError, bad_request, can_set_created_at, db, forbidden, require, verify};
 use crate::{Env, query};
 use actix_multipart::Multipart;
 use actix_web::{HttpRequest, HttpResponse, post, web::Data};
@@ -22,11 +22,6 @@ pub async fn new_post(
     env: Data<Env>,
 ) -> Result<HttpResponse, HttpError> {
     let user = verify(&req, &env).await?;
-    // Refuse before reading a possibly large upload; the exact section is checked below.
-    let sections = ["logbuch", "team", "coaches", "forest-project"];
-    if !sections.iter().any(|s| require(&user, s).is_ok()) {
-        return Err(forbidden("Missing permission"));
-    }
 
     let mut form = read_form(
         &mut payload,
@@ -39,12 +34,21 @@ pub async fn new_post(
             "heading_en",
             "content_en",
             "season",
+            "created_at",
         ],
     )
     .await?;
     let mut take = |key: &str| form.text.remove(key);
     let non_empty = |v: Option<String>| v.filter(|t| !t.is_empty());
 
+    // Section and created_at are checked after the body is read (rejecting earlier would need a
+    // per-field check hook in `read_form`, out of scope) but before any file is stored.
+    // An empty created_at means "now".
+    let created_at = match non_empty(take("created_at")) {
+        Some(_) if !can_set_created_at(&user) => return Err(forbidden("Missing permission")),
+        Some(raw) => parse_created_at(&raw)?,
+        None => Utc::now().naive_utc(),
+    };
     let name = normalize_section(&take("name").ok_or_else(|| bad_request("Name missing!"))?)?;
     require(&user, name)?;
     let season = non_empty(take("season"));
@@ -76,7 +80,7 @@ pub async fn new_post(
         media_type: db_media_type,
         media_name: db_media_name,
         media_creator,
-        created_at: Utc::now().naive_utc(),
+        created_at,
         updated_at: None,
         heading_en,
         content_en,

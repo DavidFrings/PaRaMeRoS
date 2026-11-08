@@ -1,7 +1,7 @@
 [package]
 name = "parameros-api"
 authors = ["David Frings <dev@davidfrings.dev> (https://DavidFrings.dev)"]
-version = "3.0.0"
+version = "3.1.0"
 description = "This is the API / backend from the Official PaRaMeRoS Website"
 categories = ["web-programming", "api-bindings"]
 homepage = "https://PaRaMeRoS.net"
@@ -33,7 +33,7 @@ anyhow = "^1"
 redis = { version = "^0.32", features = ["tokio-comp", "connection-manager"] }
 bb8 = "^0.9"
 #tokio-postgres = "^0.7"
-bcrypt = "^0.17"
+bcrypt = "^0.19"
 jsonwebtoken = "^9.3"
 image = { version = "^0.25", features = ["jpeg", "png", "webp"] }
 webp = "^0.3"

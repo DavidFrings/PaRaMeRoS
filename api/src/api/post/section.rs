@@ -1,4 +1,5 @@
 use crate::utils::{HttpError, bad_request};
+use chrono::{DateTime, Datelike, NaiveDateTime, TimeDelta, Utc};
 
 /// Map a requested section to its canonical name (`progress-logs` is the legacy alias of `logbuch`).
 ///
@@ -30,4 +31,21 @@ pub fn validate_season(s: &str) -> Result<(), HttpError> {
     } else {
         Err(bad_request("Invalid season, expected e.g. 2017/18"))
     }
+}
+
+/// Clock skew allowed for a `created_at` ahead of the server's now.
+const CREATED_AT_SKEW: TimeDelta = TimeDelta::minutes(5);
+
+/// RFC 3339 with an offset to the naive UTC value `posts.created_at` stores. Allowed range: from
+/// 2017 (in the given offset's local time) to now plus a few minutes of clock skew.
+///
+/// # Errors
+/// 400 if `raw` is not RFC 3339 or out of range.
+pub fn parse_created_at(raw: &str) -> Result<NaiveDateTime, HttpError> {
+    let invalid = || bad_request("Invalid created_at");
+    let t = DateTime::parse_from_rfc3339(raw).map_err(|_| invalid())?;
+    if t.year() < 2017 || t > Utc::now() + CREATED_AT_SKEW {
+        return Err(invalid());
+    }
+    Ok(t.naive_utc())
 }
