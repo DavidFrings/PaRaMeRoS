@@ -507,3 +507,163 @@ async fn migration_w06_down_up_roundtrip() {
         .unwrap();
     assert_eq!(text(conn, &role("new")).await, "normal");
 }
+
+fn post_with_date(auth: &str, section: &str, created_at: &str) -> actix_http::Request {
+    let body = common::multipart(
+        &[
+            ("name", section),
+            ("heading", "H"),
+            ("content", "C"),
+            ("created_at", created_at),
+        ],
+        None,
+    );
+    multipart_req("/post", "POST", auth, body)
+}
+
+#[actix_web::test]
+async fn super_sets_created_at_on_post_and_put() {
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
+    let admin = common::login(&app).await;
+
+    let res = call_service(
+        &app,
+        post_with_date(&admin, "logbuch", "2024-01-28T10:00:00+01:00"),
+    )
+    .await;
+    assert_eq!(res.status(), 200);
+    let id = read_body_json::<Value, _>(res).await["id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let p = get_post(&app, &id).await;
+    assert_eq!(p["created_at"], "2024-01-28T09:00:00");
+    assert_eq!(p["updated_at"], Value::Null);
+
+    // Warm the list cache; the date change must invalidate it.
+    let list = |app| async move {
+        let req = TestRequest::get().uri("/posts/logbuch").to_request();
+        read_body_json::<Value, _>(call_service(app, req).await).await
+    };
+    assert_eq!(list(&app).await[0]["created_at"], "2024-01-28T09:00:00");
+
+    // Correcting the date alone is not a content edit.
+    let res = call_service(
+        &app,
+        put_post(
+            &admin,
+            &id,
+            json!({"created_at": "2023-06-01T12:30:00+02:00"}),
+        ),
+    )
+    .await;
+    assert_eq!(res.status(), 202);
+    let p = get_post(&app, &id).await;
+    assert_eq!(p["created_at"], "2023-06-01T10:30:00");
+    assert_eq!(p["updated_at"], Value::Null);
+    assert_eq!(list(&app).await[0]["created_at"], "2023-06-01T10:30:00");
+
+    let res = call_service(
+        &app,
+        put_post(
+            &admin,
+            &id,
+            json!({"heading": "Neu", "created_at": "2023-06-02T00:00:00Z"}),
+        ),
+    )
+    .await;
+    assert_eq!(res.status(), 202);
+    let p = get_post(&app, &id).await;
+    assert_eq!(p["created_at"], "2023-06-02T00:00:00");
+    assert_ne!(p["updated_at"], Value::Null);
+}
+
+#[actix_web::test]
+async fn non_super_gets_403_on_created_at() {
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
+    for (user, role) in [("ranger", "forest"), ("editor", "normal")] {
+        let auth = user_with(&app, user, role).await;
+        let res = call_service(
+            &app,
+            post_with_date(&auth, "logbuch", "2024-01-28T10:00:00+01:00"),
+        )
+        .await;
+        assert_eq!(res.status(), 403, "{role}");
+
+        let id = create_id(&app, &auth, "logbuch").await;
+        let before = get_post(&app, &id).await;
+        let res = call_service(
+            &app,
+            put_post(
+                &auth,
+                &id,
+                json!({"heading": "x", "created_at": "2024-01-28T10:00:00+01:00"}),
+            ),
+        )
+        .await;
+        assert_eq!(res.status(), 403, "{role}");
+        assert_eq!(get_post(&app, &id).await, before, "{role}");
+
+        // An empty field means "now" and needs no capability.
+        let res = call_service(&app, post_with_date(&auth, "logbuch", "")).await;
+        assert_eq!(res.status(), 200, "{role}");
+    }
+}
+
+#[actix_web::test]
+async fn non_super_created_at_writes_no_file() {
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
+    let auth = user_with(&app, "ranger", "forest").await;
+    let img = common::encoded(400, 300, image::ImageFormat::Png);
+    let body = common::multipart(
+        &[
+            ("name", "forest-project"),
+            ("heading", "H"),
+            ("content", "C"),
+            ("created_at", "2024-01-28T10:00:00+01:00"),
+            ("media_type", "img"),
+            ("media_creator", "me"),
+        ],
+        Some(("p.png", &img)),
+    );
+    let res = call_service(&app, multipart_req("/post", "POST", &auth, body)).await;
+    assert_eq!(res.status(), 403);
+    assert_eq!(upload_files(&env), 0);
+}
+
+#[actix_web::test]
+async fn invalid_or_out_of_range_created_at_is_400() {
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
+    let admin = common::login(&app).await;
+    let id = create_id(&app, &admin, "logbuch").await;
+    let before = get_post(&app, &id).await;
+    let future = (chrono::Utc::now() + chrono::TimeDelta::days(2)).to_rfc3339();
+    for bad in [
+        "garbage",
+        "2024-01-28T10:00:00",
+        "2024-01-28",
+        "2016-12-31T12:00:00Z",
+        future.as_str(),
+    ] {
+        let res = call_service(&app, post_with_date(&admin, "logbuch", bad)).await;
+        assert_eq!(res.status(), 400, "POST {bad}");
+        assert_eq!(read_body(res).await, "Invalid created_at", "POST {bad}");
+        let res = call_service(&app, put_post(&admin, &id, json!({"created_at": bad}))).await;
+        assert_eq!(res.status(), 400, "PUT {bad}");
+    }
+    assert_eq!(get_post(&app, &id).await, before);
+    // Within a day ahead and from 2017 on are fine.
+    let soon = (chrono::Utc::now() + chrono::TimeDelta::hours(20)).to_rfc3339();
+    for ok in ["2017-01-01T12:00:00Z", soon.as_str()] {
+        let res = call_service(&app, post_with_date(&admin, "logbuch", ok)).await;
+        assert_eq!(res.status(), 200, "{ok}");
+    }
+}

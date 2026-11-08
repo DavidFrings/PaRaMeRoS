@@ -7,9 +7,9 @@ use diesel::prelude::*;
 use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
 use uuid::Uuid;
 
-use super::section::{normalize_section, validate_season};
+use super::section::{normalize_section, parse_created_at, validate_season};
 use crate::Env;
-use crate::db::schema::posts::updated_at;
+use crate::db::schema::posts::{created_at, updated_at};
 use crate::db::{
     models::UpdatePostRequest,
     schema::posts::{
@@ -18,7 +18,7 @@ use crate::db::{
     },
 };
 use crate::redis_store::cache_clear_posts;
-use crate::utils::{HttpError, bad_request, db, require, verify};
+use crate::utils::{HttpError, bad_request, can_set_created_at, db, forbidden, require, verify};
 
 macro_rules! update {
     ($content:expr, $new_content:expr, $uuid:expr, $conn:expr) => {
@@ -70,6 +70,12 @@ pub async fn update_post(
             // Moving a post also writes to the new section.
             if let Some(new_name) = new_name {
                 require(user, new_name)?;
+            }
+            if let Some(raw) = data.created_at.as_deref().filter(|v| !v.is_empty()) {
+                if !can_set_created_at(user) {
+                    return Err(forbidden("Missing permission"));
+                }
+                update!(created_at, parse_created_at(raw)?, uuid, conn);
             }
             if let Some(new_name) = new_name {
                 update!(name, new_name, uuid, conn);

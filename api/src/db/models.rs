@@ -98,6 +98,8 @@ pub struct UpdatePostRequest {
     pub heading_en: Option<String>,
     pub content_en: Option<String>,
     pub season: Option<String>,
+    /// RFC 3339 with offset; `super` only. Not a content edit, so it alone leaves `updated_at`.
+    pub created_at: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
