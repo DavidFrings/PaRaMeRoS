@@ -21,6 +21,7 @@ const L = {
     heading: 'Überschrift',
     content: 'Text (Markdown)',
     publish: 'Veröffentlichen',
+    date: 'Datum',
     footerForest: 'Wald-Projekt (9. Klassen PRMRS)',
     countdown: /Testturnier in\s12\sTagen/,
     imprint: 'Impressum',
@@ -44,6 +45,7 @@ const L = {
     heading: 'Heading',
     content: 'Text (Markdown)',
     publish: 'Publish',
+    date: 'Date',
     footerForest: 'Forest project (Year 9 PRMRS)',
     countdown: /Testturnier in\s12\sdays/,
     imprint: 'Imprint',
@@ -187,19 +189,42 @@ for (const [lang, c] of Object.entries(L)) {
       expect(created[0]).toMatch(/name="heading"\r?\n\r?\nE2E Eintrag/)
     })
 
-    test.describe('limited account', () => {
-      test.use({ editor: true })
+    test('admin_super_backdates_post', async ({ page, created }) => {
+      await adminLogin(page)
+      await page.goto(`${c.prefix}/admin`)
+      await expectPage(page, c.admin, c.notFound)
+      await page
+        .locator('[data-section="logbuch"]')
+        .getByRole('button', { name: c.newPost })
+        .click()
+      await page.getByLabel(c.heading).first().fill('Alter Eintrag')
+      await page.getByLabel(c.content).first().fill('Nachgetragen')
+      await page.getByLabel(c.date, { exact: true }).fill('2024-01-28T10:00')
+      await page.getByRole('button', { name: c.publish }).click()
+      await expect.poll(() => created.length).toBe(1)
+      expect(created[0]).toMatch(/name="created_at"\r?\n\r?\n2024-01-28T10:00:00\+01:00/)
+    })
+
+    test.describe('normal role', () => {
+      test.use({ role: 'normal' })
       test('admin_shows_only_permitted_areas', async ({ page }) => {
         await adminLogin(page)
         await page.goto(`${c.prefix}/admin`)
         await expectPage(page, c.admin, c.notFound)
         await expect(page.getByRole('heading', { level: 2, name: c.tournament })).toBeVisible()
-        await expect(
-          page.locator('[data-section="logbuch"]').getByRole('button', { name: c.newPost }),
-        ).toBeVisible()
-        for (const s of ['team', 'coaches', 'forest-project'])
-          await expect(page.locator(`[data-section="${s}"]`)).toHaveCount(0)
+        for (const s of ['logbuch', 'team', 'coaches'])
+          await expect(
+            page.locator(`[data-section="${s}"]`).getByRole('button', { name: c.newPost }),
+          ).toBeVisible()
+        await expect(page.locator('[data-section="forest-project"]')).toHaveCount(0)
         await expect(page.getByRole('heading', { name: c.forest })).toHaveCount(0)
+        // No date field without the super role.
+        await page
+          .locator('[data-section="logbuch"]')
+          .getByRole('button', { name: c.newPost })
+          .click()
+        await expect(page.getByLabel(c.heading).first()).toBeVisible()
+        await expect(page.getByLabel(c.date, { exact: true })).toHaveCount(0)
       })
     })
 

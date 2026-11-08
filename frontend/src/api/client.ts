@@ -56,12 +56,17 @@ export type PostInput = {
   heading_en?: string
   content_en?: string
   season?: string
+  // RFC 3339 with offset; the API accepts it from super users only.
+  created_at?: string
   media_creator?: string
   file?: File
 }
 
 type PostFields = Partial<
-  Pick<PostInput, 'name' | 'heading' | 'content' | 'heading_en' | 'content_en' | 'season'>
+  Pick<
+    PostInput,
+    'name' | 'heading' | 'content' | 'heading_en' | 'content_en' | 'season' | 'created_at'
+  >
 >
 
 export const getPosts = async (section: Section) =>

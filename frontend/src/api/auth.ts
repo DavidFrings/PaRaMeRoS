@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useCookies } from 'vue3-cookies'
 import { AuthExpiredError, TOKEN_COOKIE, readToken, request } from './client'
 
@@ -15,27 +15,29 @@ export function tokenCookieExpiry(token: string): Date {
   throw new Error('Token has no valid exp claim')
 }
 
+type Verify = { role: string; permissions: string[]; can_set_created_at: boolean }
+
 const loggedIn = ref(!!readToken())
-// From /auth/verify; the API lists every permission for admins.
-const permissions = ref<string[]>([])
+// From /auth/verify; the API derives the permissions from the role.
+const verified = ref<Verify | null>(null)
+const role = computed(() => verified.value?.role ?? null)
+const permissions = computed(() => verified.value?.permissions ?? [])
+const canSetCreatedAt = computed(() => !!verified.value?.can_set_created_at)
 
 async function check() {
   if (!readToken()) {
     loggedIn.value = false
-    permissions.value = []
+    verified.value = null
     return
   }
   try {
-    const res = await request<{ permissions?: string[] }>(
-      { url: '/auth/verify', method: 'GET' },
-      true,
-    )
-    permissions.value = res.data.permissions ?? []
+    const res = await request<Verify>({ url: '/auth/verify', method: 'GET' }, true)
+    verified.value = res.data
     loggedIn.value = true
   } catch (e) {
     if (e instanceof AuthExpiredError) useCookies().cookies.remove(TOKEN_COOKIE, '/')
     loggedIn.value = false
-    permissions.value = []
+    verified.value = null
   }
 }
 
@@ -55,9 +57,9 @@ export async function login(username: string, password: string): Promise<void> {
 export function logout(): void {
   useCookies().cookies.remove(TOKEN_COOKIE, '/')
   loggedIn.value = false
-  permissions.value = []
+  verified.value = null
 }
 
 export function useAuth() {
-  return { loggedIn, permissions, check, can }
+  return { loggedIn, role, permissions, canSetCreatedAt, check, can }
 }

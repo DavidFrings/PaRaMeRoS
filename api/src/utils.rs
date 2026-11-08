@@ -116,12 +116,32 @@ pub fn too_many_requests(retry_after_secs: u64) -> HttpError {
 /// Every permission value; section names equal post `name` values.
 pub const PERMISSIONS: [&str; 5] = ["logbuch", "team", "coaches", "forest-project", "tournament"];
 
-/// Admins hold every permission; everyone else only what `permissions` lists.
-///
+/// Every role value; the `users.role` CHECK allows the same.
+pub const ROLES: [&str; 3] = ["normal", "forest", "super"];
+
+/// Permissions follow from the role: `normal` writes the shared sections and the tournament,
+/// `forest` adds `forest-project`, `super` holds everything.
+#[must_use]
+pub fn role_allows(role: &str, perm: &str) -> bool {
+    matches!(
+        (role, perm),
+        (
+            "normal" | "forest" | "super",
+            "logbuch" | "team" | "coaches" | "tournament"
+        ) | ("forest" | "super", "forest-project")
+    )
+}
+
+/// Only `super` may set a post's `created_at`.
+#[must_use]
+pub fn can_set_created_at(user: &User) -> bool {
+    user.role == "super"
+}
+
 /// # Errors
-/// 403 if the user lacks `perm`.
+/// 403 if the user's role does not allow `perm`.
 pub fn require(user: &User, perm: &str) -> Result<(), HttpError> {
-    if user.admin || user.permissions.iter().flatten().any(|p| p == perm) {
+    if role_allows(&user.role, perm) {
         Ok(())
     } else {
         Err(forbidden("Missing permission"))

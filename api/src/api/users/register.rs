@@ -5,7 +5,7 @@ use crate::db::{
 };
 use crate::redis_store::hit_limit;
 use crate::utils::{
-    HttpError, PERMISSIONS, bad_request, db, forbidden, internal_error, too_many_requests,
+    HttpError, ROLES, bad_request, db, forbidden, internal_error, too_many_requests,
 };
 use crate::{Env, query};
 use actix_web::{
@@ -43,14 +43,10 @@ pub async fn register(
         return Err(forbidden("You are not allowed to create a new user!"));
     }
 
-    let mut permissions: Vec<Option<String>> = Vec::new();
-    for p in req.permissions {
-        if !PERMISSIONS.contains(&p.as_str()) {
-            return Err(bad_request(format!("Unknown permission: {p}")));
-        }
-        if !permissions.iter().flatten().any(|q| *q == p) {
-            permissions.push(Some(p));
-        }
+    // The value is not echoed: it is attacker-controlled.
+    let role = req.role.unwrap_or_else(|| "normal".into());
+    if !ROLES.contains(&role.as_str()) {
+        return Err(bad_request("Unknown role"));
     }
 
     let hashed = hash(&req.password, DEFAULT_COST)
@@ -59,8 +55,7 @@ pub async fn register(
     let new_user = NewUser {
         username: req.username,
         password: hashed,
-        admin: req.admin,
-        permissions,
+        role,
     };
 
     let mut conn = db(&env).await?;

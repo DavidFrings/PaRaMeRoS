@@ -58,6 +58,13 @@ describe('isLive', () => {
     expect(isLive({ created_at: '2026-02-14T09:59:00' }, now)).toBe(false)
     expect(isLive(undefined, now)).toBe(false)
   })
+
+  it('future dates beyond the 5 min clock skew are not live', () => {
+    // `now` is 12:00 UTC.
+    expect(isLive({ created_at: '2026-02-14T12:04:00' }, now)).toBe(true)
+    expect(isLive({ created_at: '2026-02-14T12:10:00' }, now)).toBe(false)
+    expect(isLive({ created_at: '2027-01-01T00:00:00' }, now)).toBe(false)
+  })
 })
 
 describe('Berlin wall time <-> RFC 3339', () => {

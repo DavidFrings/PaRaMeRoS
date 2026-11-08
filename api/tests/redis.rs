@@ -109,7 +109,7 @@ async fn fourth_register_attempt_returns_429() {
         let req = TestRequest::post()
             .uri("/register")
             .insert_header(("X-Real-IP", "10.1.0.3"))
-            .set_json(json!({"username": format!("u{i}"), "password": "pw", "admin_pass": "wrong", "admin": false}))
+            .set_json(json!({"username": format!("u{i}"), "password": "pw", "admin_pass": "wrong"}))
             .to_request();
         let res = call_service(&app, req).await;
         if i < 3 {

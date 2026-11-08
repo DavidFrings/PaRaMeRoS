@@ -21,9 +21,8 @@ pub struct User {
     pub id: i32,
     pub username: String,
     pub password: String,
-    pub admin: bool,
-    // TEXT[] elements are nullable in Postgres; a NULL grants nothing.
-    pub permissions: Vec<Option<String>>,
+    /// `normal`, `forest` or `super` (DB CHECK); see `utils::role_allows`.
+    pub role: String,
 }
 
 #[derive(Insertable, Deserialize, Debug)]
@@ -31,9 +30,8 @@ pub struct User {
 pub struct NewUser {
     pub username: String,
     pub password: String,
-    pub admin: bool,
-    // TEXT[] elements are nullable in Postgres; a NULL grants nothing.
-    pub permissions: Vec<Option<String>>,
+    /// `normal`, `forest` or `super` (DB CHECK); see `utils::role_allows`.
+    pub role: String,
 }
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, Debug)]
@@ -77,14 +75,13 @@ pub struct NewPost {
 //*****************************//
 
 #[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct RegisterRequest {
     pub username: String,
     pub password: String,
-    pub admin: bool,
+    /// Defaults to `normal`; checked against `ROLES`.
+    pub role: Option<String>,
     pub admin_pass: String,
-    /// Sections (and `tournament`) a non-admin may write; checked against `PERMISSIONS`.
-    #[serde(default)]
-    pub permissions: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -101,12 +98,15 @@ pub struct UpdatePostRequest {
     pub heading_en: Option<String>,
     pub content_en: Option<String>,
     pub season: Option<String>,
+    /// RFC 3339 with offset; `super` only. Not a content edit, so it alone leaves `updated_at`.
+    pub created_at: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
 pub struct AuthVerifyResponse {
-    pub admin: bool,
-    pub permissions: Vec<String>,
+    pub role: String,
+    pub permissions: Vec<&'static str>,
+    pub can_set_created_at: bool,
 }
 
 #[derive(Serialize, Debug)]
