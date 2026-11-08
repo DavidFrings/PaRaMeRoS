@@ -34,7 +34,7 @@ redis = { version = "^0.32", features = ["tokio-comp", "connection-manager"] }
 bb8 = "^0.9"
 #tokio-postgres = "^0.7"
 bcrypt = "^0.19"
-jsonwebtoken = "^11.1"
+jsonwebtoken = { version = "^11.1", features = ["aws_lc_rs"] }
 image = { version = "^0.25", features = ["jpeg", "png", "webp"] }
 webp = "^0.3"
 jpegxl-rs = { version = "^0.16", default-features = false, features = ["vendored"] }
