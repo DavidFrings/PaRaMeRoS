@@ -103,9 +103,14 @@ describe('review lows', () => {
 describe('permissions', () => {
   it('can_follows_verified_permissions', async () => {
     const { useAuth } = await import('../auth')
-    request.mockResolvedValue({ status: 200, data: { admin: false, permissions: ['logbuch'] } })
+    request.mockResolvedValue({
+      status: 200,
+      data: { role: 'normal', permissions: ['logbuch'], can_set_created_at: false },
+    })
     const auth = useAuth()
     await auth.check()
+    expect(auth.role.value).toBe('normal')
+    expect(auth.canSetCreatedAt.value).toBe(false)
     expect(auth.permissions.value).toEqual(['logbuch'])
     expect(auth.can('logbuch')).toBe(true)
     // Old logbuch posts carry the legacy name.
@@ -116,12 +121,18 @@ describe('permissions', () => {
 
   it('can_is_false_when_logged_out', async () => {
     const { useAuth, logout } = await import('../auth')
-    request.mockResolvedValue({ status: 200, data: { admin: true, permissions: ['logbuch'] } })
+    request.mockResolvedValue({
+      status: 200,
+      data: { role: 'super', permissions: ['logbuch'], can_set_created_at: true },
+    })
     const auth = useAuth()
     await auth.check()
     expect(auth.can('logbuch')).toBe(true)
+    expect(auth.canSetCreatedAt.value).toBe(true)
     logout()
     expect(auth.permissions.value).toEqual([])
+    expect(auth.role.value).toBeNull()
+    expect(auth.canSetCreatedAt.value).toBe(false)
     expect(auth.can('logbuch')).toBe(false)
   })
 
@@ -131,7 +142,10 @@ describe('permissions', () => {
     request.mockImplementation(async (c) =>
       c.url === '/auth'
         ? { status: 200, data: '', headers: { authorization: token } }
-        : { status: 200, data: { admin: false, permissions: ['team'] } },
+        : {
+            status: 200,
+            data: { role: 'forest', permissions: ['team'], can_set_created_at: false },
+          },
     )
     await login('a', 'b')
     expect(useAuth().can('team')).toBe(true)

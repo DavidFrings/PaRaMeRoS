@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuth } from '@/api/auth'
 import {
   AuthExpiredError,
   ForbiddenError,
@@ -16,12 +17,14 @@ import PostMedia from '@/components/PostMedia.vue'
 import { refreshLogbuch } from '@/composables/useLogbuch'
 import type { Post } from '@/lib/post'
 import { seasonOf } from '@/lib/season'
+import { berlinToRfc3339, parseApiTime, rfc3339ToBerlinLocal } from '@/lib/time'
 import AuthExpiredNotice from './AuthExpiredNotice.vue'
 
 // Props are read once: the parent keys the editor by post.
 const props = defineProps<{ section: Section; post?: Post | null }>()
 const emit = defineEmits<{ saved: []; cancel: [] }>()
 const { t } = useI18n()
+const { canSetCreatedAt } = useAuth()
 
 // Same types and MiB limits as the API.
 const ACCEPT = 'image/jpeg,image/png,image/webp,video/mp4,video/webm'
@@ -39,6 +42,11 @@ const initial = {
 type Field = keyof typeof initial
 const saved = { ...initial }
 const f = reactive({ ...initial })
+// Berlin `datetime-local`; empty on create means "now".
+let savedDate = props.post
+  ? rfc3339ToBerlinLocal(parseApiTime(props.post.created_at).toISOString())
+  : ''
+const date = ref(savedDate)
 const file = ref<File | null>(null)
 const creator = ref(props.post?.media_creator ?? '')
 const removeMedia = ref(false)
@@ -112,9 +120,14 @@ async function save(post: Post) {
   const changed = Object.fromEntries(
     (Object.keys(f) as Field[]).filter((k) => f[k] !== saved[k]).map((k) => [k, f[k]]),
   )
-  if (Object.keys(changed).length) {
-    await updatePost(post.uuid, changed)
+  const dateChanged = canSetCreatedAt.value && !!date.value && date.value !== savedDate
+  if (Object.keys(changed).length || dateChanged) {
+    await updatePost(
+      post.uuid,
+      dateChanged ? { ...changed, created_at: berlinToRfc3339(date.value) } : changed,
+    )
     Object.assign(saved, changed)
+    savedDate = date.value
   }
   if (file.value) await replaceMedia(post.uuid, file.value, creator.value.trim())
   else if (removeMedia.value && post.media_name) await deleteMedia(post.uuid)
@@ -137,6 +150,7 @@ async function submit() {
         heading_en: f.heading_en || undefined,
         content_en: f.content_en || undefined,
         season: props.section === 'team' ? f.season || undefined : undefined,
+        created_at: canSetCreatedAt.value && date.value ? berlinToRfc3339(date.value) : undefined,
         file: file.value ?? undefined,
         media_creator: file.value ? creator.value.trim() : undefined,
       })
@@ -254,6 +268,34 @@ const hint = 'text-[13px] text-(--muted)'
           aria-describedby="pe-season-hint"
         />
         <p id="pe-season-hint" :class="hint">{{ t('admin.editor.seasonHint') }}</p>
+      </div>
+
+      <div v-if="canSetCreatedAt" class="grid gap-1">
+        <label for="pe-date" :class="label">{{ t('admin.editor.date') }}</label>
+        <input
+          id="pe-date"
+          v-model="date"
+          type="datetime-local"
+          class="field max-w-[260px]"
+          aria-describedby="pe-date-hint"
+        />
+        <p id="pe-date-hint" :class="hint">
+          {{ t(post ? 'admin.editor.dateHint' : 'admin.editor.dateHintNew') }}
+        </p>
+      </div>
+
+      <div v-if="canSetCreatedAt" class="grid gap-1">
+        <label for="pe-date" :class="label">{{ t('admin.editor.date') }}</label>
+        <input
+          id="pe-date"
+          v-model="date"
+          type="datetime-local"
+          class="field max-w-[260px]"
+          aria-describedby="pe-date-hint"
+        />
+        <p id="pe-date-hint" :class="hint">
+          {{ t(post ? 'admin.editor.dateHint' : 'admin.editor.dateHintNew') }}
+        </p>
       </div>
 
       <div class="grid gap-3">

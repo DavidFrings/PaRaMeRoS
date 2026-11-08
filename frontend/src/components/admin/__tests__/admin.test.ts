@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { createMemoryHistory } from 'vue-router'
 import { createAppRouter } from '@/router'
 import { i18n } from '@/i18n'
@@ -21,12 +21,15 @@ vi.mock('@/api/client', async (orig) => ({
 }))
 const ALL = ['logbuch', 'team', 'coaches', 'forest-project', 'tournament']
 const perms = vi.hoisted(() => ({ value: [] as string[] }))
+const role = vi.hoisted(() => ({ value: 'super' }))
 vi.mock('@/api/auth', () => ({
   login: vi.fn(),
   logout: vi.fn(),
   useAuth: () => ({
     loggedIn: ref(true),
+    role,
     permissions: perms,
+    canSetCreatedAt: computed(() => role.value === 'super'),
     check: vi.fn().mockResolvedValue(undefined),
     can: (p: string) => perms.value.includes(p === 'progress-logs' ? 'logbuch' : p),
   }),
@@ -41,6 +44,7 @@ import {
   getPosts,
   getTournament,
   putTournament,
+  updatePost,
 } from '@/api/client'
 import PostEditor from '../PostEditor.vue'
 import TournamentForm from '../TournamentForm.vue'
@@ -85,6 +89,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   Object.assign(URL, { createObjectURL: () => 'blob:default', revokeObjectURL: () => {} })
   perms.value = [...ALL]
+  role.value = 'super'
   vi.mocked(getPosts).mockResolvedValue([])
   vi.mocked(getTournament).mockResolvedValue(null)
   document.body.innerHTML = ''
@@ -203,6 +208,57 @@ describe('PostEditor', () => {
     const credit = w.get('#pe-creator').element as HTMLInputElement
     expect(credit.readOnly).toBe(true)
     expect(credit.value).toBe('Anna')
+  })
+})
+
+describe('PostEditor created_at', () => {
+  it('date_field_hidden_for_normal_and_forest_shown_for_super', async () => {
+    for (const r of ['normal', 'forest']) {
+      role.value = r
+      const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+      expect(w.find('#pe-date').exists()).toBe(false)
+    }
+    role.value = 'super'
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    expect(w.get('label[for=pe-date]').text()).toBe('Datum')
+    expect(w.get('#pe-date').attributes('type')).toBe('datetime-local')
+  })
+
+  it('create_sends_berlin_date_as_rfc3339', async () => {
+    vi.mocked(createPost).mockResolvedValue('n1')
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    await w.get('#pe-heading-de').setValue('H')
+    await w.get('#pe-content-de').setValue('C')
+    await w.get('#pe-date').setValue('2024-01-28T10:00')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(vi.mocked(createPost).mock.calls[0][0].created_at).toBe('2024-01-28T10:00:00+01:00')
+  })
+
+  it('create_without_date_sends_none', async () => {
+    vi.mocked(createPost).mockResolvedValue('n1')
+    const { w } = await mountAt(PostEditor, { section: 'logbuch' })
+    await w.get('#pe-heading-de').setValue('H')
+    await w.get('#pe-content-de').setValue('C')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(vi.mocked(createPost).mock.calls[0][0].created_at).toBeUndefined()
+  })
+
+  it('edit_prefills_berlin_date_and_sends_it_only_when_changed', async () => {
+    vi.mocked(updatePost).mockResolvedValue()
+    // Naive UTC 11:00 is 12:00 in Berlin (CET).
+    const { w } = await mountAt(PostEditor, { section: 'coaches', post: post() })
+    expect((w.get('#pe-date').element as HTMLInputElement).value).toBe('2026-03-01T12:00')
+    await w.get('#pe-heading-de').setValue('Neu')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(updatePost).toHaveBeenLastCalledWith('u1', { heading: 'Neu' })
+
+    await w.get('#pe-date').setValue('2024-07-01T09:30')
+    await w.get('form').trigger('submit')
+    await flushPromises()
+    expect(updatePost).toHaveBeenLastCalledWith('u1', { created_at: '2024-07-01T09:30:00+02:00' })
   })
 })
 

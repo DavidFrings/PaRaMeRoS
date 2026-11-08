@@ -62,16 +62,23 @@ export const fixtures = (live: boolean) => ({
   ],
 })
 
-// `editor` is a limited account with only the Logbuch and the tournament; otherwise admin.
-type Opts = { live: boolean; tournament: boolean; consent: boolean; editor: boolean }
+export type Role = 'normal' | 'forest' | 'super'
+// Same derivation as the API's `role_allows`.
+const ROLE_PERMISSIONS: Record<Role, string[]> = {
+  normal: ['logbuch', 'team', 'coaches', 'tournament'],
+  forest: ['logbuch', 'team', 'coaches', 'forest-project', 'tournament'],
+  super: ['logbuch', 'team', 'coaches', 'forest-project', 'tournament'],
+}
+
+type Opts = { live: boolean; tournament: boolean; consent: boolean; role: Role }
 
 export const test = base.extend<Opts & { created: string[] }>({
   live: [false, { option: true }],
   tournament: [true, { option: true }],
   consent: [true, { option: true }],
-  editor: [false, { option: true }],
+  role: ['super', { option: true }],
   created: async ({}, use) => use([]),
-  page: async ({ page, context, live, tournament, consent, editor, created }, use) => {
+  page: async ({ page, context, live, tournament, consent, role, created }, use) => {
     if (consent)
       await context.addCookies([
         {
@@ -142,10 +149,9 @@ export const test = base.extend<Opts & { created: string[] }>({
       if (method === 'GET' && pathname === '/auth/verify')
         return req.headers()['authorization']
           ? json(route, {
-              admin: !editor,
-              permissions: editor
-                ? ['logbuch', 'tournament']
-                : ['logbuch', 'team', 'coaches', 'forest-project', 'tournament'],
+              role,
+              permissions: ROLE_PERMISSIONS[role],
+              can_set_created_at: role === 'super',
             })
           : route.fulfill({ status: 400, body: 'Missing Authorization header!', headers: cors })
       if (method === 'POST' && pathname === '/post') {
