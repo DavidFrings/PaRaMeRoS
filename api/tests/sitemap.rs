@@ -26,7 +26,9 @@ where
 
 #[actix_web::test]
 async fn sitemap_lists_fixed_pages_in_both_languages() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let xml = sitemap(&app).await;
     assert!(xml.starts_with("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
     for p in [
@@ -51,7 +53,9 @@ async fn sitemap_lists_fixed_pages_in_both_languages() {
 
 #[actix_web::test]
 async fn sitemap_includes_post_with_lastmod() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     {
         let mut conn = env.pool.get().await.unwrap();
         let conn: &mut AsyncPgConnection = &mut conn;
@@ -72,7 +76,10 @@ async fn sitemap_includes_post_with_lastmod() {
 
 #[actix_web::test]
 async fn sitemap_escapes_xml() {
-    let (app, _env) = common::test_app_with_site("https://example.test/?a=1&b=<2>/").await;
+    let Some((app, _env)) = common::test_app_with_site("https://example.test/?a=1&b=<2>/").await
+    else {
+        return;
+    };
     let xml = sitemap(&app).await;
     assert!(xml.contains("<loc>https://example.test/?a=1&amp;b=&lt;2&gt;/About</loc>"));
     assert!(!xml.contains("&b="));
@@ -80,7 +87,9 @@ async fn sitemap_escapes_xml() {
 
 #[actix_web::test]
 async fn sitemap_has_hreflang_alternates() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let xml = sitemap(&app).await;
     assert!(xml.contains(
         "<xhtml:link rel=\"alternate\" hreflang=\"de\" href=\"https://example.test/About\"/>"
@@ -103,7 +112,9 @@ async fn sitemap_cache_invalidated_on_post_create() {
     if std::env::var("TEST_REDIS_URL").is_err() {
         return;
     }
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     let before = sitemap(&app).await;
     assert!(!before.contains("/post/"));

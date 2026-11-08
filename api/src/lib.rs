@@ -23,6 +23,19 @@ pub struct Env {
     pub site_url: String,
 }
 
+/// Leaves out the secrets and the pool so `{:?}` cannot leak them into logs.
+impl std::fmt::Debug for Env {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Env")
+            .field("jwt_expire", &self.jwt_expire)
+            .field("cors_origins", &self.cors_origins)
+            .field("upload_dir", &self.upload_dir)
+            .field("redis", &self.redis.is_some())
+            .field("site_url", &self.site_url)
+            .finish_non_exhaustive()
+    }
+}
+
 impl Env {
     /// Initialize the Env struct by reading environment variables
     pub async fn init() -> Self {
@@ -62,10 +75,15 @@ impl Env {
 }
 
 /// Helper function to read an environment variable
+///
+/// # Panics
+/// If `var` is not set.
+#[must_use]
 pub fn get_env_var(var: &str) -> String {
-    std::env::var(var).unwrap_or_else(|_| panic!("Environment variable {} not set!", var))
+    std::env::var(var).unwrap_or_else(|_| panic!("Environment variable {var} not set!"))
 }
 
+#[must_use]
 pub fn get_env_var_optional(var: &str) -> Option<String> {
     std::env::var(var).ok()
 }

@@ -56,14 +56,14 @@ pub async fn auth(
             return Err(unauthorized("Invalid username or password"));
         }
         Err(err) => {
-            error!("Database error: {}", err);
+            error!("Database error: {err}");
             return Err(internal_error("Database error"));
         }
     };
 
     // Verify password
     let password_matches = verify(&data.password, &usr.password).map_err(|err| {
-        error!("Password verification error: {}", err);
+        error!("Password verification error: {err}");
         internal_error("Authentication failed")
     })?;
 
@@ -79,7 +79,7 @@ pub async fn auth(
     let expiration = Utc::now()
         .checked_add_signed(Duration::minutes(env.jwt_expire))
         .expect("Invalid timestamp!")
-        .timestamp() as usize;
+        .timestamp();
 
     let claims = Claims {
         sub: usr.id.to_string(),
@@ -92,12 +92,12 @@ pub async fn auth(
         &EncodingKey::from_secret(env.jwt_secret.as_bytes()),
     )
     .map_err(|err| {
-        error!("Could not create token: {}", err);
+        error!("Could not create token: {err}");
         internal_error("Authentication failed")
     })?;
 
     Ok(HttpResponse::Ok()
-        .insert_header((AUTHORIZATION, format!("Bearer {}", token)))
+        .insert_header((AUTHORIZATION, format!("Bearer {token}")))
         .insert_header((ACCESS_CONTROL_EXPOSE_HEADERS, "authorization"))
         .finish())
 }

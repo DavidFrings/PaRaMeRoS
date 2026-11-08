@@ -64,13 +64,13 @@ impl ResponseError for HttpError {
     }
 }
 
-/// Diesel errors inside transactions: NotFound is a 404, anything else a logged 500.
+/// Diesel errors inside transactions: `NotFound` is a 404, anything else a logged 500.
 impl From<diesel::result::Error> for HttpError {
     fn from(err: diesel::result::Error) -> Self {
         match err {
             diesel::result::Error::NotFound => not_found("Not found"),
             err => {
-                error!("Database error: {}", err);
+                error!("Database error: {err}");
                 internal_error("Database error")
             }
         }
@@ -105,6 +105,7 @@ pub fn forbidden(msg: impl Into<String>) -> HttpError {
     HttpError::new(msg, StatusCode::FORBIDDEN)
 }
 
+#[must_use]
 pub fn too_many_requests(retry_after_secs: u64) -> HttpError {
     HttpError {
         retry_after: Some(retry_after_secs),
@@ -116,6 +117,9 @@ pub fn too_many_requests(retry_after_secs: u64) -> HttpError {
 pub const PERMISSIONS: [&str; 5] = ["logbuch", "team", "coaches", "forest-project", "tournament"];
 
 /// Admins hold every permission; everyone else only what `permissions` lists.
+///
+/// # Errors
+/// 403 if the user lacks `perm`.
 pub fn require(user: &User, perm: &str) -> Result<(), HttpError> {
     if user.admin || user.permissions.iter().flatten().any(|p| p == perm) {
         Ok(())
@@ -125,6 +129,9 @@ pub fn require(user: &User, perm: &str) -> Result<(), HttpError> {
 }
 
 /// `verify` plus a permission check: 401 without a valid token, 403 without `perm`.
+///
+/// # Errors
+/// 400/401 like `verify`, 403 without `perm`, 500 on database errors.
 pub async fn authorize(req: &HttpRequest, env: &Data<Env>, perm: &str) -> Result<i32, HttpError> {
     let user = verify(req, env).await?;
     require(&user, perm)?;
@@ -132,6 +139,9 @@ pub async fn authorize(req: &HttpRequest, env: &Data<Env>, perm: &str) -> Result
 }
 
 /// Validate the `Authorization: Bearer <JWT>` header and load its user.
+///
+/// # Errors
+/// 400 without the header, 401 for an invalid token or unknown user, 500 on database errors.
 pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<User, HttpError> {
     let auth_header = req
         .headers()
@@ -152,14 +162,14 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<User, HttpErro
         &validation,
     )
     .map_err(|err| {
-        warn!("Token verification failed: {}", err);
+        warn!("Token verification failed: {err}");
         unauthorized("Invalid token")
     })?
     .claims
     .sub
     .parse()
     .map_err(|err| {
-        warn!("Token subject parsing failed: {}", err);
+        warn!("Token subject parsing failed: {err}");
         unauthorized("Invalid token")
     })?;
 
@@ -173,17 +183,21 @@ pub async fn verify(req: &HttpRequest, env: &Data<Env>) -> Result<User, HttpErro
         .map_err(|err| match err {
             diesel::result::Error::NotFound => unauthorized("Invalid token"),
             err => {
-                error!("Database error: {}", err);
+                error!("Database error: {err}");
                 internal_error("Database error")
             }
         })
 }
 
+/// Get a pooled database connection.
+///
+/// # Errors
+/// 500 if no connection is available.
 pub async fn db(
     env: &Data<Env>,
 ) -> Result<bb8::PooledConnection<'_, AsyncDieselConnectionManager<AsyncPgConnection>>, HttpError> {
     let conn = env.pool.get().await.map_err(|err| {
-        error!("Database connection error: {}", err);
+        error!("Database connection error: {err}");
         internal_error("Database error")
     })?;
     Ok(conn)

@@ -20,28 +20,38 @@ pub fn site_url() -> &'static str {
     "https://example.test"
 }
 
-pub async fn test_app() -> (
+/// `None` without `TEST_DATABASE_URL`: the test then returns early. The rust-ci `test` job has no
+/// Postgres; the `API / Test` job sets the variable and `REQUIRE_TEST_DB`, which turns a skip into a
+/// failure.
+pub async fn test_app() -> Option<(
     impl Service<
         actix_http::Request,
         Response = ServiceResponse<impl MessageBody>,
         Error = actix_web::Error,
     >,
     Env,
-) {
+)> {
     test_app_with_site(site_url()).await
 }
 
 pub async fn test_app_with_site(
     site: &str,
-) -> (
+) -> Option<(
     impl Service<
         actix_http::Request,
         Response = ServiceResponse<impl MessageBody>,
         Error = actix_web::Error,
     >,
     Env,
-) {
-    let db_url = std::env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL not set");
+)> {
+    let Ok(db_url) = std::env::var("TEST_DATABASE_URL") else {
+        assert!(
+            std::env::var_os("REQUIRE_TEST_DB").is_none(),
+            "REQUIRE_TEST_DB is set but TEST_DATABASE_URL is missing"
+        );
+        eprintln!("TEST_DATABASE_URL not set, skipping");
+        return None;
+    };
     run_migrations(&db_url).await.expect("migrations failed");
 
     let pool = connection::establish(db_url).await;
@@ -101,7 +111,7 @@ pub async fn test_app_with_site(
             .configure(app::configure),
     )
     .await;
-    (app, env)
+    Some((app, env))
 }
 
 /// Log in as the seeded admin and return the `Authorization` header value.
@@ -126,8 +136,13 @@ where
 
 /// In-memory test image in the given format.
 pub fn encoded(w: u32, h: u32, fmt: ImageFormat) -> Vec<u8> {
-    let img: RgbImage =
-        ImageBuffer::from_fn(w, h, |x, y| Rgb([(x % 256) as u8, (y % 256) as u8, 128]));
+    let img: RgbImage = ImageBuffer::from_fn(w, h, |x, y| {
+        Rgb([
+            u8::try_from(x % 256).unwrap(),
+            u8::try_from(y % 256).unwrap(),
+            128,
+        ])
+    });
     let mut out = Cursor::new(Vec::new());
     img.write_to(&mut out, fmt).expect("encode fixture");
     out.into_inner()

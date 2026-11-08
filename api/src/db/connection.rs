@@ -5,6 +5,10 @@ use diesel_async::{
 
 pub type DbPool = Pool<AsyncPgConnection>;
 
+/// Build the database connection pool.
+///
+/// # Panics
+/// If the pool cannot be created.
 pub async fn establish(db_url: String) -> DbPool {
     let manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
     Pool::builder()

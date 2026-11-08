@@ -41,7 +41,7 @@ pub async fn update_post(
     let data = update_data.into_inner();
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
-        .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
+        .map_err(|err| bad_request(format!("Invalid UUID format: {err}")))?;
 
     if let Some(s) = data.season.as_deref().filter(|s| !s.is_empty()) {
         validate_season(s)?;
@@ -49,12 +49,13 @@ pub async fn update_post(
 
     let new_name = data.name.as_deref().map(normalize_section).transpose()?;
 
-    let mut conn = db(&env).await?;
-
-    // One transaction: a failing statement must not leave a half-applied update.
+    // Declared before `conn`: the transaction borrows them until the pooled connection drops.
     let uuid = &req_uuid;
     let data = &data;
     let user = &user;
+    let mut conn = db(&env).await?;
+
+    // One transaction: a failing statement must not leave a half-applied update.
     conn.transaction::<_, HttpError, _>(|conn| {
         async move {
             let mut was_updated = false;

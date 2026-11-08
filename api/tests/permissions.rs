@@ -8,6 +8,7 @@ use actix_web::{
 };
 use diesel_async::{AsyncPgConnection, RunQueryDsl, SimpleAsyncConnection};
 use serde_json::{Value, json};
+use std::fmt::Write as _;
 
 const ALL: [&str; 5] = ["logbuch", "team", "coaches", "forest-project", "tournament"];
 
@@ -63,7 +64,11 @@ where
 {
     let mut body = String::new();
     for (k, v) in [("name", section), ("heading", "H"), ("content", "C")] {
-        body += &format!("--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n");
+        // Writing to a String cannot fail.
+        let _ = write!(
+            body,
+            "--XB\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
+        );
     }
     body += "--XB--\r\n";
     let req = TestRequest::post()
@@ -138,7 +143,9 @@ where
 
 #[actix_web::test]
 async fn limited_user_manages_logbuch_and_tournament() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let auth = editor(&app).await;
 
     // `progress-logs` is the logbuch alias and needs the logbuch permission.
@@ -168,7 +175,9 @@ async fn limited_user_manages_logbuch_and_tournament() {
 
 #[actix_web::test]
 async fn limited_user_gets_403_outside_permissions() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let admin = common::login(&app).await;
     let auth = editor(&app).await;
 
@@ -221,7 +230,9 @@ async fn limited_user_gets_403_outside_permissions() {
 
 #[actix_web::test]
 async fn user_without_tournament_permission_gets_403() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     assert_eq!(register(&app, "writer", json!(["team"])).await, 201);
     let auth = login_as(&app, "writer").await;
     assert_eq!(
@@ -236,7 +247,9 @@ async fn user_without_tournament_permission_gets_403() {
 
 #[actix_web::test]
 async fn admin_can_write_everything() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let admin = common::login(&app).await;
     for s in ["logbuch", "team", "coaches", "forest-project"] {
         let id = create_id(&app, &admin, s).await;
@@ -255,7 +268,9 @@ async fn admin_can_write_everything() {
 
 #[actix_web::test]
 async fn verify_returns_permissions() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let admin = common::login(&app).await;
     assert_eq!(
         verify_json(&app, &admin).await,
@@ -270,7 +285,9 @@ async fn verify_returns_permissions() {
 
 #[actix_web::test]
 async fn register_validates_and_dedupes_permissions() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     assert_eq!(register(&app, "bad", json!(["logbuch", "evil"])).await, 400);
     assert_eq!(
         register(&app, "dup", json!(["team", "team", "logbuch"])).await,
@@ -285,7 +302,9 @@ async fn register_validates_and_dedupes_permissions() {
 
 #[actix_web::test]
 async fn register_without_permissions_field_stores_none() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let req = TestRequest::post()
         .uri("/register")
         .set_json(json!({
@@ -302,15 +321,17 @@ const W05_DOWN: &str = include_str!("../migrations/w05-user-permissions/down.sql
 
 #[actix_web::test]
 async fn migration_w05_down_up_roundtrip_backfills_non_admins() {
-    let (_app, env) = common::test_app().await;
-    let mut conn = env.pool.get().await.unwrap();
-    let conn: &mut AsyncPgConnection = &mut conn;
     async fn text(conn: &mut AsyncPgConnection, sql: &str) -> String {
         diesel::select(diesel::dsl::sql::<diesel::sql_types::Text>(sql))
             .get_result(conn)
             .await
             .unwrap()
     }
+    let Some((_app, env)) = common::test_app().await else {
+        return;
+    };
+    let mut conn = env.pool.get().await.unwrap();
+    let conn: &mut AsyncPgConnection = &mut conn;
     let col = "count(*)::text FROM information_schema.columns \
         WHERE table_name='users' AND column_name='permissions'";
 
@@ -360,7 +381,9 @@ fn multipart_req(uri: &str, method: &str, auth: &str, body: Vec<u8>) -> actix_ht
 
 #[actix_web::test]
 async fn null_permission_elements_grant_nothing() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = editor(&app).await;
     sql(
         &env,
@@ -377,7 +400,9 @@ async fn null_permission_elements_grant_nothing() {
 
 #[actix_web::test]
 async fn user_with_no_permissions_cannot_write() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let admin = common::login(&app).await;
     let post = create_id(&app, &admin, "logbuch").await;
     assert_eq!(register(&app, "nobody", json!([])).await, 201);
@@ -393,7 +418,9 @@ async fn user_with_no_permissions_cannot_write() {
 
 #[actix_web::test]
 async fn revoked_permission_applies_to_existing_token() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = editor(&app).await;
     assert_eq!(create(&app, &auth, "logbuch").await.status(), 200);
     sql(
@@ -408,7 +435,9 @@ async fn revoked_permission_applies_to_existing_token() {
 
 #[actix_web::test]
 async fn forbidden_uploads_write_no_file() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let admin = common::login(&app).await;
     let team = create_id(&app, &admin, "team").await;
     let auth = editor(&app).await;
@@ -439,7 +468,9 @@ async fn forbidden_uploads_write_no_file() {
 
 #[actix_web::test]
 async fn post_without_any_section_permission_is_rejected_early() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     assert_eq!(register(&app, "cup", json!(["tournament"])).await, 201);
     let auth = login_as(&app, "cup").await;
     let img = common::encoded(1600, 1200, image::ImageFormat::Png);

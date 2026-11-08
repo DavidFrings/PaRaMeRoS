@@ -8,7 +8,7 @@ pub async fn backfill(upload_dir: PathBuf) {
     // A panic inside the blocking task surfaces as a JoinError and is only logged.
     match spawn_blocking(move || run(&upload_dir)).await {
         Ok((created, skipped, failed)) => {
-            info!("Media backfill: created {created}, skipped {skipped}, failed {failed}")
+            info!("Media backfill: created {created}, skipped {skipped}, failed {failed}");
         }
         Err(err) => error!("Media backfill task failed: {err}"),
     }

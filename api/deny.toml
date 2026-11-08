@@ -1,0 +1,55 @@
+# cargo-deny configuration (rust-security.yml workflow from DavidFrings/rust-ci).
+# On the first run, `cargo deny check licenses` lists licenses still missing from
+# `allow`. Decide deliberately; do not allow everything blindly.
+
+[graph]
+all-features = true
+
+[advisories]
+yanked = "warn"
+# Exceptions only with a reason.
+ignore = [
+    { id = "RUSTSEC-2026-0138", reason = "diesel-async: unsound only in the MySQL backend; this crate uses PostgreSQL only; drop after diesel-async >= 0.9 upgrade" },
+    { id = "RUSTSEC-2024-0436", reason = "paste (unmaintained proc-macro) comes in via image -> exr/pulp and rav1e; no maintained release to move to" },
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "CC0-1.0",
+    "MPL-2.0",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.8
+
+# The API itself stays MPL-2.0. These licenses are allowed only for the crates named.
+[[licenses.exceptions]]
+# libjxl bindings used for the JPEG XL variants
+crate = "jpegxl-rs"
+allow = ["GPL-3.0-or-later"]
+
+[[licenses.exceptions]]
+crate = "jpegxl-sys"
+allow = ["GPL-3.0-or-later"]
+
+[[licenses.exceptions]]
+# Pulled in by rav1e via image's default features (webp enables them)
+crate = "libfuzzer-sys"
+allow = ["NCSA"]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

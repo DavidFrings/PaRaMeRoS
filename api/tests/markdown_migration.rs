@@ -45,7 +45,9 @@ async fn insert(conn: &mut AsyncPgConnection, name: &str, content: &str) {
 
 #[actix_web::test]
 async fn html_to_md_cases() {
-    let (_app, env) = common::test_app().await;
+    let Some((_app, env)) = common::test_app().await else {
+        return;
+    };
     let mut conn = env.pool.get().await.unwrap();
     let c: &mut AsyncPgConnection = &mut conn;
     let cases = [
@@ -79,7 +81,9 @@ async fn html_to_md_cases() {
 
 #[actix_web::test]
 async fn plain_rows_untouched_and_unbacked() {
-    let (_app, env) = common::test_app().await;
+    let Some((_app, env)) = common::test_app().await else {
+        return;
+    };
     let mut conn = env.pool.get().await.unwrap();
     let c: &mut AsyncPgConnection = &mut conn;
     insert(c, "plain", "Kein HTML & so\n&amp; bleibt").await;
@@ -97,7 +101,9 @@ async fn plain_rows_untouched_and_unbacked() {
 
 #[actix_web::test]
 async fn markdown_migration_down_restores_original() {
-    let (_app, env) = common::test_app().await;
+    let Some((_app, env)) = common::test_app().await else {
+        return;
+    };
     let mut conn = env.pool.get().await.unwrap();
     let c: &mut AsyncPgConnection = &mut conn;
     let html = "<p>A &amp; B</p>\n<b>x\ny</b><br>&lt;z&gt; <a href=\"u\">l</a>  \n\n";

@@ -17,7 +17,7 @@ use uuid::Uuid;
 pub async fn post(path: Path<String>, env: Data<Env>) -> Result<HttpResponse, HttpError> {
     let req_path = path.into_inner();
     let req_uuid = Uuid::parse_str(&req_path)
-        .map_err(|err| bad_request(format!("Invalid UUID format: {}", err)))?;
+        .map_err(|err| bad_request(format!("Invalid UUID format: {err}")))?;
 
     let key = format!("cache:post:{req_uuid}");
     if let Some(body) = cache_get(&env, &key).await {

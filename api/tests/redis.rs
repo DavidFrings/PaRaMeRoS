@@ -14,6 +14,10 @@ use serde_json::{Value, json};
 fn has_redis() -> bool {
     let ok = std::env::var("TEST_REDIS_URL").is_ok();
     if !ok {
+        assert!(
+            std::env::var_os("REQUIRE_TEST_DB").is_none(),
+            "REQUIRE_TEST_DB is set but TEST_REDIS_URL is missing"
+        );
         eprintln!("TEST_REDIS_URL not set, skipping");
     }
     ok
@@ -36,7 +40,9 @@ async fn sixth_failed_login_returns_429_with_retry_after() {
     if !has_redis() {
         return;
     }
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     for _ in 0..5 {
         assert_eq!(
             login_as(&app, "10.1.0.1", "admin", "bad").await.status(),
@@ -68,7 +74,9 @@ async fn successful_login_resets_counter() {
     if !has_redis() {
         return;
     }
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     for _ in 0..4 {
         assert_eq!(
             login_as(&app, "10.1.0.2", "admin", "bad").await.status(),
@@ -94,7 +102,9 @@ async fn fourth_register_attempt_returns_429() {
     if !has_redis() {
         return;
     }
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     for i in 0..4 {
         let req = TestRequest::post()
             .uri("/register")
@@ -116,7 +126,9 @@ async fn rate_limit_uses_x_real_ip() {
     if !has_redis() {
         return;
     }
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     for _ in 0..6 {
         login_as(&app, "10.1.0.4", "admin", "bad").await;
     }
@@ -160,7 +172,9 @@ async fn posts_cached_then_invalidated_on_create() {
     if !has_redis() {
         return;
     }
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     insert_row(&env, "one").await;
     assert_eq!(count(&app, "/posts/team").await, 1);
@@ -185,7 +199,9 @@ async fn progress_logs_alias_shares_logbuch_cache() {
     if !has_redis() {
         return;
     }
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     assert_eq!(count(&app, "/posts/logbuch").await, 0);
     let mut conn = env.pool.get().await.unwrap();
     let conn: &mut AsyncPgConnection = &mut conn;
@@ -224,7 +240,9 @@ async fn api_works_when_redis_down() {
             });
         }
     });
-    let (_app, mut env) = common::test_app().await;
+    let Some((_app, mut env)) = common::test_app().await else {
+        return;
+    };
     env.redis = Some(
         redis::aio::ConnectionManager::new(
             redis::Client::open(format!("redis://127.0.0.1:{port}")).unwrap(),
@@ -261,7 +279,9 @@ async fn put_invalidates_post_and_list_cache() {
     if !has_redis() {
         return;
     }
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let auth = common::login(&app).await;
     insert_row(&env, "old").await;
     let list: Vec<Value> = read_body_json(

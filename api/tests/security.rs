@@ -35,19 +35,22 @@ fn new_post(name: &str, heading: &str, media_name: Option<&str>) -> NewPost {
     }
 }
 
-async fn cors_app() -> impl actix_web::dev::Service<
-    actix_http::Request,
-    Response = actix_web::dev::ServiceResponse<impl actix_web::body::MessageBody>,
-    Error = actix_web::Error,
+async fn cors_app() -> Option<
+    impl actix_web::dev::Service<
+        actix_http::Request,
+        Response = actix_web::dev::ServiceResponse<impl actix_web::body::MessageBody>,
+        Error = actix_web::Error,
+    >,
 > {
-    let (_, env) = common::test_app().await;
-    init_service(
+    let (_, env) = common::test_app().await?;
+    let app = init_service(
         App::new()
             .wrap(app::cors(&["http://localhost:3000".to_string()]))
             .app_data(Data::new(env))
             .configure(app::configure),
     )
-    .await
+    .await;
+    Some(app)
 }
 
 fn preflight(origin: &str) -> actix_http::Request {
@@ -61,14 +64,18 @@ fn preflight(origin: &str) -> actix_http::Request {
 
 #[actix_web::test]
 async fn cors_rejects_empty_origin() {
-    let app = cors_app().await;
+    let Some(app) = cors_app().await else {
+        return;
+    };
     let res = call_service(&app, preflight("")).await;
     assert!(res.headers().get("access-control-allow-origin").is_none());
 }
 
 #[actix_web::test]
 async fn cors_allows_configured_origin() {
-    let app = cors_app().await;
+    let Some(app) = cors_app().await else {
+        return;
+    };
     let res = call_service(&app, preflight("http://localhost:3000")).await;
     assert_eq!(
         res.headers().get("access-control-allow-origin").unwrap(),
@@ -78,7 +85,9 @@ async fn cors_allows_configured_origin() {
 
 #[actix_web::test]
 async fn get_unknown_post_returns_404() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let req = TestRequest::get()
         .uri(&format!("/post/{}", Uuid::new_v4()))
         .to_request();
@@ -88,7 +97,9 @@ async fn get_unknown_post_returns_404() {
 
 #[actix_web::test]
 async fn db_errors_do_not_leak() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let req = TestRequest::get()
         .uri(&format!("/post/{}", Uuid::new_v4()))
         .to_request();
@@ -101,7 +112,9 @@ async fn db_errors_do_not_leak() {
 
 #[actix_web::test]
 async fn verify_rejects_token_without_bearer_prefix() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     let token = common::login(&app).await;
     let raw = token.strip_prefix("Bearer ").unwrap();
     let req = TestRequest::delete()
@@ -113,7 +126,9 @@ async fn verify_rejects_token_without_bearer_prefix() {
 
 #[actix_web::test]
 async fn verify_rejects_deleted_user() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let token = common::login(&app).await;
     {
         let mut conn = env.pool.get().await.unwrap();
@@ -131,7 +146,9 @@ async fn verify_rejects_deleted_user() {
 
 #[actix_web::test]
 async fn delete_post_with_missing_file_succeeds() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let token = common::login(&app).await;
     let post = new_post("logbuch", "h", Some("gone.webp"));
     let id = post.uuid;
@@ -152,7 +169,9 @@ async fn delete_post_with_missing_file_succeeds() {
 
 #[actix_web::test]
 async fn posts_sorted_newest_first() {
-    let (app, env) = common::test_app().await;
+    let Some((app, env)) = common::test_app().await else {
+        return;
+    };
     let mut old = new_post("logbuch", "old", None);
     old.created_at = (Utc::now() - Duration::minutes(1)).naive_utc();
     let new = new_post("logbuch", "new", None);
@@ -179,7 +198,9 @@ async fn posts_sorted_newest_first() {
 
 #[actix_web::test]
 async fn login_unknown_user_takes_bcrypt_time() {
-    let (app, _env) = common::test_app().await;
+    let Some((app, _env)) = common::test_app().await else {
+        return;
+    };
     for i in 1..=10 {
         let req = TestRequest::post()
             .uri("/auth")

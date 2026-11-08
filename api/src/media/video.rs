@@ -4,6 +4,9 @@ use log::info;
 use std::path::Path;
 
 /// Store a sniffed video as `<base>.mp4` or `<base>.webm`. Videos are not re-encoded.
+///
+/// # Errors
+/// 500 if the file cannot be written.
 pub fn store_video(
     upload_dir: &Path,
     base: &str,
