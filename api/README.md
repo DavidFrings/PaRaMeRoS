@@ -29,7 +29,7 @@ Roles (`users.role`) decide what a user may write:
 
 Internally the role is mapped to the permissions `logbuch`, `team`, `coaches`, `forest-project`, `tournament` (section permissions equal post `name` values; `progress-logs` maps to `logbuch`). "Section" writes need the permission of the post's section: on POST the new `name`, on PUT/DELETE the post's current section, and on a PUT that changes `name` also the new one. A missing permission returns 403 ("Missing permission"); an unknown uuid stays 404, checked before the permission. Reads are public.
 
-`created_at` (POST /post and PUT /post/{uuid}, `super` only, else 403) is RFC 3339 with an offset, e.g. `2024-01-28T10:00:00+01:00`, and is stored as UTC. Invalid values, years before 2017 and times more than one day ahead return 400 (`Invalid created_at`). An empty value is ignored (POST: now). Changing only `created_at` leaves `updated_at` untouched.
+`created_at` (POST /post and PUT /post/{uuid}, `super` only, else 403) is RFC 3339 with an offset, e.g. `2024-01-28T10:00:00+01:00`, and is stored as UTC. Invalid values, years before 2017 (in the given offset's local time) and times more than 5 minutes ahead (clock skew) return 400 (`Invalid created_at`). An empty value is ignored (POST: now). Changing only `created_at` leaves `updated_at` untouched.
 
 To change a user's role, update the row directly; it applies to the user's next request, even with an existing token:
 
@@ -38,5 +38,7 @@ UPDATE users SET role = 'normal' WHERE username = '…';
 ```
 
 Migration `w06-user-roles` replaces `admin`/`permissions` with `role` and makes **every existing account `super`**; narrow them after deploy.
+
+Its `down.sql` maps roles back (super → admin with all permissions, normal/forest → their section lists); per-user w05 permission sets are not restored.
 
 `media_creator` is required together with media (POST /post and PUT /post/{uuid}/media: 400 if missing). On POST /post a creator without media is ignored.

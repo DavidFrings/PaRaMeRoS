@@ -33,18 +33,19 @@ pub fn validate_season(s: &str) -> Result<(), HttpError> {
     }
 }
 
+/// Clock skew allowed for a `created_at` ahead of the server's now.
+const CREATED_AT_SKEW: TimeDelta = TimeDelta::minutes(5);
+
 /// RFC 3339 with an offset to the naive UTC value `posts.created_at` stores. Allowed range: from
-/// 2017 to one day ahead.
+/// 2017 (in the given offset's local time) to now plus a few minutes of clock skew.
 ///
 /// # Errors
 /// 400 if `raw` is not RFC 3339 or out of range.
 pub fn parse_created_at(raw: &str) -> Result<NaiveDateTime, HttpError> {
     let invalid = || bad_request("Invalid created_at");
-    let t = DateTime::parse_from_rfc3339(raw)
-        .map_err(|_| invalid())?
-        .naive_utc();
-    if t.year() < 2017 || t > Utc::now().naive_utc() + TimeDelta::days(1) {
+    let t = DateTime::parse_from_rfc3339(raw).map_err(|_| invalid())?;
+    if t.year() < 2017 || t > Utc::now() + CREATED_AT_SKEW {
         return Err(invalid());
     }
-    Ok(t)
+    Ok(t.naive_utc())
 }

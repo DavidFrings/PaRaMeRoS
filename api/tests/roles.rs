@@ -548,6 +548,14 @@ async fn super_sets_created_at_on_post_and_put() {
         read_body_json::<Value, _>(call_service(app, req).await).await
     };
     assert_eq!(list(&app).await[0]["created_at"], "2024-01-28T09:00:00");
+    // Warm the sitemap cache too.
+    let sitemap = |app| async move {
+        let req = TestRequest::get().uri("/sitemap.xml").to_request();
+        String::from_utf8(read_body(call_service(app, req).await).await.to_vec()).unwrap()
+    };
+    let lastmod =
+        |d: &str| format!("<loc>https://example.test/post/{id}</loc>\n    <lastmod>{d}</lastmod>");
+    assert!(sitemap(&app).await.contains(&lastmod("2024-01-28")));
 
     // Correcting the date alone is not a content edit.
     let res = call_service(
@@ -564,6 +572,7 @@ async fn super_sets_created_at_on_post_and_put() {
     assert_eq!(p["created_at"], "2023-06-01T10:30:00");
     assert_eq!(p["updated_at"], Value::Null);
     assert_eq!(list(&app).await[0]["created_at"], "2023-06-01T10:30:00");
+    assert!(sitemap(&app).await.contains(&lastmod("2023-06-01")));
 
     let res = call_service(
         &app,
@@ -645,7 +654,7 @@ async fn invalid_or_out_of_range_created_at_is_400() {
     let admin = common::login(&app).await;
     let id = create_id(&app, &admin, "logbuch").await;
     let before = get_post(&app, &id).await;
-    let future = (chrono::Utc::now() + chrono::TimeDelta::days(2)).to_rfc3339();
+    let future = (chrono::Utc::now() + chrono::TimeDelta::minutes(10)).to_rfc3339();
     for bad in [
         "garbage",
         "2024-01-28T10:00:00",
@@ -660,9 +669,13 @@ async fn invalid_or_out_of_range_created_at_is_400() {
         assert_eq!(res.status(), 400, "PUT {bad}");
     }
     assert_eq!(get_post(&app, &id).await, before);
-    // Within a day ahead and from 2017 on are fine.
-    let soon = (chrono::Utc::now() + chrono::TimeDelta::hours(20)).to_rfc3339();
-    for ok in ["2017-01-01T12:00:00Z", soon.as_str()] {
+    // Up to 5 min of clock skew ahead is fine, and 2017 counts in the given offset's local time.
+    let soon = (chrono::Utc::now() + chrono::TimeDelta::minutes(2)).to_rfc3339();
+    for ok in [
+        "2017-01-01T12:00:00Z",
+        "2017-01-01T00:30:00+01:00",
+        soon.as_str(),
+    ] {
         let res = call_service(&app, post_with_date(&admin, "logbuch", ok)).await;
         assert_eq!(res.status(), 200, "{ok}");
     }
