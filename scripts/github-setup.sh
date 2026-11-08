@@ -9,6 +9,10 @@ set -euo pipefail
 
 REPO="${1:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}"
 
+# Branch ruleset to update (or create). Rulesets stack, so this script merges into the existing one
+# instead of adding a second ruleset next to it. Its admin bypass must stay: see the create branch below.
+RULESET_NAME="Main"
+
 # Required checks, named as they appear on a PR:
 # - "api / result": <job ID in ci.yml> / <job name in rust-ci's rust.yml>; sums up fmt, clippy, test, doc, msrv.
 # - the other names are the `name:` of the jobs in .github/workflows/ci.yml.
@@ -70,45 +74,71 @@ try gh api -X PATCH "repos/$REPO" --input - <<<'{"security_and_analysis":{"secre
 step "Actions: workflows get read-only access by default"
 try gh api -X PUT "repos/$REPO/actions/permissions/workflow" -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
 
-step "Ruleset for the default branch"
+step "Ruleset \"$RULESET_NAME\" for the default branch"
 checks_json=$(printf '{ "context": "%s" },' "${REQUIRED_CHECKS[@]}")
 checks_json="[ ${checks_json%,} ]"
-payload=$(cat <<JSON
-{
-  "name": "protect-default-branch",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
-  "bypass_actors": [],
-  "rules": [
-    { "type": "deletion" },
-    { "type": "non_fast_forward" },
-    { "type": "required_linear_history" },
-    {
-      "type": "pull_request",
-      "parameters": {
-        "required_approving_review_count": 0,
-        "dismiss_stale_reviews_on_push": false,
-        "require_code_owner_review": false,
-        "require_last_push_approval": false,
-        "required_review_thread_resolution": false
-      }
-    },
-    {
-      "type": "required_status_checks",
-      "parameters": {
-        "strict_required_status_checks_policy": false,
-        "required_status_checks": $checks_json
-      }
+rules=$(cat <<JSON
+[
+  { "type": "deletion" },
+  { "type": "non_fast_forward" },
+  { "type": "required_linear_history" },
+  {
+    "type": "pull_request",
+    "parameters": {
+      "required_approving_review_count": 0,
+      "dismiss_stale_reviews_on_push": false,
+      "require_code_owner_review": false,
+      "require_last_push_approval": false,
+      "required_review_thread_resolution": false
     }
-  ]
-}
+  },
+  {
+    "type": "required_status_checks",
+    "parameters": {
+      "strict_required_status_checks_policy": false,
+      "required_status_checks": $checks_json
+    }
+  }
+]
 JSON
 )
-existing=$(gh api "repos/$REPO/rulesets" --jq '.[] | select(.name == "protect-default-branch") | .id' 2>/dev/null || true)
+
+# Merge $add into an existing ruleset: existing rules, bypass_actors, conditions and enforcement stay
+# as they are. Rules are deduped by type (the existing one wins), except required_status_checks, whose
+# contexts become the union of both. Only the fields the PUT endpoint accepts are kept.
+# shellcheck disable=SC2016 # jq program, not shell expansion
+MERGE_JQ='
+  .rules as $old
+  | {name, target, enforcement, conditions, bypass_actors,
+     rules: (reduce $add[] as $r ($old;
+       if any(.[]; .type == $r.type) then
+         if $r.type == "required_status_checks" then
+           map(if .type == "required_status_checks" then
+                 (.parameters.required_status_checks // []) as $have
+                 | .parameters.required_status_checks = $have + [
+                     $r.parameters.required_status_checks[]
+                     | select(.context as $c | $have | any(.context == $c) | not)
+                   ]
+               else . end)
+         else . end
+       else . + [$r] end))}'
+
+existing=$(gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$RULESET_NAME\") | .id" 2>/dev/null || true)
 if [[ -n "$existing" ]]; then
+  payload=$(gh api "repos/$REPO/rulesets/$existing" | jq --argjson add "$rules" "$MERGE_JQ")
   try gh api -X PUT "repos/$REPO/rulesets/$existing" --input - <<<"$payload"
 else
+  # Admins (RepositoryRole 5) may bypass via pull request: the version-bump PR from release.yml is
+  # opened with GITHUB_TOKEN, which triggers no CI, so its required checks never report and only
+  # this bypass lets it be merged.
+  payload=$(jq -n --arg name "$RULESET_NAME" --argjson rules "$rules" '{
+    name: $name,
+    target: "branch",
+    enforcement: "active",
+    conditions: { ref_name: { include: ["~DEFAULT_BRANCH"], exclude: [] } },
+    bypass_actors: [ { actor_id: 5, actor_type: "RepositoryRole", bypass_mode: "pull_request" } ],
+    rules: $rules
+  }')
   try gh api -X POST "repos/$REPO/rulesets" --input - <<<"$payload"
 fi
 
