@@ -11,7 +11,7 @@ use actix_web::{
     web::{Data, Path},
 };
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
+use diesel_async::{AsyncConnection, RunQueryDsl};
 use log::info;
 use uuid::Uuid;
 
@@ -32,22 +32,19 @@ pub async fn delete_post(
     let user = &user;
     let mut conn = db(&env).await?;
     let post = conn
-        .transaction::<_, HttpError, _>(|conn| {
-            async move {
-                // Locked row: the section checked is the one deleted. 404 comes before 403.
-                let post = posts
-                    .filter(uuid_schema.eq(uuid))
-                    .select(Post::as_select())
-                    .for_update()
-                    .first(conn)
-                    .await?;
-                require(user, &post.name)?;
-                diesel::delete(posts.filter(uuid_schema.eq(uuid)))
-                    .execute(conn)
-                    .await?;
-                Ok(post)
-            }
-            .scope_boxed()
+        .transaction::<_, HttpError, _>(async move |conn| {
+            // Locked row: the section checked is the one deleted. 404 comes before 403.
+            let post = posts
+                .filter(uuid_schema.eq(uuid))
+                .select(Post::as_select())
+                .for_update()
+                .first(conn)
+                .await?;
+            require(user, &post.name)?;
+            diesel::delete(posts.filter(uuid_schema.eq(uuid)))
+                .execute(conn)
+                .await?;
+            Ok(post)
         })
         .await?;
 

@@ -4,7 +4,7 @@ use actix_web::{
 };
 use chrono::Utc;
 use diesel::prelude::*;
-use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
+use diesel_async::{AsyncConnection, RunQueryDsl};
 use uuid::Uuid;
 
 use super::section::{normalize_section, parse_created_at, validate_season};
@@ -56,61 +56,58 @@ pub async fn update_post(
     let mut conn = db(&env).await?;
 
     // One transaction: a failing statement must not leave a half-applied update.
-    conn.transaction::<_, HttpError, _>(|conn| {
-        async move {
-            let mut was_updated = false;
-            // Locked row: the section checked is the one written. 404 comes before 403.
-            let current: String = posts
-                .filter(uuid_schema.eq(uuid))
-                .select(name)
-                .for_update()
-                .first(conn)
-                .await?;
-            require(user, &current)?;
-            // Moving a post also writes to the new section.
-            if let Some(new_name) = new_name {
-                require(user, new_name)?;
-            }
-            if let Some(raw) = data.created_at.as_deref().filter(|v| !v.is_empty()) {
-                if !can_set_created_at(user) {
-                    return Err(forbidden("Missing permission"));
-                }
-                update!(created_at, parse_created_at(raw)?, uuid, conn);
-            }
-            if let Some(new_name) = new_name {
-                update!(name, new_name, uuid, conn);
-                was_updated = true;
-            }
-            if let Some(v) = &data.heading {
-                update!(heading, v, uuid, conn);
-                was_updated = true;
-            }
-            if let Some(v) = &data.content {
-                update!(content, v, uuid, conn);
-                was_updated = true;
-            }
-
-            // An empty string clears the optional field to NULL.
-            let opt = |v: &String| Some(v.clone()).filter(|v| !v.is_empty());
-            if let Some(v) = &data.heading_en {
-                update!(heading_en, opt(v), uuid, conn);
-                was_updated = true;
-            }
-            if let Some(v) = &data.content_en {
-                update!(content_en, opt(v), uuid, conn);
-                was_updated = true;
-            }
-            if let Some(v) = &data.season {
-                update!(season, opt(v), uuid, conn);
-                was_updated = true;
-            }
-
-            if was_updated {
-                update!(updated_at, Utc::now().naive_utc(), uuid, conn);
-            }
-            Ok(())
+    conn.transaction::<_, HttpError, _>(async move |conn| {
+        let mut was_updated = false;
+        // Locked row: the section checked is the one written. 404 comes before 403.
+        let current: String = posts
+            .filter(uuid_schema.eq(uuid))
+            .select(name)
+            .for_update()
+            .first(conn)
+            .await?;
+        require(user, &current)?;
+        // Moving a post also writes to the new section.
+        if let Some(new_name) = new_name {
+            require(user, new_name)?;
         }
-        .scope_boxed()
+        if let Some(raw) = data.created_at.as_deref().filter(|v| !v.is_empty()) {
+            if !can_set_created_at(user) {
+                return Err(forbidden("Missing permission"));
+            }
+            update!(created_at, parse_created_at(raw)?, uuid, conn);
+        }
+        if let Some(new_name) = new_name {
+            update!(name, new_name, uuid, conn);
+            was_updated = true;
+        }
+        if let Some(v) = &data.heading {
+            update!(heading, v, uuid, conn);
+            was_updated = true;
+        }
+        if let Some(v) = &data.content {
+            update!(content, v, uuid, conn);
+            was_updated = true;
+        }
+
+        // An empty string clears the optional field to NULL.
+        let opt = |v: &String| Some(v.clone()).filter(|v| !v.is_empty());
+        if let Some(v) = &data.heading_en {
+            update!(heading_en, opt(v), uuid, conn);
+            was_updated = true;
+        }
+        if let Some(v) = &data.content_en {
+            update!(content_en, opt(v), uuid, conn);
+            was_updated = true;
+        }
+        if let Some(v) = &data.season {
+            update!(season, opt(v), uuid, conn);
+            was_updated = true;
+        }
+
+        if was_updated {
+            update!(updated_at, Utc::now().naive_utc(), uuid, conn);
+        }
+        Ok(())
     })
     .await?;
 
