@@ -16,9 +16,7 @@ use actix_web::{
 };
 use chrono::Utc;
 use diesel::prelude::*;
-use diesel_async::{
-    AsyncConnection, AsyncPgConnection, RunQueryDsl, scoped_futures::ScopedFutureExt,
-};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use uuid::Uuid;
 
 async fn find_post(env: &Data<Env>, id: &Uuid) -> Result<Post, HttpError> {
@@ -78,22 +76,19 @@ pub async fn replace_media(
     let (user, id, new_type, stored) = (&user, &id, &new_type, new_name.clone());
     let mut conn = db(&env).await?;
     let res = conn
-        .transaction::<_, HttpError, _>(|conn| {
-            async move {
-                let old = locked_post(conn, id).await?;
-                require(user, &old.name)?;
-                diesel::update(posts.filter(uuid_schema.eq(id)))
-                    .set((
-                        media_type.eq(new_type),
-                        media_name.eq(stored),
-                        media_creator.eq(creator),
-                        updated_at.eq(Utc::now().naive_utc()),
-                    ))
-                    .execute(conn)
-                    .await?;
-                Ok(old.media_name)
-            }
-            .scope_boxed()
+        .transaction::<_, HttpError, _>(async move |conn| {
+            let old = locked_post(conn, id).await?;
+            require(user, &old.name)?;
+            diesel::update(posts.filter(uuid_schema.eq(id)))
+                .set((
+                    media_type.eq(new_type),
+                    media_name.eq(stored),
+                    media_creator.eq(creator),
+                    updated_at.eq(Utc::now().naive_utc()),
+                ))
+                .execute(conn)
+                .await?;
+            Ok(old.media_name)
         })
         .await;
     let old_name = res.inspect_err(|_| remove_media_files(&env.upload_dir, &new_name))?;
@@ -122,22 +117,19 @@ pub async fn delete_media(
     let (user, id) = (&user, &id);
     let mut conn = db(&env).await?;
     let old_name = conn
-        .transaction::<_, HttpError, _>(|conn| {
-            async move {
-                let old = locked_post(conn, id).await?;
-                require(user, &old.name)?;
-                diesel::update(posts.filter(uuid_schema.eq(id)))
-                    .set((
-                        media_type.eq(None::<String>),
-                        media_name.eq(None::<String>),
-                        media_creator.eq(None::<String>),
-                        updated_at.eq(Utc::now().naive_utc()),
-                    ))
-                    .execute(conn)
-                    .await?;
-                Ok(old.media_name)
-            }
-            .scope_boxed()
+        .transaction::<_, HttpError, _>(async move |conn| {
+            let old = locked_post(conn, id).await?;
+            require(user, &old.name)?;
+            diesel::update(posts.filter(uuid_schema.eq(id)))
+                .set((
+                    media_type.eq(None::<String>),
+                    media_name.eq(None::<String>),
+                    media_creator.eq(None::<String>),
+                    updated_at.eq(Utc::now().naive_utc()),
+                ))
+                .execute(conn)
+                .await?;
+            Ok(old.media_name)
         })
         .await?;
 
