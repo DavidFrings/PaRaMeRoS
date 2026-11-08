@@ -30,7 +30,7 @@ diesel = { version = "^2.3", features = ["chrono", "uuid"] }
 diesel-async = { version = "^0.7", features = ["postgres", "tokio", "bb8", "async-connection-wrapper"] }
 diesel_migrations = "^2.3"
 anyhow = "^1"
-redis = { version = "^0.32", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "^1.8", features = ["tokio-comp", "connection-manager"] }
 bb8 = "^0.9"
 #tokio-postgres = "^0.7"
 bcrypt = "^0.19"
