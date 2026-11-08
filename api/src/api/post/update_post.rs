@@ -49,12 +49,13 @@ pub async fn update_post(
 
     let new_name = data.name.as_deref().map(normalize_section).transpose()?;
 
-    let mut conn = db(&env).await?;
-
-    // One transaction: a failing statement must not leave a half-applied update.
+    // Declared before `conn`: the transaction borrows them until the pooled connection drops.
     let uuid = &req_uuid;
     let data = &data;
     let user = &user;
+    let mut conn = db(&env).await?;
+
+    // One transaction: a failing statement must not leave a half-applied update.
     conn.transaction::<_, HttpError, _>(|conn| {
         async move {
             let mut was_updated = false;

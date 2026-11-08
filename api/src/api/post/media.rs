@@ -74,9 +74,9 @@ pub async fn replace_media(
         .ok_or_else(|| bad_request("Media creator missing!"))?;
     let (new_type, new_name) = store_upload(env.upload_dir.clone(), id, &kind, data).await?;
 
-    let mut conn = db(&env).await?;
     // Owned copy: the transaction's borrows live as long as the pooled connection.
     let (user, id, new_type, stored) = (&user, &id, &new_type, new_name.clone());
+    let mut conn = db(&env).await?;
     let res = conn
         .transaction::<_, HttpError, _>(|conn| {
             async move {
@@ -118,8 +118,9 @@ pub async fn delete_media(
     let user = verify(&req, &env).await?;
     let id = parse_uuid(path)?;
 
-    let mut conn = db(&env).await?;
+    // Declared before `conn`: the transaction borrows them until the pooled connection drops.
     let (user, id) = (&user, &id);
+    let mut conn = db(&env).await?;
     let old_name = conn
         .transaction::<_, HttpError, _>(|conn| {
             async move {

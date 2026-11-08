@@ -27,10 +27,10 @@ pub async fn delete_post(
     let req_uuid = Uuid::parse_str(&req_path)
         .map_err(|err| bad_request(format!("Invalid UUID format: {err}")))?;
 
-    let mut conn = db(&env).await?;
-
+    // Declared before `conn`: the transaction borrows them until the pooled connection drops.
     let uuid = &req_uuid;
     let user = &user;
+    let mut conn = db(&env).await?;
     let post = conn
         .transaction::<_, HttpError, _>(|conn| {
             async move {
