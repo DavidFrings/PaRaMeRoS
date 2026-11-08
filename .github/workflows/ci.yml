@@ -7,7 +7,7 @@ on:
     branches: [main, master]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -55,6 +55,8 @@ jobs:
     env:
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
       TEST_REDIS_URL: redis://localhost:6379
+      # Missing URLs fail the tests here instead of skipping them
+      REQUIRE_TEST_DB: "1"
     steps:
       - uses: actions/checkout@v5
       - name: Setup Rust

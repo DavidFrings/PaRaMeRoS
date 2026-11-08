@@ -14,6 +14,10 @@ use serde_json::{Value, json};
 fn has_redis() -> bool {
     let ok = std::env::var("TEST_REDIS_URL").is_ok();
     if !ok {
+        assert!(
+            std::env::var_os("REQUIRE_TEST_DB").is_none(),
+            "REQUIRE_TEST_DB is set but TEST_REDIS_URL is missing"
+        );
         eprintln!("TEST_REDIS_URL not set, skipping");
     }
     ok

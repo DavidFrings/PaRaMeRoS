@@ -9,8 +9,8 @@ all-features = true
 yanked = "warn"
 # Exceptions only with a reason.
 ignore = [
-    { id = "RUSTSEC-2026-0138", reason = "diesel-async: unsound only in the MySQL backend; this crate uses PostgreSQL only" },
-    { id = "RUSTSEC-2024-0436", reason = "paste (unmaintained proc-macro) comes in via image -> exr/rav1e; no maintained release to move to" },
+    { id = "RUSTSEC-2026-0138", reason = "diesel-async: unsound only in the MySQL backend; this crate uses PostgreSQL only; drop after diesel-async >= 0.9 upgrade" },
+    { id = "RUSTSEC-2024-0436", reason = "paste (unmaintained proc-macro) comes in via image -> exr/pulp and rav1e; no maintained release to move to" },
 ]
 
 [licenses]
@@ -25,7 +25,6 @@ allow = [
     "CC0-1.0",
     "MPL-2.0",
     "Unicode-3.0",
-    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
 

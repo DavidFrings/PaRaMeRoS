@@ -10,8 +10,8 @@ async fn main() -> std::io::Result<()> {
         dotenvy::dotenv().ok();
         // Rust 2024 marks set_var unsafe; there is no safe way to set these before startup.
         #[allow(unsafe_code)]
-        // SAFETY: runs first in main, before the logger, the DB pool or any worker thread
-        // exists, so no other thread can read the environment concurrently.
+        // SAFETY: runs right after dotenv, before the logger, pool or any thread, so no other
+        // thread can read the environment concurrently.
         unsafe {
             std::env::set_var("RUST_LOG", "debug");
             std::env::set_var("RUST_BACKTRACE", "1");

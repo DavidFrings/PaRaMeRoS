@@ -21,7 +21,8 @@ pub fn site_url() -> &'static str {
 }
 
 /// `None` without `TEST_DATABASE_URL`: the test then returns early. The rust-ci `test` job has no
-/// Postgres; the `API / Test` job sets the variable and runs every test.
+/// Postgres; the `API / Test` job sets the variable and `REQUIRE_TEST_DB`, which turns a skip into a
+/// failure.
 pub async fn test_app() -> Option<(
     impl Service<
         actix_http::Request,
@@ -44,6 +45,10 @@ pub async fn test_app_with_site(
     Env,
 )> {
     let Ok(db_url) = std::env::var("TEST_DATABASE_URL") else {
+        assert!(
+            std::env::var_os("REQUIRE_TEST_DB").is_none(),
+            "REQUIRE_TEST_DB is set but TEST_DATABASE_URL is missing"
+        );
         eprintln!("TEST_DATABASE_URL not set, skipping");
         return None;
     };

@@ -22,13 +22,16 @@ Full dev stack (needs `.env`, copy from `.env.example`):
 API (run in `api/`) — CI runs these:
 
 ```sh
-cargo fmt --all -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo check --locked --all-targets --all-features
-cargo audit
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings   # lints: [lints] in Cargo.toml, incl. clippy::pedantic
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --locked
+cargo +1.92 check --workspace --all-features --locked   # MSRV
+cargo deny check                                       # replaces cargo audit; config in api/deny.toml
+TEST_DATABASE_URL=postgres://... TEST_REDIS_URL=redis://... cargo test --locked -- --test-threads=1   # integration tests need real Postgres + Redis
 diesel migration run --database-url postgres://...   # only to regenerate src/db/schema.rs (see diesel.toml)
-TEST_DATABASE_URL=postgres://... TEST_REDIS_URL=redis://... cargo test -- --test-threads=1   # integration tests need real Postgres + Redis
 ```
+
+DB/Redis tests skip (return early) without `TEST_DATABASE_URL` / `TEST_REDIS_URL`, and fail instead when `REQUIRE_TEST_DB` is set (CI's `api-test` sets it).
 
 Frontend (run in `frontend/`, pnpm) — CI runs these:
 
@@ -70,3 +73,6 @@ The API has integration tests (`api/tests/`); the frontend has none.
 - `.github/workflows/cd.yml` builds and pushes per-arch (x86_64/aarch64) images for both parts on pushes to `main`, tagged with the version from `Cargo.toml` / `package.json`.
 - Rate limits key on `X-Real-IP`. The host nginx must set it from a trusted source: `set_real_ip_from <Cloudflare ranges>; real_ip_header CF-Connecting-IP;` plus `proxy_set_header X-Real-IP $remote_addr;` (or firewall the origin to Cloudflare ranges). Never copy `$http_cf_connecting_ip` blindly: a direct hit on the origin could then spoof any IP.
 - Prod compose binds db, API and frontend ports to `127.0.0.1` only.
+- CI layout (`.github/workflows/ci.yml`): the `api` job calls `DavidFrings/rust-ci/.github/workflows/rust.yml@v1` (fmt, clippy, test without DB, doc, MSRV); its summary job `api / result` is the required check. `msrv` there must match `rust-version` in `api/Cargo.toml`. `api-test` runs the integration tests with Postgres/Redis services. Frontend and Docker jobs are separate.
+- `security.yml` runs cargo-deny via rust-ci `rust-security.yml@v1` on changes to `api/` Cargo files or `deny.toml`, and weekly (Monday). Advisory findings fail only the weekly run, not PRs (template behaviour, decided); licenses/bans/sources fail PRs.
+- `scripts/github-setup.sh` (repo settings, labels, merges required checks into the "Main" ruleset) is run by hand only, never from CI.
