@@ -16,7 +16,7 @@ name = "parameros_api"
 [dependencies]
 # no http2: h2 0.3 (RUSTSEC-2026-0258) has no 0.3 fix; nginx proxies HTTP/1.1
 actix-web = { version = "^4.11", default-features = false, features = ["macros", "compress-brotli", "compress-gzip", "compress-zstd", "cookies", "unicode", "compat", "ws"] }
-actix-multipart = "^0.7"
+actix-multipart = "^0.8"
 uuid = { version = "^1.18", features = ["serde", "v4"] }
 serde = { version = "^1", features = ["derive"] }
 env_logger = "^0.11"
